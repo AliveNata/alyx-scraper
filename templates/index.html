@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pet Scraper — Realtime Scraping</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { padding: 20px; background:#f7f9fc; }
+    .small-note { font-size:0.9rem; color:#6c757d; }
+    .result-title { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:360px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1 class="mb-3">🐕 Pet Scraper — Realtime Scraping</h1>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="mb-2">
+        <label class="form-label">Keywords (pisah koma)</label>
+        <input id="keywords" class="form-control" placeholder="contoh: logistik pet, industri pet, pengiriman hewan">
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label">Location</label>
+        <input id="location" class="form-control" placeholder="Jakarta">
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label">Platforms</label>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input platform" type="checkbox" id="plat_gn" value="Google News" checked>
+          <label class="form-check-label" for="plat_gn">Google News</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input platform" type="checkbox" id="plat_news" value="News Sites" checked>
+          <label class="form-check-label" for="plat_news">News Sites</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input platform" type="checkbox" id="plat_sm" value="Social Media">
+          <label class="form-check-label" for="plat_sm">Social Media</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input platform" type="checkbox" id="plat_forum" value="Forums">
+          <label class="form-check-label" for="plat_forum">Forums</label>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button id="startBtn" class="btn btn-success">🚀 Mulai Scraping</button>
+        <button id="clearBtn" class="btn btn-outline-secondary">🧹 Clear</button>
+        <div id="statusBadge" class="ms-auto align-self-center small-note">Ready</div>
+      </div>
+      <div class="mt-2 small-note">Catatan: scraping berjalan di server, bisa memakan waktu beberapa detik—menit tergantung keywords & platform.</div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex mb-2">
+        <h5 class="me-auto">Hasil</h5>
+        <div>
+          <button id="downloadCsv" class="btn btn-sm btn-outline-primary">CSV</button>
+          <button id="downloadJson" class="btn btn-sm btn-outline-primary">JSON</button>
+          <button id="downloadXlsx" class="btn btn-sm btn-outline-primary">XLSX</button>
+        </div>
+      </div>
+
+      <div id="resultsInfo" class="mb-2 small-note">Belum ada job</div>
+
+      <div class="table-responsive" style="max-height:480px; overflow:auto;">
+        <table class="table table-striped table-sm" id="resultsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Platform</th>
+              <th>Judul</th>
+              <th>Keyword</th>
+              <th>Tanggal</th>
+              <th>Sumber</th>
+              <th>URL</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="text-muted small-note">
+    <div>Catatan hukum & teknis: gunakan scraping dengan etika (robots.txt, rate limits, hak cipta). Untuk production gunakan persistent job store & rate-limiter.</div>
+  </footer>
+</div>
+
+<script>
+let currentJob = null;
+let pollInterval = null;
+
+document.getElementById('startBtn').addEventListener('click', async () => {
+  const keywords = document.getElementById('keywords').value.trim();
+  const location = document.getElementById('location').value.trim();
+  const platformEls = document.querySelectorAll('.platform:checked');
+  const platforms = Array.from(platformEls).map(el => el.value);
+
+  if (!keywords || !location || platforms.length === 0) {
+    alert('Isi keywords, location, dan pilih minimal satu platform.');
+    return;
+  }
+
+  // start
+  document.getElementById('statusBadge').textContent = 'Mengirim permintaan...';
+  const resp = await fetch('/start', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({keywords, location, platforms})
+  });
+  const data = await resp.json();
+  if (!data.ok) {
+    alert('Error: ' + (data.error || 'unknown'));
+    return;
+  }
+  currentJob = data.job_id;
+  document.getElementById('statusBadge').textContent = 'Job ID: ' + currentJob;
+  document.getElementById('resultsInfo').textContent = 'Job started: ' + currentJob;
+  // start polling
+  if (pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(pollStatus, 2000);
+  pollStatus();
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  currentJob = null;
+  if (pollInterval) clearInterval(pollInterval);
+  document.querySelector('#resultsTable tbody').innerHTML = '';
+  document.getElementById('resultsInfo').textContent = 'Cleared';
+  document.getElementById('statusBadge').textContent = 'Ready';
+});
+
+async function pollStatus() {
+  if (!currentJob) return;
+  const resp = await fetch(`/status/${currentJob}`);
+  if (resp.status === 404) {
+    document.getElementById('statusBadge').textContent = 'Job not found';
+    return;
+  }
+  const j = await resp.json();
+  if (!j.ok) {
+    document.getElementById('statusBadge').textContent = 'Error';
+    return;
+  }
+  document.getElementById('statusBadge').textContent = `${j.status} — ${j.message} (${j.count})`;
+  document.getElementById('resultsInfo').textContent = `Status: ${j.status} — ${j.message} — count ${j.count}`;
+
+  if (j.status === 'finished') {
+    // fetch results once
+    await fetchResults();
+    clearInterval(pollInterval);
+    pollInterval = null;
+  } else if (j.status === 'error') {
+    clearInterval(pollInterval);
+    pollInterval = null;
+    alert('Job error: ' + j.message);
+  }
+}
+
+async function fetchResults() {
+  const resp = await fetch(`/results/${currentJob}`);
+  const j = await resp.json();
+  if (!j.ok) { alert('Gagal ambil results'); return; }
+  const rows = j.results || [];
+  const tbody = document.querySelector('#resultsTable tbody');
+  tbody.innerHTML = '';
+  rows.forEach((r, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${idx+1}</td>
+      <td>${escapeHtml(r.platform||'')}</td>
+      <td class="result-title" title="${escapeHtml(r.title||'')}">${escapeHtml(r.title||'')}</td>
+      <td>${escapeHtml(r.keyword||'')}</td>
+      <td>${escapeHtml(r.date||'')}</td>
+      <td>${escapeHtml(r.source||'')}</td>
+      <td>${r.url ? '<a target="_blank" href="'+escapeHtml(r.url)+'">Open</a>' : ''}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function escapeHtml(s){
+  if(!s) return '';
+  return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+}
+
+document.getElementById('downloadCsv').addEventListener('click', () => download('csv'));
+document.getElementById('downloadJson').addEventListener('click', () => download('json'));
+document.getElementById('downloadXlsx').addEventListener('click', () => download('xlsx'));
+
+function download(fmt){
+  if (!currentJob) { alert('Belum ada hasil untuk didownload'); return; }
+  window.location = `/download/${currentJob}/${fmt}`;
+}
+</script>
+</body>
+</html>
