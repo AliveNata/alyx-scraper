@@ -101,12 +101,6 @@ Buka **http://localhost:5000**
 
 ---
 
-## Deploy ke PythonAnywhere
-
-Lihat [DEPLOY.md](DEPLOY.md) untuk panduan lengkap.
-
----
-
 ## Repos yang Dipakai
 
 | Lib | Repo |

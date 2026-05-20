@@ -42,5 +42,8 @@ desktop.ini
 *.swp
 *.swo
 
+# ── Deployment docs ────────────────────────────────────
+DEPLOY.md
+
 # ── PythonAnywhere ─────────────────────────────────────
 *.pythonanywhere.com
