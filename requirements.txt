@@ -1,0 +1,14 @@
+Flask>=2.3
+Werkzeug>=2.3
+pandas>=1.5
+requests>=2.28
+beautifulsoup4>=4.12
+lxml>=4.9
+openpyxl>=3.1
+gunicorn>=21.0
+
+# Optional — install manually if needed
+# twikit          # X/Twitter direct scraping
+# facebook-scraper  # Facebook direct scraping
+# instaloader     # Instagram session-based scraping
+# yagmail         # Email (forgot password)

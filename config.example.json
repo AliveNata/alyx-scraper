@@ -1,0 +1,21 @@
+{
+  "admin_password": "ganti-dengan-password-anda",
+  "twitter": {
+    "use_twikit": false,
+    "username": "",
+    "nitter_instances": [
+      "https://nitter.net",
+      "https://nitter.privacydev.net",
+      "https://nitter.1d4.us"
+    ]
+  },
+  "email": {
+    "gmail_user": "your-gmail@gmail.com",
+    "gmail_app_password": "xxxx xxxx xxxx xxxx",
+    "reset_recipient": "your-gmail@gmail.com"
+  },
+  "instagram": {
+    "username": "",
+    "session_file": ""
+  }
+}

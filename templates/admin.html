@@ -1,0 +1,1510 @@
+{% extends "base.html" %}
+
+{% block title %}Alyx Admin{% endblock %}
+
+{% block nav_actions_extra %}
+<a href="/" class="alyx-btn-icon" title="Kembali ke utama" style="font-size:.9rem"><i class="bi bi-arrow-left"></i></a>
+<a href="/alyx-control-panel/logout" class="alyx-btn-icon" title="Logout" id="logoutBtn" style="font-size:.9rem"><i class="bi bi-box-arrow-right"></i></a>
+{% endblock %}
+
+{% block extra_head %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+body { background: transparent !important; color: var(--t1) !important; font-family: 'Inter', system-ui, sans-serif !important; }
+
+/* ── Tab Bar ── */
+.adm-tabs-bar {
+  display: flex;
+  gap: 2px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--glass-b);
+  background: var(--nav-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  position: sticky;
+  top: 61px;
+  z-index: 50;
+}
+.adm-tab {
+  padding: 13px 20px;
+  font-size: .875rem;
+  font-weight: 500;
+  color: var(--t2);
+  cursor: pointer;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all .18s;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.adm-tab:hover { color: var(--t1); }
+.adm-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── Layout ── */
+.adm-content { max-width: 1400px; margin: 0 auto; padding: 24px 20px 40px; }
+
+/* ── Glass Card ── */
+.g-card {
+  background: var(--glass);
+  border: 1px solid var(--glass-b);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 2px 20px rgba(99,102,241,.06);
+  overflow: hidden;
+}
+[data-theme="dark"] .g-card { box-shadow: 0 4px 28px rgba(0,0,0,.28); }
+
+.g-card-head {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--glass-b);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.g-card-title {
+  font-size: .9rem;
+  font-weight: 600;
+  color: var(--t1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.g-card-body { padding: 20px; }
+
+/* ── Stat Grid ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+@media(max-width:1100px) { .stat-grid { grid-template-columns: repeat(3, 1fr); } }
+@media(max-width:580px)  { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.stat-card { padding: 20px 18px; display: flex; align-items: center; gap: 16px; }
+.stat-icon {
+  width: 48px; height: 48px; flex-shrink: 0;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; color: #fff;
+  box-shadow: 0 4px 14px rgba(0,0,0,.18);
+}
+.stat-body { flex: 1; min-width: 0; }
+.stat-val {
+  font-size: 1.65rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--t1);
+}
+.stat-lbl { font-size: .75rem; color: var(--t2); margin-top: 3px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Overview grid ── */
+.overview-grid { display: grid; grid-template-columns: 1fr 360px; gap: 16px; }
+@media(max-width:1020px) { .overview-grid { grid-template-columns: 1fr; } }
+
+/* ── Comparison cards ── */
+.cmp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+.cmp-card {
+  background: rgba(99,102,241,.05);
+  border: 1px solid rgba(99,102,241,.12);
+  border-radius: 12px;
+  padding: 14px 10px;
+  text-align: center;
+}
+[data-theme="dark"] .cmp-card { background: rgba(99,102,241,.09); border-color: rgba(99,102,241,.2); }
+.cmp-period { font-size: .68rem; color: var(--t3); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.cmp-val { font-size: 1.2rem; font-weight: 700; margin: 5px 0 3px; }
+.cmp-label { font-size: .7rem; color: var(--t3); }
+.cmp-up { color: #22c55e; } .cmp-down { color: #ef4444; } .cmp-neutral { color: var(--t2); }
+
+/* ── Top list ── */
+.top-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--glass-b);
+}
+.top-item:last-child { border-bottom: none; }
+.top-name { font-size: .83rem; color: var(--t1); }
+.top-count {
+  font-size: .78rem; font-weight: 700; color: #fff;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  padding: 2px 8px; border-radius: 20px;
+  min-width: 32px; text-align: center;
+}
+.mini-title {
+  font-size: .73rem; font-weight: 700; color: var(--t3);
+  text-transform: uppercase; letter-spacing: .5px;
+  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 5px;
+}
+hr.g-hr { border: none; border-top: 1px solid var(--glass-b); margin: 14px 0; }
+
+/* ── Form controls ── */
+.g-select, .g-input {
+  background: var(--glass) !important;
+  border: 1px solid var(--glass-b) !important;
+  color: var(--t1) !important;
+  border-radius: 9px;
+  padding: 7px 12px;
+  font-size: .83rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.g-select:focus, .g-input:focus {
+  border-color: rgba(99,102,241,.45) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+}
+.g-select option { background: #1e293b; color: #f1f5f9; }
+.filters-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* ── Buttons ── */
+.g-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 9px;
+  font-size: .83rem; font-weight: 500; cursor: pointer;
+  border: 1px solid var(--glass-b);
+  background: var(--glass);
+  color: var(--t1); font-family: inherit;
+  transition: all .18s;
+}
+.g-btn:hover { border-color: var(--accent); color: var(--accent); }
+.g-btn-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-color: transparent; color: #fff;
+  box-shadow: 0 2px 12px rgba(99,102,241,.3);
+}
+.g-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(99,102,241,.45); color: #fff; }
+.g-btn-primary:active { transform: translateY(0); }
+
+/* ── Table ── */
+.g-table-wrap { overflow-x: auto; max-height: 560px; overflow-y: auto; }
+.g-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.g-table thead th {
+  background: rgba(99,102,241,.07);
+  color: var(--t3);
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  font-weight: 700;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--glass-b);
+  white-space: nowrap;
+  position: sticky;
+  top: 0; z-index: 1;
+}
+[data-theme="dark"] .g-table thead th { background: rgba(99,102,241,.13); }
+.g-table tbody td { padding: 9px 14px; border-bottom: 1px solid var(--glass-b); color: var(--t1); vertical-align: middle; }
+.g-table tbody tr:hover { background: rgba(99,102,241,.04); }
+.g-table tbody tr:last-child td { border-bottom: none; }
+
+/* ── Action badges ── */
+.act-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: .68rem; font-weight: 700;
+  padding: 3px 9px; border-radius: 20px;
+  white-space: nowrap; letter-spacing: .1px;
+}
+.act-scrape       { background: rgba(99,102,241,.12); color: #6366f1; border: 1px solid rgba(99,102,241,.22); }
+.act-image_scrape { background: rgba(14,165,233,.1);  color: #0ea5e9; border: 1px solid rgba(14,165,233,.22); }
+.act-image_search { background: rgba(34,197,94,.1);   color: #16a34a; border: 1px solid rgba(34,197,94,.22); }
+.act-image_upload { background: rgba(245,158,11,.1);  color: #d97706; border: 1px solid rgba(245,158,11,.22); }
+[data-theme="dark"] .act-scrape       { color: #a5b4fc; }
+[data-theme="dark"] .act-image_scrape { color: #7dd3fc; }
+[data-theme="dark"] .act-image_search { color: #86efac; }
+[data-theme="dark"] .act-image_upload { color: #fcd34d; }
+
+/* ── Settings ── */
+.settings-section { margin-bottom: 22px; }
+.settings-label { font-size: .85rem; font-weight: 600; color: var(--t1); display: block; margin-bottom: 8px; }
+.settings-hint { font-size: .77rem; color: var(--t3); margin-top: 5px; line-height: 1.5; }
+
+.toggle-wrap { display: flex; align-items: flex-start; gap: 14px; }
+.toggle-switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; margin-top: 2px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; inset: 0; cursor: pointer;
+  background: var(--glass-b); border-radius: 26px;
+  border: 1px solid var(--glass-b); transition: all .22s;
+}
+.toggle-slider::before {
+  content: ''; position: absolute;
+  width: 20px; height: 20px; left: 2px; top: 2px;
+  background: var(--t3); border-radius: 50%; transition: all .22s;
+}
+.toggle-switch input:checked + .toggle-slider { background: rgba(99,102,241,.25); border-color: rgba(99,102,241,.5); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); background: #6366f1; box-shadow: 0 0 8px rgba(99,102,241,.5); }
+
+.g-textarea {
+  width: 100%;
+  background: var(--glass) !important;
+  border: 1px solid var(--glass-b) !important;
+  color: var(--t1) !important;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: .83rem;
+  font-family: 'Courier New', monospace;
+  resize: vertical;
+  min-height: 120px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  line-height: 1.6;
+}
+.g-textarea:focus {
+  border-color: rgba(99,102,241,.45) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+}
+
+.save-msg {
+  display: none; align-items: center; gap: 6px;
+  font-size: .8rem; padding: 6px 12px; border-radius: 8px;
+}
+.save-msg.ok  { background: rgba(34,197,94,.1);  color: #16a34a; border: 1px solid rgba(34,197,94,.25); }
+.save-msg.err { background: rgba(239,68,68,.1);  color: #dc2626; border: 1px solid rgba(239,68,68,.25); }
+[data-theme="dark"] .save-msg.ok  { color: #86efac; }
+[data-theme="dark"] .save-msg.err { color: #fca5a5; }
+
+.nitter-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: .77rem; font-weight: 600;
+  padding: 4px 11px; border-radius: 20px;
+}
+.nitter-ok   { background: rgba(34,197,94,.1);  color: #16a34a; border: 1px solid rgba(34,197,94,.25); }
+.nitter-fail { background: rgba(239,68,68,.1);  color: #dc2626; border: 1px solid rgba(239,68,68,.25); }
+.nitter-wait { background: rgba(99,102,241,.1); color: #6366f1; border: 1px solid rgba(99,102,241,.25); }
+[data-theme="dark"] .nitter-ok   { color: #86efac; }
+[data-theme="dark"] .nitter-fail { color: #fca5a5; }
+[data-theme="dark"] .nitter-wait { color: #a5b4fc; }
+
+.info-step {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--glass-b);
+}
+.info-step:last-child { border-bottom: none; padding-bottom: 0; }
+.info-step-num {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg,#6366f1,#8b5cf6);
+  color: #fff; font-size: .75rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.info-step-body { flex: 1; }
+.info-step-title { font-size: .85rem; font-weight: 600; color: var(--t1); }
+.info-step-desc  { font-size: .78rem; color: var(--t3); margin-top: 2px; line-height: 1.5; }
+code.i { background: var(--glass); border: 1px solid var(--glass-b); padding: 1px 6px; border-radius: 5px; font-size: .8rem; color: var(--accent); font-family: monospace; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Tab Bar ── -->
+<div class="adm-tabs-bar">
+  <button class="adm-tab active" onclick="showTab('overview')" id="tab-btn-overview">
+    <i class="bi bi-bar-chart-line-fill"></i> Overview
+  </button>
+  <button class="adm-tab" onclick="showTab('logs')" id="tab-btn-logs">
+    <i class="bi bi-journal-text"></i> Audit Logs
+  </button>
+  <button class="adm-tab" onclick="showTab('settings')" id="tab-btn-settings">
+    <i class="bi bi-sliders2"></i> Settings
+  </button>
+</div>
+
+<div class="adm-content">
+
+  <!-- ══════════════ OVERVIEW ══════════════ -->
+  <div id="tab-overview">
+
+    <!-- Stat Cards -->
+    <div class="stat-grid">
+      <div class="g-card stat-card">
+        <div class="stat-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)"><i class="bi bi-send-fill"></i></div>
+        <div class="stat-body">
+          <div class="stat-val" id="sTotalScrapes">—</div>
+          <div class="stat-lbl">Total Scrapes</div>
+        </div>
+      </div>
+      <div class="g-card stat-card">
+        <div class="stat-icon" style="background:linear-gradient(135deg,#10b981,#059669)"><i class="bi bi-people-fill"></i></div>
+        <div class="stat-body">
+          <div class="stat-val" id="sUniqueUsers">—</div>
+          <div class="stat-lbl">Unique Users</div>
+        </div>
+      </div>
+      <div class="g-card stat-card">
+        <div class="stat-icon" style="background:linear-gradient(135deg,#a855f7,#7c3aed)"><i class="bi bi-collection-fill"></i></div>
+        <div class="stat-body">
+          <div class="stat-val" id="sTotalResults">—</div>
+          <div class="stat-lbl">Total Results</div>
+        </div>
+      </div>
+      <div class="g-card stat-card">
+        <div class="stat-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706)"><i class="bi bi-stopwatch-fill"></i></div>
+        <div class="stat-body">
+          <div class="stat-val" id="sAvgDuration">—</div>
+          <div class="stat-lbl">Avg Duration (s)</div>
+        </div>
+      </div>
+      <div class="g-card stat-card">
+        <div class="stat-icon" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8)"><i class="bi bi-key-fill"></i></div>
+        <div class="stat-body">
+          <div class="stat-val" id="sUniqueKw">—</div>
+          <div class="stat-lbl">Unique Keywords</div>
+        </div>
+      </div>
+      <div class="g-card stat-card">
+        <div class="stat-icon" style="background:linear-gradient(135deg,#ec4899,#be185d)"><i class="bi bi-calendar-check-fill"></i></div>
+        <div class="stat-body">
+          <div class="stat-val" id="sToday">—</div>
+          <div class="stat-lbl">Today</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart + Comparisons -->
+    <div class="overview-grid">
+
+      <!-- Chart -->
+      <div class="g-card">
+        <div class="g-card-head">
+          <div class="g-card-title"><i class="bi bi-graph-up-arrow"></i> Usage Over Time</div>
+          <div style="display:flex;gap:8px">
+            <select class="g-select" id="chartPeriod" onchange="loadStats()">
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+            <select class="g-select" id="chartDays" onchange="loadStats()">
+              <option value="30">30 days</option>
+              <option value="90" selected>90 days</option>
+              <option value="180">180 days</option>
+              <option value="365">1 year</option>
+            </select>
+          </div>
+        </div>
+        <div class="g-card-body" style="height:300px;position:relative">
+          <canvas id="usageChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Comparisons + Top Lists -->
+      <div class="g-card">
+        <div class="g-card-head">
+          <div class="g-card-title"><i class="bi bi-bar-chart-steps"></i> Comparisons</div>
+        </div>
+        <div class="g-card-body">
+          <div class="cmp-grid">
+            <div class="cmp-card">
+              <div class="cmp-period">WoW</div>
+              <div class="cmp-val cmp-neutral" id="compWoW">—</div>
+              <div class="cmp-label">Week over Week</div>
+            </div>
+            <div class="cmp-card">
+              <div class="cmp-period">MoM</div>
+              <div class="cmp-val cmp-neutral" id="compMoM">—</div>
+              <div class="cmp-label">Month over Month</div>
+            </div>
+            <div class="cmp-card">
+              <div class="cmp-period">QoQ</div>
+              <div class="cmp-val cmp-neutral" id="compQoQ">—</div>
+              <div class="cmp-label">Quarter over Quarter</div>
+            </div>
+            <div class="cmp-card">
+              <div class="cmp-period">YoY</div>
+              <div class="cmp-val cmp-neutral" id="compYoY">—</div>
+              <div class="cmp-label">Year over Year</div>
+            </div>
+          </div>
+
+          <div class="mini-title"><i class="bi bi-trophy-fill"></i> Top Platforms</div>
+          <div id="topPlatforms"></div>
+
+          <hr class="g-hr">
+
+          <div class="mini-title"><i class="bi bi-key-fill"></i> Top Keywords</div>
+          <div id="topKeywords"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ AUDIT LOGS ══════════════ -->
+  <div id="tab-logs" style="display:none">
+    <div class="g-card">
+      <div class="g-card-head">
+        <div class="g-card-title"><i class="bi bi-journal-text"></i> Audit Logs</div>
+        <div class="filters-row">
+          <select class="g-select" id="logAction" onchange="loadLogs()">
+            <option value="">All Actions</option>
+            <option value="scrape">Scrape</option>
+            <option value="image_scrape">Image Scrape</option>
+            <option value="image_search">Image Search</option>
+            <option value="image_upload">Image Upload</option>
+          </select>
+          <input type="date" class="g-input" id="logFrom" onchange="loadLogs()" style="width:auto">
+          <input type="date" class="g-input" id="logTo"   onchange="loadLogs()" style="width:auto">
+          <button class="g-btn" onclick="loadLogs()" title="Refresh">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+        </div>
+      </div>
+      <div class="g-table-wrap">
+        <table class="g-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Waktu</th><th>Action</th><th>Keyword</th>
+              <th>Platform</th><th>Location</th><th>Results</th>
+              <th>Duration</th><th>IP Address</th><th>User Agent</th>
+            </tr>
+          </thead>
+          <tbody id="logsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ SETTINGS ══════════════ -->
+  <div id="tab-settings" style="display:none">
+    <div style="max-width:700px;display:flex;flex-direction:column;gap:16px">
+
+      <!-- Twitter Settings -->
+      <div class="g-card">
+        <div class="g-card-head">
+          <div class="g-card-title">
+            <i class="bi bi-twitter-x"></i> X / Twitter Configuration
+          </div>
+          <span id="twStatusBadge"></span>
+        </div>
+        <div class="g-card-body">
+
+          <!-- Twikit login state: logged in -->
+          <div id="twLoggedIn" style="display:none">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+              <div style="width:40px;height:40px;border-radius:50%;background:#000;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.1rem"><i class="bi bi-twitter-x"></i></div>
+              <div>
+                <div style="font-weight:600;color:var(--t1)" id="twUsername">@username</div>
+                <div style="font-size:.77rem;color:#22c55e"><i class="bi bi-check-circle-fill"></i> Session aktif — scraping sebagai akun ini</div>
+              </div>
+            </div>
+            <button class="g-btn" onclick="logoutTwitter()" style="color:#ef4444;border-color:rgba(239,68,68,.3)">
+              <i class="bi bi-box-arrow-right"></i> Logout / Hapus Cookies
+            </button>
+            <hr class="g-hr">
+          </div>
+
+          <!-- Toggle: use_twikit -->
+          <div class="settings-section">
+            <div class="toggle-wrap">
+              <label class="toggle-switch">
+                <input type="checkbox" id="useTwikit" onchange="onTwikitToggle()">
+                <span class="toggle-slider"></span>
+              </label>
+              <div>
+                <div class="settings-label" style="margin-bottom:3px">Aktifkan twikit (login X/Twitter)</div>
+                <div class="settings-hint">
+                  Jika ON, scraper pakai akun X/Twitter untuk hasil lebih banyak dan akurat.
+                  Jika OFF, pakai Nitter (tidak butuh login, tapi kadang down).
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Twikit Login Form -->
+          <div id="twLoginSection" style="display:none">
+            <hr class="g-hr">
+            <div style="font-size:.82rem;font-weight:600;color:var(--t1);margin-bottom:12px"><i class="bi bi-key-fill"></i> Login ke X / Twitter</div>
+
+            <!-- Method tabs -->
+            <div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--glass-b)">
+              <button class="adm-tab active" id="twTabCookie" onclick="twSwitchTab('cookie')" style="font-size:.8rem;padding:8px 14px">
+                <i class="bi bi-cookie"></i> Auth Token <span style="font-size:.68rem;background:rgba(34,197,94,.15);color:#16a34a;padding:1px 6px;border-radius:8px;margin-left:4px">Recommended</span>
+              </button>
+              <button class="adm-tab" id="twTabPassword" onclick="twSwitchTab('password')" style="font-size:.8rem;padding:8px 14px">
+                <i class="bi bi-person-lock"></i> Username & Password
+              </button>
+            </div>
+
+            <!-- Cookie / Auth Token method (recommended) -->
+            <div id="twMethodCookie">
+              <div style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);border-radius:12px;padding:14px;margin-bottom:14px">
+                <div style="font-weight:600;font-size:.82rem;color:var(--t1);margin-bottom:10px"><i class="bi bi-info-circle"></i> Cara Ambil Auth Token dari Browser:</div>
+                <ol style="font-size:.79rem;color:var(--t2);line-height:2.1;margin:0;padding-left:18px">
+                  <li>Buka <strong>x.com</strong> di browser, pastikan sudah login</li>
+                  <li>Tekan <kbd style="background:var(--glass-b);padding:1px 6px;border-radius:4px;font-size:.75rem">F12</kbd> → tab <strong>Application</strong> (Chrome) atau <strong>Storage</strong> (Firefox)</li>
+                  <li>Klik <strong>Cookies</strong> → <strong>https://x.com</strong></li>
+                  <li>Cari cookie bernama <code class="i">auth_token</code> → salin <strong>Value</strong>-nya</li>
+                  <li>Cari juga cookie bernama <code class="i">ct0</code> → salin <strong>Value</strong>-nya</li>
+                </ol>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px;max-width:440px">
+                <div>
+                  <label style="font-size:.75rem;font-weight:600;color:var(--t2);display:block;margin-bottom:5px">Username <span style="font-weight:400;color:var(--t3)">(tanpa @)</span></label>
+                  <input class="g-input" id="twCookieUser" placeholder="username" style="width:100%">
+                </div>
+                <div>
+                  <label style="font-size:.75rem;font-weight:600;color:var(--t2);display:block;margin-bottom:5px"><code class="i">auth_token</code> cookie value</label>
+                  <input class="g-input" id="twAuthToken" placeholder="a1b2c3d4e5f6..." style="width:100%;font-family:monospace;font-size:.78rem">
+                </div>
+                <div>
+                  <label style="font-size:.75rem;font-weight:600;color:var(--t2);display:block;margin-bottom:5px"><code class="i">ct0</code> cookie value <span style="font-weight:400;color:var(--t3)">(CSRF token)</span></label>
+                  <input class="g-input" id="twCt0" placeholder="abcdef123456..." style="width:100%;font-family:monospace;font-size:.78rem">
+                </div>
+              </div>
+            </div>
+
+            <!-- Username & Password method -->
+            <div id="twMethodPassword" style="display:none">
+              <div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:12px;padding:12px;margin-bottom:14px;font-size:.8rem;color:#dc2626">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                Twitter/X sering memblokir atau mengubah flow login. Gunakan <strong>Auth Token</strong> jika metode ini error.
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px;max-width:400px">
+                <div>
+                  <label style="font-size:.75rem;font-weight:600;color:var(--t2);display:block;margin-bottom:5px">Username atau Email</label>
+                  <input class="g-input" id="twUser" placeholder="username atau email@example.com" style="width:100%">
+                </div>
+                <div>
+                  <label style="font-size:.75rem;font-weight:600;color:var(--t2);display:block;margin-bottom:5px">
+                    Email <span style="font-weight:400;color:var(--t3)">(opsional, untuk verifikasi extra)</span>
+                  </label>
+                  <input class="g-input" id="twEmail" placeholder="email@example.com" style="width:100%">
+                </div>
+                <div>
+                  <label style="font-size:.75rem;font-weight:600;color:var(--t2);display:block;margin-bottom:5px">Password</label>
+                  <div style="position:relative">
+                    <input class="g-input" type="password" id="twPass" placeholder="••••••••" style="width:100%;padding-right:38px">
+                    <button type="button" onclick="toggleTwPw()"
+                      style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t3);cursor:pointer;font-size:.95rem">
+                      <i class="bi bi-eye" id="twEye"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
+              <button class="g-btn g-btn-primary" onclick="loginTwitter()" id="twLoginBtn">
+                <i class="bi bi-box-arrow-in-right"></i> Login & Simpan Cookies
+              </button>
+              <span id="twLoginMsg" style="font-size:.8rem"></span>
+            </div>
+            <div class="settings-hint" style="margin-top:10px">
+              <i class="bi bi-shield-lock-fill"></i>
+              Token/cookies hanya disimpan sebagai file lokal <code class="i">twitter_cookies.json</code> — tidak dikirim ke server eksternal.
+            </div>
+          </div>
+
+          <hr class="g-hr">
+
+          <!-- Nitter Instances -->
+          <div class="settings-section">
+            <label class="settings-label" for="nitterInstances">
+              <i class="bi bi-hdd-network-fill"></i> Nitter Instances
+              <span style="font-weight:400;color:var(--t3);font-size:.78rem;margin-left:4px">— satu per baris (fallback jika twikit OFF)</span>
+            </label>
+            <textarea class="g-textarea" id="nitterInstances" rows="4"
+              placeholder="https://nitter.privacydev.net&#10;https://nitter.poast.org&#10;https://nitter.1d4.us"></textarea>
+            <div class="settings-hint">
+              Instances dicoba satu per satu dari atas ke bawah sampai berhasil.
+              Jika semua gagal, otomatis fallback ke Google Search <code class="i">site:x.com</code>.
+            </div>
+          </div>
+
+          <hr class="g-hr">
+
+          <!-- Actions -->
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <button class="g-btn g-btn-primary" onclick="saveSettings()">
+              <i class="bi bi-floppy-fill"></i> Simpan
+            </button>
+            <button class="g-btn" onclick="testNitter()" id="nitterTestBtn">
+              <i class="bi bi-wifi"></i> Test Nitter
+            </button>
+            <span id="nitterTestStatus"></span>
+            <span class="save-msg" id="saveMsg"></span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Email Configuration -->
+      <div class="g-card">
+        <div class="g-card-head">
+          <div class="g-card-title"><i class="bi bi-envelope-fill"></i> Email Configuration</div>
+          <span id="emailStatusBadge"></span>
+        </div>
+        <div class="g-card-body">
+          <div class="settings-hint" style="margin-bottom:16px">
+            Digunakan untuk kirim link <strong>Forgot Password</strong> ke email admin.
+            Gunakan Gmail dengan <strong>App Password</strong>
+            (<a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--accent)">myaccount.google.com/apppasswords</a>).
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px;max-width:440px">
+            <div>
+              <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">Gmail Pengirim</label>
+              <input class="g-input" id="emailUser" placeholder="contoh@gmail.com" style="width:100%">
+            </div>
+            <div>
+              <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">
+                Gmail App Password
+                <span style="font-weight:400;color:var(--t3);margin-left:4px">(bukan password Gmail biasa)</span>
+              </label>
+              <div style="position:relative">
+                <input class="g-input" type="password" id="emailAppPw" placeholder="xxxx xxxx xxxx xxxx" style="width:100%;padding-right:38px">
+                <button type="button" onclick="toggleEmailPw()"
+                  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t3);cursor:pointer;font-size:.95rem">
+                  <i class="bi bi-eye" id="emailEye"></i>
+                </button>
+              </div>
+            </div>
+            <div>
+              <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">Email Penerima Reset</label>
+              <input class="g-input" id="emailRecipient" placeholder="alivenata@gmail.com" value="alivenata@gmail.com" style="width:100%">
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <button class="g-btn g-btn-primary" onclick="saveEmailConfig()" id="emailSaveBtn">
+                <i class="bi bi-floppy-fill"></i> Simpan
+              </button>
+              <button class="g-btn" onclick="testEmail()" id="emailTestBtn">
+                <i class="bi bi-send"></i> Test Kirim Email
+              </button>
+              <span id="emailSaveMsg" style="font-size:.8rem"></span>
+            </div>
+          </div>
+
+          <div class="settings-hint" style="margin-top:14px">
+            <i class="bi bi-info-circle"></i>
+            Cara buat App Password: Google Account → Security → 2-Step Verification → App Passwords → buat baru untuk "Mail".
+          </div>
+        </div>
+      </div>
+
+      <!-- Instagram Login -->
+      <div class="g-card">
+        <div class="g-card-head">
+          <div class="g-card-title"><i class="bi bi-instagram"></i> Instagram Login</div>
+          <span id="igStatusBadge"></span>
+        </div>
+        <div class="g-card-body">
+          <div id="igLoggedIn" style="display:none">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+              <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.1rem"><i class="bi bi-instagram"></i></div>
+              <div>
+                <div style="font-weight:600;color:var(--t1)" id="igUsername">@username</div>
+                <div style="font-size:.77rem;color:#22c55e"><i class="bi bi-check-circle-fill"></i> Session aktif — scraping sebagai akun ini</div>
+              </div>
+            </div>
+            <button class="g-btn" onclick="logoutInstagram()" style="color:#ef4444;border-color:rgba(239,68,68,.3)">
+              <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+          </div>
+
+          <div id="igLoginForm">
+            <div class="settings-hint" style="margin-bottom:16px">
+              Login dengan akun Instagram untuk mendapatkan hasil lebih banyak dari hashtag publik.
+              Disarankan pakai <strong>akun dummy/alternatif</strong>, bukan akun utama.
+            </div>
+
+            <!-- Method tabs -->
+            <div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--glass-b);padding-bottom:0">
+              <button class="adm-tab active" id="igTabSession" onclick="igSwitchTab('session')" style="font-size:.8rem;padding:8px 14px">
+                <i class="bi bi-cookie"></i> Session ID <span style="font-size:.68rem;background:rgba(34,197,94,.15);color:#16a34a;padding:1px 6px;border-radius:8px;margin-left:4px">Recommended</span>
+              </button>
+              <button class="adm-tab" id="igTabPassword" onclick="igSwitchTab('password')" style="font-size:.8rem;padding:8px 14px">
+                <i class="bi bi-key-fill"></i> Username & Password
+              </button>
+            </div>
+
+            <!-- Session ID method -->
+            <div id="igMethodSession">
+              <div style="background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);border-radius:12px;padding:14px;margin-bottom:14px">
+                <div style="font-weight:600;font-size:.82rem;color:var(--t1);margin-bottom:8px"><i class="bi bi-info-circle"></i> Cara Ambil Session ID:</div>
+                <ol style="font-size:.79rem;color:var(--t2);line-height:2;margin:0;padding-left:18px">
+                  <li>Buka <strong>instagram.com</strong> di browser, pastikan sudah login</li>
+                  <li>Tekan <kbd style="background:var(--glass-b);padding:1px 6px;border-radius:4px;font-size:.75rem">F12</kbd> → tab <strong>Application</strong> (Chrome) atau <strong>Storage</strong> (Firefox)</li>
+                  <li>Klik <strong>Cookies</strong> → <strong>https://www.instagram.com</strong></li>
+                  <li>Cari cookie bernama <code class="i">sessionid</code> → salin <strong>Value</strong>-nya</li>
+                </ol>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px;max-width:420px">
+                <div>
+                  <label style="font-size:.75rem;font-weight:600;color:var(--t2);display:block;margin-bottom:5px">Username Instagram</label>
+                  <input class="g-input" id="igUserSess" placeholder="username (tanpa @)" style="width:100%">
+                </div>
+                <div>
+                  <label style="font-size:.75rem;font-weight:600;color:var(--t2);display:block;margin-bottom:5px">Session ID <span style="color:var(--t3);font-weight:400">(dari cookie sessionid)</span></label>
+                  <input class="g-input" id="igSessionId" placeholder="57152854321%3AXxXxXxXxXx%3A12%3A..." style="width:100%;font-family:monospace;font-size:.78rem">
+                </div>
+              </div>
+            </div>
+
+            <!-- Password method -->
+            <div id="igMethodPassword" style="display:none">
+              <div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:12px;padding:12px;margin-bottom:14px;font-size:.8rem;color:#dc2626">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                Instagram sering memblokir login otomatis via script. Gunakan <strong>Session ID</strong> jika metode ini gagal.
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px;max-width:380px">
+                <div>
+                  <label style="font-size:.75rem;font-weight:600;color:var(--t2);display:block;margin-bottom:5px">Username Instagram</label>
+                  <input class="g-input" id="igUser" placeholder="username (tanpa @)" style="width:100%">
+                </div>
+                <div>
+                  <label style="font-size:.75rem;font-weight:600;color:var(--t2);display:block;margin-bottom:5px">Password</label>
+                  <input class="g-input" type="password" id="igPass" placeholder="••••••••" style="width:100%">
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
+              <button class="g-btn g-btn-primary" onclick="loginInstagram()" id="igLoginBtn">
+                <i class="bi bi-box-arrow-in-right"></i> Login
+              </button>
+              <span id="igLoginMsg" style="font-size:.8rem"></span>
+            </div>
+
+            <div class="settings-hint" style="margin-top:12px">
+              <i class="bi bi-shield-lock-fill"></i>
+              Session ID/Password hanya dipakai untuk generate session file lokal — tidak dikirim ke server eksternal manapun.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Package Manager -->
+      <div class="g-card">
+        <div class="g-card-head">
+          <div class="g-card-title"><i class="bi bi-box-seam-fill"></i> Package Manager</div>
+          <span style="font-size:.77rem;color:var(--t3)">pip install langsung dari browser</span>
+        </div>
+        <div class="g-card-body">
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <input class="g-input" id="pipPkg" placeholder="nama-package (misal: twikit)" style="flex:1"
+              onkeydown="if(event.key==='Enter')pipInstall()">
+            <button class="g-btn g-btn-primary" onclick="pipInstall()" id="pipBtn">
+              <i class="bi bi-download"></i> Install
+            </button>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+            <button class="g-btn" style="font-size:.76rem;padding:4px 10px" onclick="quickInstall('twikit')">twikit</button>
+            <button class="g-btn" style="font-size:.76px;padding:4px 10px" onclick="quickInstall('instaloader')">instaloader</button>
+            <button class="g-btn" style="font-size:.76rem;padding:4px 10px" onclick="quickInstall('facebook-scraper')">facebook-scraper</button>
+            <button class="g-btn" style="font-size:.76rem;padding:4px 10px" onclick="quickInstall('lxml')">lxml</button>
+          </div>
+          <div id="pipOutput" style="display:none;background:rgba(0,0,0,.2);border:1px solid var(--glass-b);border-radius:10px;padding:12px;font-family:monospace;font-size:.76rem;color:var(--t2);max-height:200px;overflow-y:auto;white-space:pre-wrap;line-height:1.6"></div>
+        </div>
+      </div>
+
+      <!-- Scraper Diagnostics -->
+      <div class="g-card">
+        <div class="g-card-head">
+          <div class="g-card-title"><i class="bi bi-bug-fill"></i> Scraper Diagnostics</div>
+          <span style="font-size:.77rem;color:var(--t3)">Test tiap platform secara langsung</span>
+        </div>
+        <div class="g-card-body">
+          <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+            <select class="g-select" id="diagPlatform" style="flex:1;min-width:140px">
+              <option>Google News</option>
+              <option>News Sites</option>
+              <option>Reddit</option>
+              <option>Kaskus</option>
+              <option>X/Twitter</option>
+              <option>Quora</option>
+              <option>Instagram</option>
+              <option>Facebook</option>
+              <option>Threads</option>
+            </select>
+            <input class="g-input" id="diagKeyword" value="indonesia flood" placeholder="keyword..." style="flex:1;min-width:120px">
+            <button class="g-btn g-btn-primary" onclick="runDiag()" id="diagBtn">
+              <i class="bi bi-play-fill"></i> Test
+            </button>
+          </div>
+          <div id="diagResult" style="display:none">
+            <div id="diagLog" style="background:rgba(0,0,0,.15);border:1px solid var(--glass-b);border-radius:10px;padding:12px;font-family:monospace;font-size:.78rem;color:var(--t2);max-height:180px;overflow-y:auto;line-height:1.7;margin-bottom:10px;white-space:pre-wrap"></div>
+            <div id="diagSample" style="font-size:.82rem;color:var(--t2)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Platform Status Info -->
+      <div class="g-card">
+        <div class="g-card-head">
+          <div class="g-card-title"><i class="bi bi-info-circle-fill"></i> Status Platform</div>
+        </div>
+        <div class="g-card-body" style="padding:0">
+          <table style="width:100%;border-collapse:collapse;font-size:.82rem" id="platformStatusTable">
+            <thead>
+              <tr style="background:rgba(99,102,241,.06)">
+                <th style="padding:9px 14px;text-align:left;color:var(--t3);font-size:.7rem;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--glass-b)">Platform</th>
+                <th style="padding:9px 14px;text-align:left;color:var(--t3);font-size:.7rem;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--glass-b)">Metode</th>
+                <th style="padding:9px 14px;text-align:left;color:var(--t3);font-size:.7rem;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--glass-b)">Perlu Auth?</th>
+                <th style="padding:9px 14px;text-align:left;color:var(--t3);font-size:.7rem;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--glass-b)">Status</th>
+                <th style="padding:9px 14px;text-align:left;color:var(--t3);font-size:.7rem;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--glass-b)">Catatan</th>
+              </tr>
+            </thead>
+            <tbody id="platformStatusBody">
+              <!-- Filled by JS via loadPlatformStatus() -->
+              <tr><td colspan="5" style="padding:18px 14px;color:var(--t3);text-align:center"><span class="spin" style="display:inline-block;width:14px;height:14px;border:2px solid var(--glass-b);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite"></span> Memeriksa status...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const ADMIN_KEY = '{{ admin_key }}';
+let usageChart = null;
+
+function esc(s){ return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '' }
+
+// ── Tab switching ──
+function showTab(name){
+  ['overview','logs','settings'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = t === name ? '' : 'none';
+    document.getElementById('tab-btn-' + t).classList.toggle('active', t === name);
+  });
+  if(name === 'logs') loadLogs();
+  if(name === 'settings') loadSettings();
+}
+
+window.onThemeChange = function(){ loadStats(); };
+
+// ── Stats ──
+async function loadStats(){
+  const period = document.getElementById('chartPeriod').value;
+  const days   = document.getElementById('chartDays').value;
+  try {
+    const r = await fetch(`/api/admin/stats?key=${ADMIN_KEY}&period=${period}&days=${days}`);
+    const j = await r.json(); if(!j.ok) return;
+    const s = j.summary || {};
+
+    document.getElementById('sTotalScrapes').textContent = (s.total_scrapes  || 0).toLocaleString();
+    document.getElementById('sUniqueUsers') .textContent = (s.unique_users   || 0).toLocaleString();
+    document.getElementById('sTotalResults').textContent = (s.total_results  || 0).toLocaleString();
+    document.getElementById('sAvgDuration') .textContent = (s.avg_duration   || 0).toFixed(1);
+    document.getElementById('sUniqueKw')    .textContent = (s.unique_keywords|| 0).toLocaleString();
+
+    renderChart(j.usage || []);
+    computeComparisons(j.usage || []);
+
+    const tp = j.top_platforms || [];
+    document.getElementById('topPlatforms').innerHTML =
+      tp.slice(0,5).map(p =>
+        `<div class="top-item"><span class="top-name">${esc(p.platform)}</span><span class="top-count">${p.count}</span></div>`
+      ).join('') || '<span style="font-size:.8rem;color:var(--t3)">Belum ada data</span>';
+
+    const tk = j.top_keywords || [];
+    document.getElementById('topKeywords').innerHTML =
+      tk.slice(0,8).map(k =>
+        `<div class="top-item"><span class="top-name">${esc(k.keyword)}</span><span class="top-count">${k.count}</span></div>`
+      ).join('') || '<span style="font-size:.8rem;color:var(--t3)">Belum ada data</span>';
+
+  } catch(e){ console.error(e) }
+}
+
+function renderChart(usage){
+  const ctx    = document.getElementById('usageChart').getContext('2d');
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const gridC  = isDark ? 'rgba(148,163,184,.1)' : 'rgba(0,0,0,.05)';
+  const textC  = isDark ? '#94a3b8' : '#64748b';
+  if(usageChart) usageChart.destroy();
+  usageChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: usage.map(u => u.period),
+      datasets: [
+        {
+          label: 'Requests',
+          data: usage.map(u => u.total_requests),
+          borderColor: '#6366f1',
+          backgroundColor: isDark ? 'rgba(99,102,241,.12)' : 'rgba(99,102,241,.07)',
+          fill: true, tension: .38, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2
+        },
+        {
+          label: 'Unique Users',
+          data: usage.map(u => u.unique_users),
+          borderColor: '#10b981',
+          backgroundColor: isDark ? 'rgba(16,185,129,.1)' : 'rgba(16,185,129,.06)',
+          fill: true, tension: .38, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: {
+          labels: { color: textC, font: { size: 12, family: 'Inter' }, usePointStyle: true, pointStyleWidth: 8 }
+        }
+      },
+      scales: {
+        x: { grid: { color: gridC }, ticks: { color: textC, font: { size: 11 }, maxRotation: 45 }, border: { display: false } },
+        y: { grid: { color: gridC }, ticks: { color: textC, font: { size: 11 } }, beginAtZero: true, border: { display: false } }
+      }
+    }
+  });
+}
+
+function computeComparisons(usage){
+  if(!usage.length){ ['compWoW','compMoM','compQoQ','compYoY'].forEach(id => setComp(id, null)); return }
+  const total = usage.map(u => u.total_requests), n = total.length;
+  function calcChange(a, b){
+    const ca = a.reduce((x,y)=>x+y,0), cb = b.reduce((x,y)=>x+y,0);
+    return cb === 0 ? (ca > 0 ? 100 : 0) : (ca - cb) / cb * 100;
+  }
+  setComp('compWoW', n >= 14  ? calcChange(total.slice(-7),   total.slice(-14,-7))  : null);
+  setComp('compMoM', n >= 60  ? calcChange(total.slice(-30),  total.slice(-60,-30)) : null);
+  setComp('compQoQ', n >= 180 ? calcChange(total.slice(-90),  total.slice(-180,-90)): null);
+  setComp('compYoY', n >= 365 ? calcChange(total.slice(-182), total.slice(0,183))   : null);
+}
+
+function setComp(id, val){
+  const el = document.getElementById(id);
+  if(val === null){ el.textContent = '—'; el.className = 'cmp-val cmp-neutral'; return }
+  el.textContent = (val > 0 ? '+' : '') + val.toFixed(1) + '%';
+  el.className   = 'cmp-val ' + (val > 0 ? 'cmp-up' : val < 0 ? 'cmp-down' : 'cmp-neutral');
+}
+
+// ── Logs ──
+async function loadLogs(){
+  const action = document.getElementById('logAction').value;
+  const from   = document.getElementById('logFrom').value;
+  const to     = document.getElementById('logTo').value;
+  let url = `/api/admin/logs?key=${ADMIN_KEY}&limit=200`;
+  if(action) url += '&action=' + action;
+  if(from)   url += '&date_from=' + from;
+  if(to)     url += '&date_to=' + to;
+  try {
+    const r = await fetch(url), j = await r.json(); if(!j.ok) return;
+    const logs = j.logs || [];
+
+    const todayStr  = new Date().toDateString();
+    const todayCount = logs.filter(l => new Date(l.created_at).toDateString() === todayStr).length;
+    document.getElementById('sToday').textContent = todayCount;
+
+    const badgeCls = {
+      scrape: 'act-scrape', image_scrape: 'act-image_scrape',
+      image_search: 'act-image_search', image_upload: 'act-image_upload'
+    };
+    document.getElementById('logsBody').innerHTML = logs.map((l, i) => `
+      <tr>
+        <td style="color:var(--t3);font-size:.75rem">${i+1}</td>
+        <td style="white-space:nowrap;font-size:.77rem;color:var(--t2);font-family:monospace">${esc(l.created_at)}</td>
+        <td><span class="act-badge ${badgeCls[l.action]||'act-scrape'}">${esc(l.action)}</span></td>
+        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(l.keyword)}">${esc(l.keyword)}</td>
+        <td style="white-space:nowrap">${esc(l.platform)}</td>
+        <td>${esc(l.location)}</td>
+        <td style="font-weight:700;color:var(--accent)">${esc(l.results_count)}</td>
+        <td style="white-space:nowrap">${esc((l.duration_seconds||0).toFixed(1))}s</td>
+        <td style="font-family:monospace;font-size:.77rem;white-space:nowrap">${esc(l.ip_address)}</td>
+        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t2);font-size:.76rem"
+            title="${esc(l.user_agent)}">${esc((l.user_agent||'').substring(0,30))}</td>
+      </tr>
+    `).join('');
+  } catch(e){ console.error(e) }
+}
+
+// ── Settings ──
+async function loadSettings(){
+  try {
+    const r = await fetch(`/api/admin/settings?key=${ADMIN_KEY}`);
+    const j = await r.json(); if(!j.ok) return;
+    const tw = j.config?.twitter || {};
+    document.getElementById('useTwikit').checked = !!tw.use_twikit;
+    const instances = tw.nitter_instances || ['https://nitter.privacydev.net','https://nitter.poast.org'];
+    document.getElementById('nitterInstances').value = instances.join('\n');
+  } catch(e){ console.error(e) }
+  loadEmailConfig();
+  checkInstagramStatus();
+  checkTwitterStatus();
+  loadPlatformStatus();
+}
+
+async function saveSettings(){
+  const use_twikit = document.getElementById('useTwikit').checked;
+  const nitter_instances = document.getElementById('nitterInstances').value
+    .split('\n').map(s => s.trim()).filter(Boolean);
+  const msg = document.getElementById('saveMsg');
+  try {
+    const r = await fetch(`/api/admin/settings?key=${ADMIN_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ twitter: { use_twikit, nitter_instances } })
+    });
+    const j = await r.json();
+    msg.style.display = 'inline-flex';
+    if(j.ok){
+      msg.className = 'save-msg ok';
+      msg.innerHTML = '<i class="bi bi-check-circle-fill"></i> Tersimpan!';
+    } else {
+      msg.className = 'save-msg err';
+      msg.innerHTML = '<i class="bi bi-x-circle-fill"></i> Gagal menyimpan';
+    }
+  } catch(e){
+    msg.style.display = 'inline-flex';
+    msg.className = 'save-msg err';
+    msg.innerHTML = '<i class="bi bi-x-circle-fill"></i> Error';
+  }
+  setTimeout(() => { msg.style.display = 'none'; }, 3000);
+}
+
+async function testNitter(){
+  const instances = document.getElementById('nitterInstances').value
+    .split('\n').map(s => s.trim()).filter(Boolean);
+  const statusEl = document.getElementById('nitterTestStatus');
+  statusEl.innerHTML = '<span class="nitter-badge nitter-wait"><i class="bi bi-hourglass-split"></i> Testing...</span>';
+  try {
+    const r = await fetch(`/api/admin/test-nitter?key=${ADMIN_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ instances })
+    });
+    const j = await r.json();
+    if(j.ok && j.results){
+      const working = j.results.filter(x => x.ok).length;
+      statusEl.innerHTML = working > 0
+        ? `<span class="nitter-badge nitter-ok"><i class="bi bi-wifi"></i> ${working}/${j.results.length} online</span>`
+        : `<span class="nitter-badge nitter-fail"><i class="bi bi-wifi-off"></i> Semua offline</span>`;
+    }
+  } catch(e){
+    statusEl.innerHTML = '<span class="nitter-badge nitter-fail"><i class="bi bi-wifi-off"></i> Test gagal</span>';
+  }
+}
+
+// ── Email Config ──
+function toggleEmailPw(){
+  const inp = document.getElementById('emailAppPw');
+  const icon = document.getElementById('emailEye');
+  if(inp.type === 'password'){ inp.type = 'text'; icon.className = 'bi bi-eye-slash'; }
+  else { inp.type = 'password'; icon.className = 'bi bi-eye'; }
+}
+
+async function loadEmailConfig(){
+  try {
+    const r = await fetch(`/api/admin/settings?key=${ADMIN_KEY}`);
+    const j = await r.json(); if(!j.ok) return;
+    const em = j.config?.email || {};
+    document.getElementById('emailUser').value = em.gmail_user || '';
+    document.getElementById('emailAppPw').value = em.gmail_app_password || '';
+    document.getElementById('emailRecipient').value = em.reset_recipient || 'alivenata@gmail.com';
+
+    const configured = !!(em.gmail_user && em.gmail_app_password);
+    document.getElementById('emailStatusBadge').innerHTML = configured
+      ? '<span class="nitter-badge nitter-ok"><i class="bi bi-check-circle-fill"></i> Configured</span>'
+      : '<span class="nitter-badge nitter-fail"><i class="bi bi-x-circle-fill"></i> Belum dikonfigurasi</span>';
+  } catch(e){}
+}
+
+async function saveEmailConfig(){
+  const btn = document.getElementById('emailSaveBtn');
+  const msg = document.getElementById('emailSaveMsg');
+  btn.disabled = true;
+  try {
+    const r = await fetch(`/api/admin/settings?key=${ADMIN_KEY}`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email: {
+        gmail_user:         document.getElementById('emailUser').value.trim(),
+        gmail_app_password: document.getElementById('emailAppPw').value.trim(),
+        reset_recipient:    document.getElementById('emailRecipient').value.trim(),
+      }})
+    });
+    const j = await r.json();
+    if(j.ok){
+      msg.style.color = '#22c55e'; msg.textContent = '✓ Tersimpan';
+      loadEmailConfig();
+    } else {
+      msg.style.color = '#ef4444'; msg.textContent = '✗ Gagal simpan';
+    }
+  } catch(e){ msg.style.color = '#ef4444'; msg.textContent = '✗ Error'; }
+  btn.disabled = false;
+  setTimeout(() => msg.textContent = '', 3000);
+}
+
+async function testEmail(){
+  const btn = document.getElementById('emailTestBtn');
+  const msg = document.getElementById('emailSaveMsg');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid var(--glass-b);border-top-color:var(--t1);border-radius:50%;animation:spin .7s linear infinite"></span> Mengirim...';
+  try {
+    const r = await fetch(`/api/admin/test-email?key=${ADMIN_KEY}`, { method: 'POST' });
+    const j = await r.json();
+    if(j.ok){
+      msg.style.color = '#22c55e';
+      msg.textContent = `✓ Email terkirim ke ${j.recipient}`;
+    } else {
+      msg.style.color = '#ef4444';
+      msg.textContent = '✗ ' + (j.error || 'Gagal');
+    }
+  } catch(e){ msg.style.color = '#ef4444'; msg.textContent = '✗ Network error'; }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="bi bi-send"></i> Test Kirim Email';
+  setTimeout(() => msg.textContent = '', 5000);
+}
+
+// ── Platform Status Table ──
+function _statusBadge(level, label){
+  const styles = {
+    ready:   'background:rgba(34,197,94,.1);color:#16a34a;border:1px solid rgba(34,197,94,.25)',
+    warn:    'background:rgba(245,158,11,.1);color:#d97706;border:1px solid rgba(245,158,11,.25)',
+    notready:'background:rgba(239,68,68,.1);color:#dc2626;border:1px solid rgba(239,68,68,.25)',
+    checking:'background:rgba(99,102,241,.08);color:var(--accent);border:1px solid rgba(99,102,241,.2)',
+  };
+  const icons = { ready:'✓', warn:'⚠', notready:'✗', checking:'…' };
+  return `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;${styles[level]}">${icons[level]} ${label}</span>`;
+}
+
+async function loadPlatformStatus(){
+  try {
+    const r = await fetch(`/api/admin/platform-status?key=${ADMIN_KEY}`);
+    const j = await r.json();
+    if(!j.ok) return;
+    const s = j.status;
+
+    const rows = [
+      { name:'Google News', method:'RSS Feed', methodColor:'#16a34a',
+        auth:'✓ Tidak perlu', authColor:'#16a34a',
+        status: _statusBadge('ready','Ready'),
+        note:'Selalu bisa, paling reliable' },
+      { name:'News Sites', method:'RSS Feed', methodColor:'#16a34a',
+        auth:'✓ Tidak perlu', authColor:'#16a34a',
+        status: _statusBadge('ready','Ready'),
+        note:'Bing RSS + 18 media Indonesia' },
+      { name:'Reddit', method:'JSON API', methodColor:'#16a34a',
+        auth:'✓ Tidak perlu', authColor:'#16a34a',
+        status: _statusBadge('ready','Ready'),
+        note:'Keyword English lebih banyak hasilnya' },
+      { name:'Kaskus', method:'HTML Scrape', methodColor:'#d97706',
+        auth:'✓ Tidak perlu', authColor:'#16a34a',
+        status: _statusBadge('warn','Limited'),
+        note:'Keyword Indonesia, kadang diblokir' },
+      { name:'X / Twitter', method: s.twitter ? 'twikit' : 'Nitter', methodColor: s.twitter ? '#16a34a' : '#d97706',
+        auth: s.twitter ? `✓ Login sebagai @${s.twitter_user||'?'}` : '⚠ Nitter (tanpa login)',
+        authColor: s.twitter ? '#16a34a' : '#d97706',
+        status: s.twitter ? _statusBadge('ready',`Ready (@${s.twitter_user||'twikit'})`) : _statusBadge('warn','Nitter (limited)'),
+        note: s.twitter ? 'twikit aktif, hasil lebih banyak & akurat' : 'Login ke X untuk hasil optimal. Nitter kadang down.' },
+      { name:'Quora', method:'Mobile + GraphQL', methodColor:'#d97706',
+        auth:'✓ Tidak perlu', authColor:'#16a34a',
+        status: _statusBadge('warn','Limited'),
+        note:'Mobile HTML + GraphQL API + Google fallback. Konten mayoritas Bahasa Inggris.' },
+      { name:'Instagram', method:'instaloader', methodColor: s.instagram ? '#16a34a' : '#dc2626',
+        auth: s.instagram ? '✓ Logged in' : '✗ Belum login', authColor: s.instagram ? '#16a34a' : '#ef4444',
+        status: s.instagram ? _statusBadge('ready', `Ready (@${s.instagram_user})`) : _statusBadge('notready','Not Ready — Login dulu'),
+        note: s.instagram ? `Session aktif sebagai @${s.instagram_user}` : 'Buka Settings → Instagram Login' },
+      { name:'Facebook', method:'mbasic + page scrape', methodColor: s.facebook_pkg ? '#d97706' : '#dc2626',
+        auth:'✓ Tidak perlu (public)', authColor:'#16a34a',
+        status: s.facebook_pkg ? _statusBadge('warn','Limited (no login)') : _statusBadge('warn','Limited — install pkg'),
+        note: s.facebook_pkg
+          ? 'mbasic search + scrape 18 news pages. Login = hasil lebih banyak.'
+          : 'Install dulu: <code class="i">pip install facebook-scraper</code>' },
+      { name:'Threads', method:'Internal API', methodColor:'#d97706',
+        auth:'✓ Tidak perlu', authColor:'#16a34a',
+        status: _statusBadge('warn','Limited'),
+        note:'GraphQL API + Google fallback. Hasil bervariasi tergantung respon server.' },
+    ];
+
+    document.getElementById('platformStatusBody').innerHTML = rows.map(row => `
+      <tr style="border-bottom:1px solid var(--glass-b)">
+        <td style="padding:9px 14px;font-weight:600;color:var(--t1)">${row.name}</td>
+        <td style="padding:9px 14px"><span style="background:rgba(99,102,241,.08);color:${row.methodColor};padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:600">${row.method}</span></td>
+        <td style="padding:9px 14px"><span style="color:${row.authColor};font-size:.82rem">${row.auth}</span></td>
+        <td style="padding:9px 14px">${row.status}</td>
+        <td style="padding:9px 14px;color:var(--t3);font-size:.8rem">${row.note}</td>
+      </tr>`).join('');
+  } catch(e) {
+    document.getElementById('platformStatusBody').innerHTML =
+      '<tr><td colspan="5" style="padding:14px;color:var(--t3)">Gagal memuat status</td></tr>';
+  }
+}
+
+// ── Twitter / twikit ──
+function toggleTwPw(){
+  const inp = document.getElementById('twPass');
+  const icon = document.getElementById('twEye');
+  if(inp.type === 'password'){ inp.type = 'text'; icon.className = 'bi bi-eye-slash'; }
+  else { inp.type = 'password'; icon.className = 'bi bi-eye'; }
+}
+
+function twSwitchTab(method){
+  const isCookie = method === 'cookie';
+  document.getElementById('twTabCookie').classList.toggle('active', isCookie);
+  document.getElementById('twTabPassword').classList.toggle('active', !isCookie);
+  document.getElementById('twMethodCookie').style.display   = isCookie ? '' : 'none';
+  document.getElementById('twMethodPassword').style.display = isCookie ? 'none' : '';
+}
+
+function onTwikitToggle(){
+  const on = document.getElementById('useTwikit').checked;
+  const sec = document.getElementById('twLoginSection');
+  const loggedIn = document.getElementById('twLoggedIn').style.display !== 'none';
+  sec.style.display = (on && !loggedIn) ? '' : 'none';
+}
+
+async function checkTwitterStatus(){
+  try {
+    const r = await fetch(`/api/admin/twitter-status?key=${ADMIN_KEY}`);
+    const j = await r.json();
+    const loggedIn = j.ok && j.logged_in;
+    document.getElementById('twLoggedIn').style.display  = loggedIn ? '' : 'none';
+    // Show login section if twikit toggle is ON but not logged in
+    const twikitOn = document.getElementById('useTwikit').checked;
+    document.getElementById('twLoginSection').style.display = (twikitOn && !loggedIn) ? '' : 'none';
+    if(loggedIn){
+      document.getElementById('twUsername').textContent = '@' + j.username;
+      document.getElementById('twStatusBadge').innerHTML =
+        '<span class="nitter-badge nitter-ok"><i class="bi bi-check-circle-fill"></i> twikit aktif</span>';
+    } else {
+      document.getElementById('twStatusBadge').innerHTML =
+        '<span class="nitter-badge nitter-wait"><i class="bi bi-broadcast"></i> Nitter mode</span>';
+    }
+  } catch(e){}
+}
+
+async function loginTwitter(){
+  const btn = document.getElementById('twLoginBtn');
+  const msg = document.getElementById('twLoginMsg');
+  const useCookie = document.getElementById('twTabCookie').classList.contains('active');
+
+  let payload;
+  if(useCookie){
+    const user      = document.getElementById('twCookieUser').value.trim();
+    const authToken = document.getElementById('twAuthToken').value.trim();
+    const ct0       = document.getElementById('twCt0').value.trim();
+    if(!user || !authToken || !ct0){ alert('Isi Username, auth_token, dan ct0 dulu!'); return; }
+    payload = { method: 'cookie', username: user, auth_token: authToken, ct0: ct0 };
+  } else {
+    const user  = document.getElementById('twUser').value.trim();
+    const email = document.getElementById('twEmail').value.trim();
+    const pass  = document.getElementById('twPass').value;
+    if(!user || !pass){ alert('Isi username/email dan password dulu!'); return; }
+    payload = { method: 'password', username: user, email: email, password: pass };
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></span> Memproses...';
+  msg.style.color = 'var(--t2)';
+  msg.textContent = useCookie ? 'Memverifikasi token...' : 'Menghubungi X/Twitter... (10-30 detik)';
+
+  try {
+    const r = await fetch(`/api/admin/login-twitter?key=${ADMIN_KEY}`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+    if(j.ok){
+      msg.style.color = '#22c55e'; msg.textContent = '✓ ' + j.message;
+      // Clear sensitive fields
+      if(useCookie){ document.getElementById('twAuthToken').value = ''; document.getElementById('twCt0').value = ''; }
+      else { document.getElementById('twPass').value = ''; }
+      setTimeout(() => { checkTwitterStatus(); loadPlatformStatus(); }, 800);
+    } else {
+      msg.style.color = '#ef4444'; msg.textContent = '✗ ' + (j.error || 'Login gagal');
+    }
+  } catch(e){
+    msg.style.color = '#ef4444'; msg.textContent = '✗ Network error';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Login & Simpan Cookies';
+}
+
+async function logoutTwitter(){
+  if(!confirm('Hapus session Twitter/X?')) return;
+  await fetch(`/api/admin/logout-twitter?key=${ADMIN_KEY}`, { method: 'POST' });
+  checkTwitterStatus();
+  loadPlatformStatus();
+}
+
+// ── Instagram Login Tab Switch ──
+function igSwitchTab(method){
+  const isSession = method === 'session';
+  document.getElementById('igTabSession').classList.toggle('active', isSession);
+  document.getElementById('igTabPassword').classList.toggle('active', !isSession);
+  document.getElementById('igMethodSession').style.display  = isSession ? '' : 'none';
+  document.getElementById('igMethodPassword').style.display = isSession ? 'none' : '';
+}
+
+// ── Instagram Login ──
+async function checkInstagramStatus(){
+  try {
+    const r = await fetch(`/api/admin/instagram-status?key=${ADMIN_KEY}`);
+    const j = await r.json();
+    const loggedIn = j.ok && j.logged_in;
+    document.getElementById('igLoggedIn').style.display  = loggedIn ? '' : 'none';
+    document.getElementById('igLoginForm').style.display = loggedIn ? 'none' : '';
+    if(loggedIn){
+      document.getElementById('igUsername').textContent = '@' + j.username;
+      document.getElementById('igStatusBadge').innerHTML =
+        '<span class="nitter-badge nitter-ok"><i class="bi bi-check-circle-fill"></i> Logged in</span>';
+    } else {
+      document.getElementById('igStatusBadge').innerHTML =
+        '<span class="nitter-badge nitter-fail"><i class="bi bi-x-circle-fill"></i> Belum login</span>';
+    }
+  } catch(e){}
+}
+
+async function loginInstagram(){
+  const btn = document.getElementById('igLoginBtn');
+  const msg = document.getElementById('igLoginMsg');
+
+  // Determine active tab
+  const useSession = document.getElementById('igTabSession').classList.contains('active');
+
+  let payload;
+  if(useSession){
+    const user      = document.getElementById('igUserSess').value.trim();
+    const sessionId = document.getElementById('igSessionId').value.trim();
+    if(!user || !sessionId){ alert('Isi Username dan Session ID dulu!'); return; }
+    payload = { username: user, session_id: sessionId };
+  } else {
+    const user = document.getElementById('igUser').value.trim();
+    const pass = document.getElementById('igPass').value;
+    if(!user || !pass){ alert('Isi username dan password dulu!'); return; }
+    payload = { username: user, password: pass };
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></span> Login...';
+  msg.style.color = 'var(--t2)'; msg.textContent = 'Menghubungi Instagram...';
+
+  try {
+    const r = await fetch(`/api/admin/login-instagram?key=${ADMIN_KEY}`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+    if(j.ok){
+      msg.style.color = '#22c55e'; msg.textContent = '✓ ' + j.message;
+      // Clear sensitive fields
+      if(useSession) document.getElementById('igSessionId').value = '';
+      else document.getElementById('igPass').value = '';
+      setTimeout(() => { checkInstagramStatus(); loadPlatformStatus(); }, 800);
+    } else if(j.checkpoint){
+      msg.style.color = '#f59e0b';
+      msg.textContent = '⚠ ' + j.error;
+    } else {
+      msg.style.color = '#ef4444'; msg.textContent = '✗ ' + (j.error||'Login gagal');
+    }
+  } catch(e){
+    msg.style.color = '#ef4444'; msg.textContent = '✗ Network error';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Login';
+}
+
+async function logoutInstagram(){
+  if(!confirm('Logout dari Instagram?')) return;
+  await fetch(`/api/admin/logout-instagram?key=${ADMIN_KEY}`, { method: 'POST' });
+  checkInstagramStatus();
+}
+
+// ── Package Manager ──
+async function pipInstall(pkg){
+  pkg = pkg || document.getElementById('pipPkg').value.trim();
+  if(!pkg) return;
+  const btn = document.getElementById('pipBtn');
+  const out = document.getElementById('pipOutput');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></span> Installing...';
+  out.style.display = '';
+  out.textContent = `$ pip install ${pkg}\n\nMenginstall, harap tunggu...\n`;
+  try {
+    const r = await fetch(`/api/admin/pip-install?key=${ADMIN_KEY}`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ package: pkg })
+    });
+    const j = await r.json();
+    out.textContent = `$ pip install ${pkg}\n\n` + (j.stdout || '') + (j.stderr ? '\n[stderr]\n' + j.stderr : '');
+    out.scrollTop = out.scrollHeight;
+    if(j.ok){
+      out.style.borderColor = 'rgba(34,197,94,.35)';
+    } else {
+      out.style.borderColor = 'rgba(239,68,68,.35)';
+    }
+  } catch(e){
+    out.textContent += '\nError: ' + e.message;
+    out.style.borderColor = 'rgba(239,68,68,.35)';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="bi bi-download"></i> Install';
+}
+
+function quickInstall(pkg){
+  document.getElementById('pipPkg').value = pkg;
+  pipInstall(pkg);
+}
+
+// ── Scraper Diagnostics ──
+async function runDiag(){
+  const platform = document.getElementById('diagPlatform').value;
+  const keyword  = document.getElementById('diagKeyword').value.trim() || 'indonesia';
+  const btn      = document.getElementById('diagBtn');
+  const resEl    = document.getElementById('diagResult');
+  const logEl    = document.getElementById('diagLog');
+  const sampleEl = document.getElementById('diagSample');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></span> Testing...';
+  resEl.style.display = '';
+  logEl.textContent = `Testing [${platform}] keyword="${keyword}"...\n`;
+  sampleEl.innerHTML = '';
+
+  try {
+    const r = await fetch(`/api/admin/test-scraper?key=${ADMIN_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ platform, keyword })
+    });
+    const j = await r.json();
+
+    // Show log
+    const logLines = (j.log || []).join('\n');
+    logEl.textContent = logLines || '(no log)';
+    logEl.scrollTop = logEl.scrollHeight;
+
+    // Show result summary
+    if(j.ok){
+      const countColor = j.count > 0 ? '#22c55e' : '#ef4444';
+      sampleEl.innerHTML = `<div style="margin-bottom:8px;font-weight:700;color:${countColor}">
+        ${j.count > 0 ? '✓' : '✗'} ${j.count} hasil ditemukan</div>`;
+      if(j.sample && j.sample.length){
+        sampleEl.innerHTML += j.sample.map(s =>
+          `<div style="padding:7px 0;border-bottom:1px solid var(--glass-b)">
+            <div style="font-weight:600;font-size:.82rem;color:var(--t1)">${esc(s.title)}</div>
+            <div style="font-size:.76rem;color:var(--t3);margin-top:2px">
+              <a href="${esc(s.url)}" target="_blank" style="color:var(--accent)">${esc((s.url||'').substring(0,60))}${(s.url||'').length>60?'…':''}</a>
+            </div>
+          </div>`
+        ).join('');
+      }
+    } else {
+      sampleEl.innerHTML = `<div style="color:#ef4444;font-weight:600">✗ Error: ${esc(j.error||'Unknown error')}</div>`;
+    }
+  } catch(e){
+    logEl.textContent += '\nRequest failed: ' + e.message;
+    sampleEl.innerHTML = `<div style="color:#ef4444">✗ Network error</div>`;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="bi bi-play-fill"></i> Test';
+}
+
+loadStats();
+</script>
+{% endblock %}

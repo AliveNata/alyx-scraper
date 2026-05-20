@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Login — Alyx Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+body{display:flex;flex-direction:column;min-height:100vh}
+.login-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px}
+
+.login-card{
+  width:100%;max-width:380px;
+  background:var(--glass);
+  border:1px solid var(--glass-b);
+  border-radius:20px;
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  padding:40px 36px;
+  box-shadow:0 20px 60px rgba(99,102,241,.1);
+}
+[data-theme="dark"] .login-card{box-shadow:0 24px 60px rgba(0,0,0,.5)}
+
+.login-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.login-logo-icon{
+  width:44px;height:44px;border-radius:12px;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;color:#fff;box-shadow:0 4px 16px rgba(99,102,241,.4);
+}
+.login-logo-text{font-size:1.3rem;font-weight:800;color:var(--accent)}
+[data-theme="dark"] .login-logo-text{
+  background:linear-gradient(135deg,#fff 0%,#a78bfa 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+
+.login-sub{text-align:center;font-size:.83rem;color:var(--t3);margin-bottom:32px}
+
+.login-group{margin-bottom:18px}
+.login-label{display:block;font-size:.72rem;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px}
+.login-input-wrap{position:relative}
+.login-input{
+  width:100%;padding:11px 42px 11px 14px;
+  background:var(--glass);border:1px solid var(--glass-b);
+  border-radius:10px;color:var(--t1);font-size:.92rem;font-family:inherit;outline:none;
+  transition:all .2s;
+}
+[data-theme="light"] .login-input{background:rgba(255,255,255,.9)}
+.login-input::placeholder{color:var(--t3)}
+.login-input:focus{border-color:rgba(99,102,241,.5);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+[data-theme="dark"] .login-input:focus{background:rgba(99,102,241,.07)}
+
+.eye-btn{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:var(--t3);cursor:pointer;font-size:1rem;
+  display:flex;align-items:center;transition:color .2s;padding:0;
+}
+.eye-btn:hover{color:var(--t2)}
+
+.error-box{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;border-radius:10px;
+  background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);
+  color:#dc2626;font-size:.84rem;margin-bottom:18px;
+}
+[data-theme="dark"] .error-box{background:rgba(239,68,68,.12);color:#fca5a5;border-color:rgba(239,68,68,.35)}
+
+.btn-submit{
+  width:100%;padding:12px;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  color:#fff;border:none;border-radius:10px;
+  font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .2s;box-shadow:0 4px 16px rgba(99,102,241,.35);
+}
+.btn-submit:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(99,102,241,.45)}
+.btn-submit:active{transform:translateY(0)}
+
+.login-footer{text-align:center;margin-top:24px;font-size:.77rem;color:var(--t3)}
+.login-footer a{color:var(--accent);text-decoration:none;transition:opacity .2s}
+.login-footer a:hover{opacity:.8}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon"><i class="bi bi-layers-fill"></i></div>
+      <span class="login-logo-text">Alyx</span>
+    </div>
+    <p class="login-sub" data-i18n="login_sub">Admin Dashboard — masukkan password untuk lanjut</p>
+
+    {% if error %}
+    <div class="error-box">
+      <i class="bi bi-exclamation-circle-fill"></i>
+      {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST" action="/alyx-control-panel/login">
+      <div class="login-group">
+        <label class="login-label" for="password" data-i18n="login_pw_label">Password</label>
+        <div class="login-input-wrap">
+          <input class="login-input" type="password" id="password" name="password"
+            data-i18n-ph="login_pw_ph" placeholder="Masukkan password"
+            autocomplete="current-password" required>
+          <button type="button" class="eye-btn" onclick="togglePw()">
+            <i class="bi bi-eye" id="eyeIcon"></i>
+          </button>
+        </div>
+      </div>
+      <button class="btn-submit" type="submit">
+        <i class="bi bi-shield-lock-fill"></i> <span data-i18n="login_btn">Masuk</span>
+      </button>
+    </form>
+
+    <div style="text-align:center;margin-top:16px">
+      <button type="button" onclick="sendForgotPassword()"
+        style="background:none;border:none;color:var(--accent);font-size:.82rem;cursor:pointer;font-family:inherit;padding:0;transition:opacity .2s"
+        onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'"
+        data-i18n="login_forgot">Lupa Password?</button>
+    </div>
+
+    <p class="login-footer">
+      <a href="/"><i class="bi bi-arrow-left"></i> <span data-i18n="login_back">Kembali ke Alyx</span></a>
+    </p>
+  </div>
+</div>
+
+<!-- Forgot Password Toast -->
+<div id="fpToast" style="
+  display:none;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-b);
+  border-radius:14px;padding:14px 20px;box-shadow:0 8px 32px rgba(0,0,0,.15);
+  max-width:360px;width:90%;z-index:9999;animation:fpIn .28s ease">
+  <div style="display:flex;align-items:flex-start;gap:12px">
+    <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);
+      display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;font-size:1rem">
+      <i class="bi bi-envelope-check-fill"></i>
+    </div>
+    <div>
+      <div style="font-weight:600;font-size:.88rem;color:var(--t1);margin-bottom:3px" data-i18n="fp_title">Email Terkirim!</div>
+      <div style="font-size:.79rem;color:var(--t2)" id="fpMsg">Link reset password telah dikirim ke alivenata@gmail.com</div>
+    </div>
+    <button onclick="document.getElementById('fpToast').style.display='none'"
+      style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:.9rem;padding:0;margin-left:auto;flex-shrink:0">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+</div>
+<style>@keyframes fpIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.PAGE_L = {
+  id:{
+    login_sub:'Admin Dashboard — masukkan password untuk lanjut',
+    login_pw_label:'Password', login_pw_ph:'Masukkan password',
+    login_btn:'Masuk', login_back:'Kembali ke Alyx',
+    login_forgot:'Lupa Password?',
+    fp_title:'Email Terkirim!',
+  },
+  en:{
+    login_sub:'Admin Dashboard — enter password to continue',
+    login_pw_label:'Password', login_pw_ph:'Enter password',
+    login_btn:'Sign In', login_back:'Back to Alyx',
+    login_forgot:'Forgot Password?',
+    fp_title:'Email Sent!',
+  }
+};
+
+async function sendForgotPassword(){
+  const toast  = document.getElementById('fpToast');
+  const msgEl  = document.getElementById('fpMsg');
+  const lang   = typeof currentLang !== 'undefined' ? currentLang : 'id';
+  const titleEl = toast.querySelector('[data-i18n="fp_title"]');
+
+  // Show loading state
+  if(titleEl) titleEl.textContent = lang === 'id' ? 'Mengirim...' : 'Sending...';
+  msgEl.textContent = lang === 'id' ? 'Mohon tunggu sebentar...' : 'Please wait...';
+  toast.style.display = '';
+
+  try {
+    const r = await fetch('/api/forgot-password', { method: 'POST' });
+    const j = await r.json();
+    if(j.ok){
+      if(titleEl) titleEl.textContent = lang === 'id' ? 'Email Terkirim! ✓' : 'Email Sent! ✓';
+      msgEl.textContent = lang === 'id'
+        ? `Link reset password telah dikirim ke ${j.recipient}`
+        : `Password reset link has been sent to ${j.recipient}`;
+      toast.style.borderColor = 'rgba(34,197,94,.4)';
+    } else {
+      if(titleEl) titleEl.textContent = lang === 'id' ? 'Gagal Mengirim' : 'Failed to Send';
+      const notConfigured = j.error && j.error.includes('belum dikonfigurasi');
+      msgEl.innerHTML = notConfigured
+        ? (lang === 'id'
+            ? 'Email belum dikonfigurasi. <a href="/alyx-control-panel/dashboard" style="color:#6366f1">Buka Admin → Settings → Email Config</a>'
+            : 'Email not configured. <a href="/alyx-control-panel/dashboard" style="color:#6366f1">Open Admin → Settings → Email Config</a>')
+        : (j.error || 'Terjadi kesalahan');
+      toast.style.borderColor = 'rgba(239,68,68,.4)';
+    }
+  } catch(e) {
+    if(titleEl) titleEl.textContent = 'Error';
+    msgEl.textContent = 'Network error — pastikan server berjalan.';
+    toast.style.borderColor = 'rgba(239,68,68,.4)';
+  }
+
+  // Auto-hide after 8 seconds
+  setTimeout(() => {
+    toast.style.display = 'none';
+    toast.style.borderColor = '';
+    if(titleEl) titleEl.textContent = lang === 'id' ? 'Email Terkirim!' : 'Email Sent!';
+  }, 8000);
+}
+
+function togglePw(){
+  const inp=document.getElementById('password'),icon=document.getElementById('eyeIcon');
+  if(inp.type==='password'){inp.type='text';icon.className='bi bi-eye-slash'}
+  else{inp.type='password';icon.className='bi bi-eye'}
+}
+</script>
+{% endblock %}

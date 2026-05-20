@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}Alyx Docs{% endblock %}
+
+{% block extra_head %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body{background:transparent!important;color:var(--t1)!important;font-family:'Inter',system-ui,sans-serif!important}
+
+/* Doc vars that map to base.html theme vars */
+.sidebar{position:sticky;top:80px}
+.sidebar a{display:block;padding:6px 12px;color:var(--t2);text-decoration:none;font-size:.88rem;border-left:2px solid transparent;border-radius:0 6px 6px 0;transition:all .15s}
+.sidebar a:hover,.sidebar a.active{color:var(--accent);border-left-color:var(--accent);background:rgba(99,102,241,.06)}
+.sidebar .sidebar-title{font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);padding:6px 12px;margin-top:16px}
+
+.doc-section{padding-top:24px;margin-bottom:32px}
+.doc-section h2{font-size:1.4rem;font-weight:700;color:var(--t1);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--glass-b)}
+.doc-section h3{font-size:1.1rem;font-weight:600;color:var(--t1);margin-top:20px;margin-bottom:8px}
+.doc-section p,.doc-section li{font-size:.92rem;line-height:1.7;color:var(--t1)}
+.doc-section code{background:var(--glass);border:1px solid var(--glass-b);padding:2px 6px;border-radius:4px;font-size:.84rem;color:var(--accent)}
+
+.platform-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.platform-item{
+  background:var(--glass);border:1px solid var(--glass-b);border-radius:10px;padding:16px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+[data-theme="dark"] .platform-item{box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.platform-item h5{font-size:.95rem;font-weight:600;margin-bottom:4px;color:var(--t1)}
+.platform-item p{font-size:.82rem;color:var(--t2);margin-bottom:0}
+
+.changelog-item{
+  background:var(--glass);border:1px solid var(--glass-b);border-radius:10px;padding:16px;margin-bottom:12px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.changelog-item .cl-version{font-weight:700;color:var(--accent);font-size:1rem}
+.changelog-item .cl-date{font-size:.8rem;color:var(--t3)}
+.changelog-item ul{margin-bottom:0;padding-left:20px}
+.changelog-item li{font-size:.88rem;margin-bottom:4px;color:var(--t1)}
+
+.badge-new{background:#22c55e;color:#fff;font-size:.68rem;padding:2px 6px;border-radius:4px;font-weight:600}
+.badge-fix{background:#f59e0b;color:#fff;font-size:.68rem;padding:2px 6px;border-radius:4px;font-weight:600}
+.badge-improve{background:#3b82f6;color:#fff;font-size:.68rem;padding:2px 6px;border-radius:4px;font-weight:600}
+
+hr{border-color:var(--glass-b)!important}
+</style>
+{% endblock %}
+
+{% block nav_tabs %}
+<ul class="alyx-nav-tabs">
+  <li><a href="/" class="alyx-nav-tab">Scraper</a></li>
+  <li><a href="/docs" class="alyx-nav-tab active">Docs</a></li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+<div class="row">
+
+  <!-- Sidebar -->
+  <div class="col-md-3 d-none d-md-block">
+    <div class="sidebar">
+      <div class="sidebar-title">Docs</div>
+      <a href="#overview" class="active">Overview</a>
+      <a href="#platforms">Platform</a>
+
+      <div class="sidebar-title">Fitur</div>
+      <a href="#image-scraper">Image Scraper</a>
+      <a href="#export">Export</a>
+
+      <div class="sidebar-title">Changelog</div>
+      <a href="#changelog">Changelog</a>
+      <a href="#new-features">Fitur Baru</a>
+
+      <div class="sidebar-title">Repo</div>
+      <a href="https://github.com/d60/twikit" target="_blank">twikit</a>
+      <a href="https://github.com/kevinzg/facebook-scraper" target="_blank">facebook-scraper</a>
+      <a href="https://github.com/adrian-dip/quora-scraper" target="_blank">quora-scraper</a>
+      <a href="https://github.com/Zeeshanahmad4/Threads-Scraper" target="_blank">Threads-Scraper</a>
+      <a href="https://github.com/mahdidevlp/image-scraper" target="_blank">image-scraper</a>
+
+      <div class="mt-4">
+        <a href="https://saweria.co/alivyx" target="_blank" class="btn btn-sm w-100"><i class="bi bi-cup-hot-fill"></i> Dukungan Saweria</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="col-md-9">
+
+    <!-- Overview -->
+    <div class="doc-section" id="overview">
+      <h2><i class="bi bi-book"></i> Overview</h2>
+      <p><strong>Alyx Scraper</strong> adalah multi-platform web scraper yang memungkinkan Anda mengumpulkan data dari berbagai sumber secara langsung (direct scraping). Dibangun dengan Flask backend dan modern responsive UI.</p>
+      <h3>Fitur Utama</h3>
+      <ul>
+        <li><strong>Direct Scraping</strong> - Scrape langsung dari platform tanpa perantara API pihak ketiga</li>
+        <li><strong>9 Platform</strong> - Google News, News Sites, Reddit, Kaskus, X/Twitter, Facebook, Threads, Quora, Instagram</li>
+        <li><strong>Image Scraper</strong> - Cari gambar, scrape dari URL, upload untuk mencari gambar mirip</li>
+        <li><strong>Export</strong> - Download hasil dalam format CSV, JSON, atau XLSX</li>
+        <li><strong>Bilingual</strong> - Bahasa Indonesia dan English</li>
+        <li><strong>Light/Dark Theme</strong> - Theme toggle dengan light sebagai default</li>
+        <li><strong>Admin Dashboard</strong> - Monitoring penggunaan dan audit log (tersembunyi)</li>
+      </ul>
+      <h3>Tech Stack</h3>
+      <ul>
+        <li><code>Flask</code> - Python web framework</li>
+        <li><code>BeautifulSoup4</code> - HTML/XML parsing</li>
+        <li><code>Requests</code> - HTTP library</li>
+        <li><code>Pandas</code> - Data manipulation &amp; export</li>
+        <li><code>SQLite</code> - Audit logging database</li>
+        <li><code>Chart.js</code> - Admin dashboard charts</li>
+        <li><code>Bootstrap 5</code> - UI framework</li>
+      </ul>
+    </div>
+
+    <!-- Platforms -->
+    <div class="doc-section" id="platforms">
+      <h2><i class="bi bi-grid"></i> Platform</h2>
+      <p>Alyx mendukung scraping langsung dari 9 platform berikut:</p>
+      <div class="platform-grid">
+        <div class="platform-item">
+          <h5><i class="bi bi-newspaper text-primary"></i> Google News</h5>
+          <p>Scrape berita terbaru via Google News RSS feed. Mendukung pencarian berdasarkan keyword dan lokasi.</p>
+        </div>
+        <div class="platform-item">
+          <h5><i class="bi bi-globe text-success"></i> News Sites</h5>
+          <p>Scrape dari portal berita worldwide termasuk Indonesia (Detik, Kompas, Liputan6, CNN, BBC, Reuters).</p>
+        </div>
+        <div class="platform-item">
+          <h5><i class="bi bi-reddit text-danger"></i> Reddit</h5>
+          <p>Direct scraping via Reddit JSON API. Mengambil post, subreddit, dan content secara langsung.</p>
+        </div>
+        <div class="platform-item">
+          <h5><i class="bi bi-chat-dots text-info"></i> Kaskus</h5>
+          <p>Scrape langsung dari Kaskus.co.id - forum terbesar di Indonesia. Cari thread dan diskusi.</p>
+        </div>
+        <div class="platform-item">
+          <h5><i class="bi bi-twitter-x"></i> X / Twitter</h5>
+          <p>Scraping via Nitter instances atau library <code>twikit</code>. Mendukung pencarian tweet terbaru.</p>
+        </div>
+        <div class="platform-item">
+          <h5><i class="bi bi-facebook text-primary"></i> Facebook</h5>
+          <p>Direct scraping menggunakan <code>facebook-scraper</code> library. Scrape post dari halaman publik.</p>
+        </div>
+        <div class="platform-item">
+          <h5><i class="bi bi-at"></i> Threads</h5>
+          <p>Scrape konten dari Threads (Meta). Mengambil post dan diskusi berdasarkan keyword.</p>
+        </div>
+        <div class="platform-item">
+          <h5><i class="bi bi-question-circle text-warning"></i> Quora</h5>
+          <p>Scrape pertanyaan dan jawaban dari Quora. Cocok untuk riset topik dan Q&amp;A.</p>
+        </div>
+        <div class="platform-item">
+          <h5><i class="bi bi-instagram text-danger"></i> Instagram</h5>
+          <p>Scrape post publik dari Instagram berdasarkan keyword pencarian.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Image Scraper -->
+    <div class="doc-section" id="image-scraper">
+      <h2><i class="bi bi-images"></i> Image Scraper</h2>
+      <p>Fitur Image Scraper memungkinkan Anda mencari dan mengumpulkan gambar dari web dengan 3 cara:</p>
+      <h3>1. Pencarian Gambar</h3>
+      <p>Masukkan kata kunci untuk mencari gambar dari web. Hasil akan ditampilkan dalam grid yang bisa diklik untuk melihat detail dan mencari gambar yang mirip.</p>
+      <h3>2. Scrape dari URL</h3>
+      <p>Masukkan URL halaman web untuk mengekstrak semua gambar yang ada di halaman tersebut. Mendukung tag <code>&lt;img&gt;</code>, <code>og:image</code>, dan <code>data-src</code> (lazy loading).</p>
+      <h3>3. Upload &amp; Cari Mirip</h3>
+      <p>Upload gambar dari komputer Anda (JPG, PNG, GIF, WebP) untuk mencari gambar yang mirip atau terkait. Mendukung drag &amp; drop.</p>
+      <h3>Fitur Tambahan</h3>
+      <ul>
+        <li><strong>Related Image Search</strong> - Klik gambar hasil, lalu klik "Cari Mirip" untuk mencari gambar serupa</li>
+        <li><strong>Grid View</strong> - Tampilan grid responsif dengan preview</li>
+        <li><strong>Modal Preview</strong> - Klik gambar untuk melihat ukuran penuh</li>
+      </ul>
+    </div>
+
+    <!-- Export -->
+    <div class="doc-section" id="export">
+      <h2><i class="bi bi-download"></i> Export</h2>
+      <p>Hasil scraping bisa di-download dalam 3 format:</p>
+      <ul>
+        <li><strong>CSV</strong> - Comma-separated values, cocok untuk spreadsheet dan analisis data</li>
+        <li><strong>JSON</strong> - JavaScript Object Notation, cocok untuk integrasi dengan aplikasi lain</li>
+        <li><strong>XLSX</strong> - Microsoft Excel format, cocok untuk laporan dan presentasi</li>
+      </ul>
+      <p>Setiap file export berisi kolom: Platform, Judul, Konten, URL, Tanggal, Sumber, Keyword, dan Lokasi.</p>
+    </div>
+
+    <!-- Changelog -->
+    <div class="doc-section" id="changelog">
+      <h2><i class="bi bi-clock-history"></i> Changelog</h2>
+
+      <div class="changelog-item">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="cl-version">v2.0.0</span>
+          <span class="cl-date">2 Mei 2026</span>
+        </div>
+        <ul>
+          <li><span class="badge-new">NEW</span> UI/UX revamp total dengan desain modern</li>
+          <li><span class="badge-new">NEW</span> Direct scraping: Reddit, Kaskus, X/Twitter, Facebook, Threads, Quora, Instagram</li>
+          <li><span class="badge-new">NEW</span> Image Scraper dengan pencarian, URL scraping, dan upload</li>
+          <li><span class="badge-new">NEW</span> Related image search - cari gambar mirip dari gambar yang dipilih</li>
+          <li><span class="badge-new">NEW</span> Admin dashboard tersembunyi dengan audit log</li>
+          <li><span class="badge-new">NEW</span> Chart.js grafik usage (line chart by date)</li>
+          <li><span class="badge-new">NEW</span> Comparison WoW, MoM, QoQ, YoY</li>
+          <li><span class="badge-new">NEW</span> Light/Dark theme toggle (light default)</li>
+          <li><span class="badge-new">NEW</span> Bilingual Indonesia/English dengan flag toggle</li>
+          <li><span class="badge-new">NEW</span> News Sites worldwide termasuk Indonesia</li>
+          <li><span class="badge-new">NEW</span> Halaman Docs dengan changelog dan fitur baru</li>
+          <li><span class="badge-new">NEW</span> Footer dengan link docs, repo, dan Saweria</li>
+          <li><span class="badge-improve">IMPROVE</span> Arsitektur backend direfactor ke modular</li>
+          <li><span class="badge-improve">IMPROVE</span> SQLite audit logging untuk semua aktivitas</li>
+        </ul>
+      </div>
+
+      <div class="changelog-item">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="cl-version">v1.0.0</span>
+          <span class="cl-date">2024</span>
+        </div>
+        <ul>
+          <li><span class="badge-new">NEW</span> Initial release - Pet Scraper</li>
+          <li><span class="badge-new">NEW</span> Google News RSS scraping</li>
+          <li><span class="badge-new">NEW</span> Bing News scraping</li>
+          <li><span class="badge-new">NEW</span> Forum &amp; social media scraping (via Google Search)</li>
+          <li><span class="badge-new">NEW</span> Export ke Excel, CSV, JSON</li>
+          <li><span class="badge-new">NEW</span> Flask web interface</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- New Features -->
+    <div class="doc-section" id="new-features">
+      <h2><i class="bi bi-stars"></i> Fitur Baru</h2>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="platform-item">
+            <h5><i class="bi bi-palette text-primary"></i> Theme Toggle</h5>
+            <p>Switch antara Light dan Dark theme. Light theme menjadi default. Preferensi disimpan di browser.</p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="platform-item">
+            <h5><i class="bi bi-translate text-success"></i> Bilingual</h5>
+            <p>Dua bahasa: Bahasa Indonesia dan English. Toggle dengan tombol bendera di navbar.</p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="platform-item">
+            <h5><i class="bi bi-images text-info"></i> Image Scraper</h5>
+            <p>Cari gambar, scrape dari URL, upload gambar untuk mencari yang mirip. Grid view dengan modal preview.</p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="platform-item">
+            <h5><i class="bi bi-shield-lock text-danger"></i> Admin Dashboard</h5>
+            <p>Halaman admin tersembunyi untuk monitoring audit log, usage chart, dan perbandingan WoW/MoM/QoQ/YoY.</p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="platform-item">
+            <h5><i class="bi bi-arrow-repeat text-warning"></i> Direct Scraping</h5>
+            <p>Scrape langsung dari platform (Reddit API, Kaskus, Nitter, facebook-scraper) tanpa via Google Search.</p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="platform-item">
+            <h5><i class="bi bi-globe2 text-primary"></i> Worldwide News</h5>
+            <p>Scraping berita dari seluruh dunia termasuk Indonesia (Detik, Kompas, CNN, BBC, Reuters).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Sidebar active highlight on scroll
+(function(){
+  const sections = document.querySelectorAll('.doc-section');
+  const links = document.querySelectorAll('.sidebar a[href^="#"]');
+  window.addEventListener('scroll', () => {
+    let cur = '';
+    sections.forEach(s => { if(window.scrollY >= s.offsetTop - 100) cur = s.id });
+    links.forEach(a => { a.classList.toggle('active', a.getAttribute('href') === '#' + cur) });
+  });
+})();
+</script>
+{% endblock %}

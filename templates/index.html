@@ -1,0 +1,699 @@
+{% extends "base.html" %}
+
+{% block title %}Alyx Scraper{% endblock %}
+
+{% block nav_tabs %}
+<ul class="alyx-nav-tabs">
+  <li><a class="alyx-nav-tab active" id="navScraper" href="#" onclick="showTab('scraper');return false"><i class="bi bi-search"></i> Scraper</a></li>
+  <li><a class="alyx-nav-tab" id="navImages" href="#" onclick="showTab('images');return false"><i class="bi bi-images"></i> Image Scraper</a></li>
+</ul>
+{% endblock %}
+
+{% block mobile_tabs %}
+<div class="alyx-mobile-tabs">
+  <a class="alyx-nav-tab active" id="mNavScraper" href="#" onclick="showTab('scraper');return false" style="flex:1;text-align:center"><i class="bi bi-search"></i> Scraper</a>
+  <a class="alyx-nav-tab" id="mNavImages" href="#" onclick="showTab('images');return false" style="flex:1;text-align:center"><i class="bi bi-images"></i> Images</a>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Index-specific theme vars ── */
+:root{
+  --input-bg:rgba(255,255,255,.9);
+  --chip-bg:rgba(255,255,255,.65);
+  --table-head-bg:rgba(99,102,241,.04);
+  --row-hover:rgba(99,102,241,.03);
+  --modal-bg:#ffffff;
+  --toast-bg:rgba(255,255,255,.97);
+  --status-bg:rgba(255,255,255,.75);
+  --prog-glow:rgba(99,102,241,.15);
+  --badge-n:#ef4444;--badge-ns:#3b82f6;--badge-f:#f59e0b;--badge-s:#ec4899;
+}
+[data-theme="dark"]{
+  --input-bg:rgba(255,255,255,.05);
+  --chip-bg:rgba(255,255,255,.04);
+  --table-head-bg:rgba(255,255,255,.02);
+  --row-hover:rgba(255,255,255,.025);
+  --modal-bg:#0b0e22;
+  --toast-bg:rgba(8,12,30,.97);
+  --status-bg:rgba(255,255,255,.05);
+  --prog-glow:rgba(99,102,241,.35);
+}
+
+.ctr{max-width:1200px;margin:0 auto;padding:0 20px}
+.main{padding:26px 0 60px}
+
+/* Glass card */
+.glass{
+  background:var(--glass);border:1px solid var(--glass-b);
+  border-radius:16px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+[data-theme="light"] .glass{box-shadow:0 1px 4px rgba(99,102,241,.07)}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat-card{padding:18px 20px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-b);backdrop-filter:blur(20px)}
+[data-theme="light"] .stat-card{box-shadow:0 1px 4px rgba(99,102,241,.07)}
+.stat-icon{font-size:1.25rem;margin-bottom:10px}
+.stat-label{font-size:.71rem;color:var(--t2);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.stat-value{font-size:1.65rem;font-weight:700;color:var(--t1);line-height:1}
+.stat-card:nth-child(1) .stat-icon{color:#6366f1}
+.stat-card:nth-child(2) .stat-icon{color:#10b981}
+.stat-card:nth-child(3) .stat-icon{color:#f59e0b}
+.stat-card:nth-child(4) .stat-icon{color:#ec4899}
+
+/* Form */
+.form-card{padding:22px 24px;margin-bottom:18px}
+.form-row{display:grid;grid-template-columns:1fr 180px auto;gap:14px;align-items:end;margin-bottom:20px}
+.form-col{display:flex;flex-direction:column;gap:6px}
+.form-label{font-size:.72rem;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px}
+input.ifield{
+  width:100%;padding:10px 14px;background:var(--input-bg);
+  border:1px solid var(--glass-b);border-radius:10px;color:var(--t1);
+  font-size:.9rem;font-family:inherit;outline:none;transition:all .2s;
+}
+input.ifield::placeholder{color:var(--t3)}
+input.ifield:focus{border-color:rgba(99,102,241,.5);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+[data-theme="dark"] input.ifield:focus{background:rgba(99,102,241,.07)}
+
+/* Buttons */
+.btn-p{
+  padding:10px 20px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border:none;border-radius:10px;font-size:.9rem;font-weight:600;
+  cursor:pointer;display:inline-flex;align-items:center;gap:8px;
+  transition:all .2s;white-space:nowrap;box-shadow:0 4px 14px rgba(99,102,241,.3);
+}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(99,102,241,.4)}
+.btn-p:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-g{
+  padding:10px 13px;background:var(--glass);color:var(--t2);
+  border:1px solid var(--glass-b);border-radius:10px;font-size:.9rem;
+  cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s;
+}
+.btn-g:hover{color:var(--t1);border-color:rgba(99,102,241,.4)}
+.btn-row{display:flex;gap:8px}
+
+/* Progress */
+.prog-wrap{height:3px;background:var(--glass-b);border-radius:2px;overflow:hidden;margin:0 0 18px}
+.prog-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;width:0%;box-shadow:0 0 8px var(--prog-glow)}
+.prog-bar.indet{animation:prog 1.5s ease-in-out infinite;width:30%}
+@keyframes prog{0%{transform:translateX(-200%)}100%{transform:translateX(500%)}}
+
+/* Section label */
+.sec-label{font-size:.71rem;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+
+/* Platform chips */
+.plat-groups{display:flex;flex-direction:column;gap:10px}
+.plat-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.plat-row-label{font-size:.68rem;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;min-width:68px;flex-shrink:0}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 13px;
+  border-radius:20px;border:1.5px solid var(--glass-b);background:var(--chip-bg);
+  color:var(--t2);font-size:.81rem;font-weight:500;cursor:pointer;
+  transition:all .18s cubic-bezier(.34,1.56,.64,1);user-select:none;
+}
+.chip:hover{transform:translateY(-1px)}
+.chip input{display:none}
+
+/* Chip active — light */
+.chip.cat-n.active{border-color:#ef4444;background:rgba(239,68,68,.08);color:#dc2626}
+.chip.cat-ns.active{border-color:#3b82f6;background:rgba(59,130,246,.08);color:#2563eb}
+.chip.cat-f.active{border-color:#f59e0b;background:rgba(245,158,11,.08);color:#d97706}
+.chip.cat-s.active{border-color:#ec4899;background:rgba(236,72,153,.08);color:#db2777}
+/* Chip active — dark (override) */
+[data-theme="dark"] .chip.cat-n.active{color:#fca5a5;background:rgba(239,68,68,.12);box-shadow:0 0 10px rgba(239,68,68,.18)}
+[data-theme="dark"] .chip.cat-ns.active{color:#93c5fd;background:rgba(59,130,246,.12);box-shadow:0 0 10px rgba(59,130,246,.18)}
+[data-theme="dark"] .chip.cat-f.active{color:#fcd34d;background:rgba(245,158,11,.12);box-shadow:0 0 10px rgba(245,158,11,.18)}
+[data-theme="dark"] .chip.cat-s.active{color:#f9a8d4;background:rgba(236,72,153,.12);box-shadow:0 0 10px rgba(236,72,153,.18)}
+
+/* Platform tag in results */
+.ptag{display:inline-block;padding:2px 8px;border-radius:5px;font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+.ptag.cat-n{background:rgba(239,68,68,.12);color:#dc2626}
+.ptag.cat-ns{background:rgba(59,130,246,.12);color:#2563eb}
+.ptag.cat-f{background:rgba(245,158,11,.12);color:#d97706}
+.ptag.cat-s{background:rgba(236,72,153,.12);color:#db2777}
+.ptag.cat-d{background:rgba(99,102,241,.12);color:var(--accent3)}
+[data-theme="dark"] .ptag.cat-n{background:rgba(239,68,68,.18);color:#fca5a5}
+[data-theme="dark"] .ptag.cat-ns{background:rgba(59,130,246,.18);color:#93c5fd}
+[data-theme="dark"] .ptag.cat-f{background:rgba(245,158,11,.18);color:#fcd34d}
+[data-theme="dark"] .ptag.cat-s{background:rgba(236,72,153,.18);color:#f9a8d4}
+[data-theme="dark"] .ptag.cat-d{background:rgba(99,102,241,.18);color:#a5b4fc}
+
+/* Status */
+.status-bar{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:10px;background:var(--status-bg);border:1px solid var(--glass-b);font-size:.83rem;color:var(--t2);margin-bottom:14px;backdrop-filter:blur(10px)}
+
+/* Results */
+.res-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px 18px;border-bottom:1px solid var(--glass-b)}
+.res-title{font-weight:600;font-size:.92rem;display:flex;align-items:center;gap:8px;color:var(--t1)}
+.badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:600;background:rgba(99,102,241,.12);color:var(--accent3);min-width:22px}
+.res-ctrls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.input-sm{padding:6px 10px;background:var(--input-bg);border:1px solid var(--glass-b);border-radius:8px;color:var(--t1);font-size:.82rem;font-family:inherit;outline:none;transition:border-color .2s}
+.input-sm::placeholder{color:var(--t3)}
+.input-sm:focus{border-color:rgba(99,102,241,.4)}
+select.input-sm option{background:var(--modal-bg)}
+.dl-grp{display:flex;gap:4px}
+.btn-dl{padding:6px 9px;background:var(--glass);border:1px solid var(--glass-b);border-radius:8px;color:var(--t2);font-size:.81rem;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
+.btn-dl:hover{border-color:rgba(99,102,241,.4);color:var(--accent)}
+
+/* Filter chips row */
+.filter-chips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--glass-b)}
+.fchip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:14px;border:1.5px solid var(--glass-b);background:rgba(99,102,241,.04);color:var(--t2);font-size:.77rem;font-weight:500;cursor:pointer;transition:all .15s;user-select:none}
+.fchip:hover{border-color:rgba(99,102,241,.3);color:var(--t1)}
+.fchip.active{border-color:rgba(99,102,241,.45);background:rgba(99,102,241,.1);color:var(--accent)}
+[data-theme="dark"] .fchip.active{color:var(--accent3)}
+.fchip-count{background:rgba(99,102,241,.15);color:var(--accent);border-radius:8px;padding:1px 5px;font-size:.69rem}
+[data-theme="dark"] .fchip-count{color:var(--accent3)}
+
+/* Table */
+.table-wrap{overflow:auto;max-height:480px}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+thead th{padding:9px 13px;text-align:left;font-size:.71rem;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;background:var(--table-head-bg);border-bottom:1px solid var(--glass-b);position:sticky;top:0;z-index:1;white-space:nowrap}
+tbody td{padding:9px 13px;border-bottom:1px solid var(--glass-b);vertical-align:middle;color:var(--t1)}
+[data-theme="light"] tbody td{border-bottom-color:rgba(99,102,241,.06)}
+tbody tr{cursor:pointer;transition:background .12s}
+tbody tr:hover{background:var(--row-hover)}
+.empty{padding:44px 20px;text-align:center;color:var(--t3)}
+.empty i{font-size:2.2rem;display:block;margin-bottom:10px;opacity:.5}
+
+/* Image tab */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.img-card{border-radius:12px;overflow:hidden;border:1px solid var(--glass-b);background:var(--glass);cursor:pointer;transition:all .2s}
+.img-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(99,102,241,.12)}
+[data-theme="dark"] .img-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.35),0 0 0 1px rgba(99,102,241,.25)}
+.img-card img{width:100%;height:140px;object-fit:cover;display:block}
+.img-card-info{padding:7px 9px;font-size:.72rem;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upload-zone{border:2px dashed var(--glass-b);border-radius:14px;padding:44px 24px;text-align:center;color:var(--t2);cursor:pointer;transition:all .2s}
+.upload-zone:hover,.upload-zone.drag-over{border-color:rgba(99,102,241,.5);background:rgba(99,102,241,.05);color:var(--accent)}
+.upload-zone i{font-size:2.2rem;display:block;margin-bottom:10px}
+
+/* Toast */
+.toast-ctr{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:11px 16px;border-radius:12px;background:var(--toast-bg);border:1px solid var(--glass-b);backdrop-filter:blur(20px);color:var(--t1);font-size:.86rem;display:flex;align-items:center;gap:10px;animation:toastIn .28s ease;max-width:300px;box-shadow:0 6px 20px rgba(0,0,0,.12)}
+[data-theme="dark"] .toast{box-shadow:0 8px 24px rgba(0,0,0,.45)}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.toast.t-ok{border-color:rgba(16,185,129,.35)}
+.toast.t-err{border-color:rgba(239,68,68,.35)}
+.ti-ok{color:#10b981}.ti-err{color:#ef4444}.ti-info{color:var(--accent)}
+
+/* Modal */
+.modal-bd{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:20px}
+[data-theme="dark"] .modal-bd{background:rgba(0,0,0,.72)}
+.modal-bd.open{display:flex}
+.modal-box{background:var(--modal-bg);border:1px solid var(--glass-b);border-radius:18px;max-width:680px;width:100%;max-height:86vh;overflow:auto;animation:mIn .22s ease;box-shadow:0 20px 60px rgba(99,102,241,.12)}
+[data-theme="dark"] .modal-box{box-shadow:none}
+@keyframes mIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid var(--glass-b)}
+.modal-title{font-weight:600;font-size:.92rem;color:var(--t1)}
+.btn-cls{background:none;border:none;color:var(--t2);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;transition:color .2s;padding:2px}
+.btn-cls:hover{color:var(--t1)}
+.modal-body{padding:20px}
+.d-row{display:flex;gap:10px;margin-bottom:10px}
+.d-lbl{font-size:.7rem;color:var(--t3);font-weight:600;text-transform:uppercase;width:80px;flex-shrink:0;padding-top:3px}
+.d-val{font-size:.86rem;color:var(--t1);word-break:break-word;flex:1}
+
+/* Spinner */
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(99,102,241,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+[data-theme="dark"] .spin{border-color:rgba(255,255,255,.15);border-top-color:rgba(255,255,255,.8)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Responsive */
+@media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}}
+@media(max-width:640px){.form-row{grid-template-columns:1fr}.img-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}.res-header{flex-direction:column;align-items:flex-start}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ctr main">
+
+<!-- Stats dashboard -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon"><i class="bi bi-collection-fill"></i></div>
+    <div class="stat-label" data-i18n="stat_results">Total Hasil</div>
+    <div class="stat-value" id="statResults">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon"><i class="bi bi-grid-3x3-gap-fill"></i></div>
+    <div class="stat-label" data-i18n="stat_platforms">Platform Aktif</div>
+    <div class="stat-value" id="statPlatforms">2</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon"><i class="bi bi-key-fill"></i></div>
+    <div class="stat-label" data-i18n="stat_keywords">Keywords</div>
+    <div class="stat-value" id="statKeywords">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon"><i class="bi bi-clock-fill"></i></div>
+    <div class="stat-label" data-i18n="stat_duration">Durasi</div>
+    <div class="stat-value" id="statDuration" style="font-size:1.3rem">—</div>
+  </div>
+</div>
+
+<!-- ==================== SCRAPER TAB ==================== -->
+<div id="tab-scraper">
+
+<div class="glass form-card">
+  <div class="form-row">
+    <div class="form-col">
+      <label class="form-label" data-i18n="keywords_label">Keywords (pisah koma)</label>
+      <input id="keywords" class="ifield" placeholder="contoh: teknologi, AI, startup" data-i18n-ph="keywords_ph" oninput="updateKeywordsStat()">
+    </div>
+    <div class="form-col">
+      <label class="form-label" data-i18n="location_label">Lokasi <span style="font-weight:400;color:var(--t3)" data-i18n="location_optional">(Opsional)</span></label>
+      <input id="location" class="ifield" placeholder="Jakarta" data-i18n-ph="location_ph">
+    </div>
+    <div class="form-col">
+      <label class="form-label">&nbsp;</label>
+      <div class="btn-row">
+        <button class="btn-p" id="startBtn" onclick="startScraping()">
+          <i class="bi bi-play-fill"></i><span data-i18n="start_btn">Mulai Scraping</span>
+        </button>
+        <button class="btn-g" onclick="clearResults()" title="Clear"><i class="bi bi-trash3"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="prog-wrap" id="progWrap" style="display:none"><div class="prog-bar" id="progBar"></div></div>
+
+  <div>
+    <div class="sec-label" data-i18n="platforms_label">Pilih Platform</div>
+    <div class="plat-groups">
+      <div class="plat-row">
+        <span class="plat-row-label" data-i18n="cat_news">Berita</span>
+        <label class="chip cat-n active"><input type="checkbox" class="pcb" value="Google News" checked><i class="bi bi-newspaper"></i> Google News</label>
+        <label class="chip cat-ns active"><input type="checkbox" class="pcb" value="News Sites" checked><i class="bi bi-globe"></i> News Sites</label>
+      </div>
+      <div class="plat-row">
+        <span class="plat-row-label" data-i18n="cat_forum">Forum</span>
+        <label class="chip cat-f"><input type="checkbox" class="pcb" value="Reddit"><i class="bi bi-reddit"></i> Reddit</label>
+        <label class="chip cat-f"><input type="checkbox" class="pcb" value="Kaskus"><i class="bi bi-chat-dots"></i> Kaskus</label>
+        <label class="chip cat-f"><input type="checkbox" class="pcb" value="Quora"><i class="bi bi-quora"></i> Quora</label>
+      </div>
+      <div class="plat-row">
+        <span class="plat-row-label" data-i18n="cat_social">Sosial</span>
+        <label class="chip cat-s"><input type="checkbox" class="pcb" value="X/Twitter"><i class="bi bi-twitter-x"></i> X / Twitter</label>
+        <label class="chip cat-s"><input type="checkbox" class="pcb" value="Threads"><i class="bi bi-at"></i> Threads</label>
+        <label class="chip cat-s"><input type="checkbox" class="pcb" value="Facebook"><i class="bi bi-facebook"></i> Facebook</label>
+        <label class="chip cat-s"><input type="checkbox" class="pcb" value="Instagram"><i class="bi bi-instagram"></i> Instagram</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="status-bar" id="statusBar">
+  <i class="bi bi-info-circle"></i>
+  <span id="statusText" data-i18n="status_ready">Siap untuk scraping.</span>
+</div>
+
+<div class="glass" style="overflow:hidden">
+  <div class="res-header">
+    <div class="res-title">
+      <i class="bi bi-table"></i>
+      <span data-i18n="results_title">Hasil Scraping</span>
+      <span class="badge" id="resultCount">0</span>
+    </div>
+    <div class="res-ctrls">
+      <input class="input-sm" id="filterSearch" style="width:140px" oninput="filterResults()" placeholder="Cari..." data-i18n-ph="search_ph">
+      <div class="dl-grp">
+        <button class="btn-dl" onclick="dl('csv')"><i class="bi bi-filetype-csv"></i> CSV</button>
+        <button class="btn-dl" onclick="dl('json')"><i class="bi bi-filetype-json"></i> JSON</button>
+        <button class="btn-dl" onclick="dl('xlsx')"><i class="bi bi-file-earmark-excel"></i> XLSX</button>
+      </div>
+    </div>
+  </div>
+  <div class="filter-chips" id="filterChips">
+    <span class="fchip active" data-plat=""><i class="bi bi-grid"></i> <span data-i18n="filter_all">Semua</span></span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th style="width:36px">#</th>
+        <th data-i18n="col_platform">Platform</th>
+        <th data-i18n="col_title">Judul</th>
+        <th data-i18n="col_keyword">Keyword</th>
+        <th data-i18n="col_date">Tanggal</th>
+        <th style="width:40px">Link</th>
+      </tr></thead>
+      <tbody id="resultsBody"></tbody>
+    </table>
+  </div>
+  <div class="empty" id="emptyState">
+    <i class="bi bi-inbox"></i>
+    <p data-i18n="empty_state">Belum ada hasil.</p>
+  </div>
+</div>
+</div><!-- end tab-scraper -->
+
+<!-- ==================== IMAGE SCRAPER TAB ==================== -->
+<div id="tab-images" style="display:none">
+
+<div class="two-col">
+  <div class="glass" style="padding:20px">
+    <h6 style="font-weight:600;font-size:.9rem;margin-bottom:14px;color:var(--t1)"><i class="bi bi-search"></i> <span data-i18n="img_search">Cari Gambar</span></h6>
+    <div style="display:flex;gap:8px">
+      <input id="imgQuery" class="ifield" placeholder="Kata kunci gambar..." data-i18n-ph="img_query_ph" style="flex:1">
+      <button class="btn-p" onclick="searchImages()" style="padding:10px 14px"><i class="bi bi-search"></i></button>
+    </div>
+  </div>
+  <div class="glass" style="padding:20px">
+    <h6 style="font-weight:600;font-size:.9rem;margin-bottom:14px;color:var(--t1)"><i class="bi bi-link-45deg"></i> <span data-i18n="img_url">Scrape dari URL</span></h6>
+    <div style="display:flex;gap:8px">
+      <input id="imgUrl" class="ifield" placeholder="https://example.com" style="flex:1">
+      <button class="btn-p" onclick="scrapeUrl()" style="padding:10px 14px"><i class="bi bi-download"></i></button>
+    </div>
+  </div>
+</div>
+
+<div class="glass" style="padding:20px;margin-bottom:16px">
+  <h6 style="font-weight:600;font-size:.9rem;margin-bottom:14px;color:var(--t1)"><i class="bi bi-upload"></i> <span data-i18n="img_upload">Upload &amp; Cari Mirip</span></h6>
+  <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+    <i class="bi bi-cloud-arrow-up"></i>
+    <p style="margin-bottom:4px;font-weight:500" data-i18n="img_drop">Klik atau drag &amp; drop gambar</p>
+    <p style="font-size:.78rem;color:var(--t3)">JPG, PNG, GIF, WebP</p>
+    <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="uploadImg(this)">
+  </div>
+  <div id="uploadPreview" style="display:none;margin-top:12px;text-align:center">
+    <img id="upImg" style="max-height:160px;border-radius:10px;border:1px solid var(--glass-b)">
+    <p style="margin-top:6px;font-size:.78rem;color:var(--t3)" id="upName"></p>
+  </div>
+</div>
+
+<div class="glass" style="overflow:hidden">
+  <div class="res-header">
+    <div class="res-title"><i class="bi bi-images"></i> <span data-i18n="img_results">Hasil Gambar</span> <span class="badge" id="imgCount">0</span></div>
+  </div>
+  <div style="padding:16px">
+    <div class="status-bar" id="imgStatus" style="display:none;margin-bottom:14px"></div>
+    <div class="img-grid" id="imgGrid"></div>
+    <div class="empty" id="imgEmpty"><i class="bi bi-images"></i><p data-i18n="img_empty">Cari atau upload gambar.</p></div>
+  </div>
+</div>
+
+</div><!-- end tab-images -->
+</div><!-- end .main -->
+{% endblock %}
+
+{% block modals %}
+<!-- Detail Modal -->
+<div class="modal-bd" id="detailModal" onclick="closeModal('detailModal')">
+<div class="modal-box" onclick="event.stopPropagation()">
+  <div class="modal-head">
+    <span class="modal-title" data-i18n="detail_title">Detail Hasil</span>
+    <button class="btn-cls" onclick="closeModal('detailModal')"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="modal-body" id="detailBody"></div>
+</div>
+</div>
+
+<!-- Image Modal -->
+<div class="modal-bd" id="imgModal" onclick="closeModal('imgModal')">
+<div class="modal-box" onclick="event.stopPropagation()">
+  <div class="modal-head">
+    <span class="modal-title" id="imgModalTitle">Image</span>
+    <button class="btn-cls" onclick="closeModal('imgModal')"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="modal-body" style="text-align:center">
+    <img id="imgModalImg" style="max-width:100%;max-height:58vh;border-radius:10px">
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:16px">
+      <a id="imgModalLink" href="#" target="_blank" class="btn-g"><i class="bi bi-box-arrow-up-right"></i> <span data-i18n="img_open">Buka</span></a>
+      <button class="btn-p" onclick="findRelated()" style="padding:9px 18px"><i class="bi bi-search"></i> <span data-i18n="img_related">Cari Mirip</span></button>
+    </div>
+  </div>
+</div>
+</div>
+{% endblock %}
+
+{% block toast_container %}
+<div class="toast-ctr" id="toastCtr"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.PAGE_L = {
+id:{
+  stat_results:'Total Hasil',stat_platforms:'Platform Aktif',stat_keywords:'Keywords',stat_duration:'Durasi',
+  keywords_label:'Keywords (pisah koma)',keywords_ph:'contoh: teknologi, AI, startup',
+  location_label:'Lokasi',location_ph:'Jakarta',location_optional:'(opsional)',location_hint:'Kosongkan = pencarian umum · pisah koma untuk multi-lokasi',start_btn:'Mulai Scraping',
+  platforms_label:'Pilih Platform',cat_news:'Berita',cat_forum:'Forum',cat_social:'Sosial',
+  status_ready:'Siap untuk scraping.',results_title:'Hasil Scraping',
+  filter_all:'Semua',search_ph:'Cari...',
+  col_platform:'Platform',col_title:'Judul',col_keyword:'Keyword',col_date:'Tanggal',
+  empty_state:'Belum ada hasil.',
+  img_search:'Cari Gambar',img_query_ph:'Kata kunci gambar...',img_url:'Scrape dari URL',
+  img_upload:'Upload & Cari Mirip',img_drop:'Klik atau drag & drop gambar',
+  img_results:'Hasil Gambar',img_empty:'Cari atau upload gambar.',img_open:'Buka',img_related:'Cari Mirip',
+  detail_title:'Detail Hasil'
+},
+en:{
+  stat_results:'Total Results',stat_platforms:'Active Platforms',stat_keywords:'Keywords',stat_duration:'Duration',
+  keywords_label:'Keywords (comma separated)',keywords_ph:'e.g.: technology, AI, startup',
+  location_label:'Location',location_ph:'Jakarta',location_optional:'(optional)',location_hint:'Leave empty for general search · comma-separate for multi-location',start_btn:'Start Scraping',
+  platforms_label:'Select Platforms',cat_news:'News',cat_forum:'Forums',cat_social:'Social',
+  status_ready:'Ready to scrape.',results_title:'Scraping Results',
+  filter_all:'All',search_ph:'Search...',
+  col_platform:'Platform',col_title:'Title',col_keyword:'Keyword',col_date:'Date',
+  empty_state:'No results yet.',
+  img_search:'Search Images',img_query_ph:'Image keywords...',img_url:'Scrape from URL',
+  img_upload:'Upload & Find Similar',img_drop:'Click or drag & drop image',
+  img_results:'Image Results',img_empty:'Search or upload images.',img_open:'Open',img_related:'Find Similar',
+  detail_title:'Result Details'
+}
+};
+
+window.onLangChange = function(){ rebuildFilterChips() };
+
+let currentJob=null, pollTimer=null, allResults=[], selImgUrl='';
+let filterPlatform='', scrapeStart=null, _viewData=[];
+
+function showTab(tab){
+  document.getElementById('tab-scraper').style.display=tab==='scraper'?'':'none';
+  document.getElementById('tab-images').style.display=tab==='images'?'':'none';
+  ['navScraper','navImages','mNavScraper','mNavImages'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.classList.remove('active');
+  });
+  document.getElementById(tab==='scraper'?'navScraper':'navImages')?.classList.add('active');
+  document.getElementById(tab==='scraper'?'mNavScraper':'mNavImages')?.classList.add('active');
+}
+
+document.querySelectorAll('.chip').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const c=b.querySelector('input');c.checked=!c.checked;
+    b.classList.toggle('active',c.checked);updatePlatformsStat();
+  });
+});
+
+function updatePlatformsStat(){ document.getElementById('statPlatforms').textContent=document.querySelectorAll('.pcb:checked').length }
+function updateKeywordsStat(){
+  const v=document.getElementById('keywords').value.trim();
+  document.getElementById('statKeywords').textContent=v?v.split(',').filter(k=>k.trim()).length:0;
+}
+
+function esc(s){return s!=null?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''}
+
+function platCat(p){
+  if(p==='Google News')return 'cat-n';
+  if(p==='News Sites')return 'cat-ns';
+  if(['Reddit','Kaskus','Quora'].includes(p))return 'cat-f';
+  if(['X/Twitter','Threads','Facebook','Instagram'].includes(p))return 'cat-s';
+  return 'cat-d';
+}
+
+function setStatus(m,loading){
+  document.getElementById('statusBar').innerHTML=(loading?'<div class="spin"></div>':'<i class="bi bi-info-circle"></i>')+'<span>'+esc(m)+'</span>';
+}
+
+function showProg(show,indet=false){
+  const w=document.getElementById('progWrap'),b=document.getElementById('progBar');
+  w.style.display=show?'':'none';
+  b.className='prog-bar'+(indet?' indet':'');
+  if(!indet)b.style.width='0%';
+}
+
+function toast(msg,type='info',dur=3500){
+  const ctr=document.getElementById('toastCtr');
+  const icons={info:'<i class="bi bi-info-circle ti-info"></i>',ok:'<i class="bi bi-check-circle-fill ti-ok"></i>',err:'<i class="bi bi-x-circle-fill ti-err"></i>'};
+  const el=document.createElement('div');
+  el.className='toast'+(type==='ok'?' t-ok':type==='err'?' t-err':'');
+  el.innerHTML=(icons[type]||icons.info)+esc(msg);
+  ctr.appendChild(el);
+  setTimeout(()=>{el.style.transition='opacity .3s';el.style.opacity='0';setTimeout(()=>el.remove(),300)},dur);
+}
+
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('detailModal');closeModal('imgModal')}});
+
+document.getElementById('filterChips').addEventListener('click',e=>{
+  const chip=e.target.closest('.fchip');if(!chip)return;
+  filterPlatform=chip.dataset.plat||'';
+  document.querySelectorAll('.fchip').forEach(f=>f.classList.remove('active'));
+  chip.classList.add('active');filterResults();
+});
+
+async function startScraping(){
+  const kw=document.getElementById('keywords').value.trim();
+  const loc=document.getElementById('location').value.trim();
+  const pls=Array.from(document.querySelectorAll('.pcb:checked')).map(e=>e.value);
+  if(!kw){toast(currentLang==='id'?'Masukkan keywords!':'Enter keywords!','err');return}
+  if(!pls.length){toast(currentLang==='id'?'Pilih minimal 1 platform!':'Select at least 1 platform!','err');return}
+  setStatus(currentLang==='id'?'Memulai...':'Starting...',true);
+  showProg(true,true);
+  document.getElementById('startBtn').disabled=true;
+  scrapeStart=Date.now();
+  try{
+    const r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kw,location:loc,platforms:pls})});
+    const d=await r.json();
+    if(!d.ok){setStatus('Error: '+(d.error||''));showProg(false);document.getElementById('startBtn').disabled=false;toast('Error: '+(d.error||''),'err');return}
+    currentJob=d.job_id;
+    if(pollTimer)clearInterval(pollTimer);
+    pollTimer=setInterval(poll,2000);poll();
+  }catch(e){setStatus('Error: '+e.message);showProg(false);document.getElementById('startBtn').disabled=false;toast('Error: '+e.message,'err')}
+}
+
+async function poll(){
+  if(!currentJob)return;
+  try{
+    const r=await fetch('/api/status/'+currentJob),j=await r.json();
+    if(!j.ok)return;
+    setStatus(j.message+' ('+j.count+')',j.status==='running');
+    if(j.status==='finished'){
+      clearInterval(pollTimer);pollTimer=null;showProg(false);
+      await loadResults();
+      document.getElementById('startBtn').disabled=false;
+      const dur=scrapeStart?((Date.now()-scrapeStart)/1000).toFixed(1)+'s':'—';
+      document.getElementById('statDuration').textContent=dur;
+      toast((currentLang==='id'?'Selesai! ':'Done! ')+j.count+' hasil','ok');
+    }else if(j.status==='error'){
+      clearInterval(pollTimer);pollTimer=null;showProg(false);
+      document.getElementById('startBtn').disabled=false;
+      toast('Error: '+j.message,'err');
+    }
+  }catch(e){}
+}
+
+async function loadResults(){
+  const r=await fetch('/api/results/'+currentJob),j=await r.json();
+  if(!j.ok)return;
+  allResults=j.results||[];
+  document.getElementById('statResults').textContent=allResults.length;
+  filterPlatform='';rebuildFilterChips();filterResults();
+}
+
+function rebuildFilterChips(){
+  const ps=[...new Set(allResults.map(r=>r.platform))];
+  const counts={};allResults.forEach(r=>counts[r.platform]=(counts[r.platform]||0)+1);
+  const ctr=document.getElementById('filterChips');
+  ctr.innerHTML='<span class="fchip'+(filterPlatform===''?' active':'')+'" data-plat=""><i class="bi bi-grid"></i> '+tr('filter_all')+'</span>';
+  ps.forEach(p=>{
+    const cat=platCat(p);const el=document.createElement('span');
+    el.className='fchip'+(filterPlatform===p?' active':'');el.dataset.plat=p;
+    el.innerHTML='<span class="ptag '+cat+'">'+esc(p)+'</span><span class="fchip-count">'+counts[p]+'</span>';
+    ctr.appendChild(el);
+  });
+}
+
+function filterResults(){
+  const q=document.getElementById('filterSearch').value.toLowerCase();
+  let f=allResults;
+  if(filterPlatform)f=f.filter(r=>r.platform===filterPlatform);
+  if(q)f=f.filter(r=>(r.title||'').toLowerCase().includes(q)||(r.content||'').toLowerCase().includes(q)||(r.keyword||'').toLowerCase().includes(q));
+  render(f);
+}
+
+function render(data){
+  _viewData=data;
+  const tb=document.getElementById('resultsBody'),em=document.getElementById('emptyState');
+  document.getElementById('resultCount').textContent=data.length;
+  if(!data.length){tb.innerHTML='';em.style.display='';return}
+  em.style.display='none';
+  tb.innerHTML=data.map((r,i)=>{
+    const cat=platCat(r.platform);
+    const title=esc((r.title||'').substring(0,75)+(r.title&&r.title.length>75?'…':''));
+    const link=r.url?'<a href="'+esc(r.url)+'" target="_blank" onclick="event.stopPropagation()" style="color:var(--accent)"><i class="bi bi-box-arrow-up-right"></i></a>':'';
+    return '<tr data-i="'+i+'"><td style="color:var(--t3);font-size:.77rem">'+(i+1)+'</td><td><span class="ptag '+cat+'">'+esc(r.platform)+'</span></td><td title="'+esc(r.content||r.title)+'">'+title+'</td><td><span style="font-size:.78rem;color:var(--t3)">'+esc(r.keyword)+'</span></td><td><span style="font-size:.78rem;color:var(--t3)">'+esc(r.date)+'</span></td><td>'+link+'</td></tr>';
+  }).join('');
+  tb.querySelectorAll('tr').forEach(row=>row.addEventListener('click',()=>openDetail(parseInt(row.dataset.i))));
+}
+
+function openDetail(i){
+  const r=_viewData[i];if(!r)return;
+  const cat=platCat(r.platform);
+  document.getElementById('detailBody').innerHTML=
+    '<div class="d-row"><div class="d-lbl">Platform</div><div class="d-val"><span class="ptag '+cat+'">'+esc(r.platform)+'</span></div></div>'+
+    '<div class="d-row"><div class="d-lbl">Keyword</div><div class="d-val">'+esc(r.keyword)+'</div></div>'+
+    '<div class="d-row"><div class="d-lbl">Judul</div><div class="d-val" style="font-weight:600">'+esc(r.title)+'</div></div>'+
+    (r.content?'<div class="d-row"><div class="d-lbl">Konten</div><div class="d-val" style="color:var(--t2)">'+esc(r.content.substring(0,500))+(r.content.length>500?'…':'')+'</div></div>':'')+
+    '<div class="d-row"><div class="d-lbl">Tanggal</div><div class="d-val">'+esc(r.date)+'</div></div>'+
+    (r.source?'<div class="d-row"><div class="d-lbl">Sumber</div><div class="d-val">'+esc(r.source)+'</div></div>':'')+
+    (r.url?'<div class="d-row"><div class="d-lbl">URL</div><div class="d-val"><a href="'+esc(r.url)+'" target="_blank" style="color:var(--accent);word-break:break-all">'+esc(r.url)+'</a></div></div>':'');
+  openModal('detailModal');
+}
+
+function clearResults(){
+  allResults=[];_viewData=[];filterPlatform='';
+  render([]);rebuildFilterChips();setStatus(tr('status_ready'));
+  document.getElementById('statResults').textContent='0';
+  document.getElementById('statDuration').textContent='—';
+  currentJob=null;
+}
+
+function dl(f){
+  if(!currentJob||!allResults.length){toast(currentLang==='id'?'Belum ada data!':'No data!','err');return}
+  window.location='/api/download/'+currentJob+'/'+f;
+}
+
+function imgStatus(m,show=true){
+  const e=document.getElementById('imgStatus');
+  e.style.display=show?'':'none';
+  e.innerHTML='<div class="spin"></div><span>'+esc(m)+'</span>';
+}
+
+function renderImgs(imgs){
+  const g=document.getElementById('imgGrid'),em=document.getElementById('imgEmpty');
+  document.getElementById('imgCount').textContent=imgs.length;
+  if(!imgs.length){g.innerHTML='';em.style.display='';return}
+  em.style.display='none';document.getElementById('imgStatus').style.display='none';
+  g.innerHTML=imgs.map(img=>'<div class="img-card" data-url="'+esc(img.url)+'" data-alt="'+esc(img.alt||'')+'"><img src="'+esc(img.url)+'" alt="'+esc(img.alt)+'" loading="lazy" onerror="this.parentElement.style.display=\'none\'"><div class="img-card-info">'+esc(img.alt||img.domain||'Image')+'</div></div>').join('');
+  g.querySelectorAll('.img-card').forEach(c=>c.addEventListener('click',()=>openImgModal(c.dataset.url,c.dataset.alt)));
+}
+
+async function searchImages(){const q=document.getElementById('imgQuery').value.trim();if(!q)return;imgStatus(currentLang==='id'?'Mencari...':'Searching...');try{const r=await fetch('/api/images/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})}),j=await r.json();renderImgs(j.ok?j.images:[])}catch(e){imgStatus('Error')}}
+async function scrapeUrl(){const u=document.getElementById('imgUrl').value.trim();if(!u)return;imgStatus('Scraping...');try{const r=await fetch('/api/images/scrape-url',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:u})}),j=await r.json();renderImgs(j.ok?j.images:[])}catch(e){imgStatus('Error')}}
+
+async function uploadImg(inp){
+  const f=inp.files[0];if(!f)return;
+  document.getElementById('uploadPreview').style.display='';
+  document.getElementById('upImg').src=URL.createObjectURL(f);
+  document.getElementById('upName').textContent=f.name;
+  imgStatus(currentLang==='id'?'Mengupload...':'Uploading...');
+  const fd=new FormData();fd.append('file',f);
+  try{const r=await fetch('/api/images/upload',{method:'POST',body:fd}),j=await r.json();renderImgs(j.ok?j.related_images:[])}catch(e){imgStatus('Error')}
+}
+
+function openImgModal(url,alt){
+  selImgUrl=url;
+  document.getElementById('imgModalImg').src=url;
+  document.getElementById('imgModalTitle').textContent=alt||'Image';
+  document.getElementById('imgModalLink').href=url;
+  openModal('imgModal');
+}
+
+async function findRelated(){
+  if(!selImgUrl)return;closeModal('imgModal');
+  imgStatus(currentLang==='id'?'Mencari mirip...':'Finding similar...');
+  try{const r=await fetch('/api/images/related',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image_url:selImgUrl})}),j=await r.json();renderImgs(j.ok?j.images:[])}catch(e){imgStatus('Error')}
+}
+
+const uz=document.getElementById('uploadZone');
+uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('drag-over')});
+uz.addEventListener('dragleave',()=>uz.classList.remove('drag-over'));
+uz.addEventListener('drop',e=>{
+  e.preventDefault();uz.classList.remove('drag-over');
+  if(e.dataTransfer.files.length){const dt=new DataTransfer();dt.items.add(e.dataTransfer.files[0]);document.getElementById('fileInput').files=dt.files;uploadImg(document.getElementById('fileInput'))}
+});
+
+updatePlatformsStat();
+</script>
+{% endblock %}
