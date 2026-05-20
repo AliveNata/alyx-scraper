@@ -25,7 +25,7 @@ Multi-platform web scraper untuk riset dan analisis data dari berbagai sumber.
 ## Fitur
 
 - **Direct Scraping** dari 9 platform
-- **Image Scraper** — URL, pencarian, upload & cari mirip
+- **Image Scraper** - URL, pencarian, upload & cari mirip
 - **Export** ke CSV / JSON / XLSX
 - **Light / Dark Theme** (light default)
 - **Bilingual** Indonesia / English
@@ -36,11 +36,51 @@ Multi-platform web scraper untuk riset dan analisis data dari berbagai sumber.
 
 ---
 
+## Changelog
+
+### v2.0.0 - Mei 2026
+
+**New Features:**
+- UI/UX revamp total dengan desain modern berbasis glassmorphism
+- Direct scraping dari Reddit (JSON API), Kaskus (HTML), X/Twitter (Nitter/twikit), Facebook (facebook-scraper), Threads, Quora, Instagram (instaloader)
+- Image Scraper - cari gambar, scrape dari URL, upload & cari gambar mirip
+- Related image search - temukan gambar serupa dari gambar yang dipilih
+- Admin dashboard tersembunyi (`/alyx-control-panel`) dengan login & password
+- Chart.js line chart usage by date
+- Perbandingan WoW, MoM, QoQ, YoY di admin dashboard
+- Light/Dark theme toggle (light sebagai default)
+- Bilingual Indonesia/English dengan toggle bendera
+- News Sites scraping worldwide termasuk Indonesia (Detik, Kompas, CNN, BBC, Reuters)
+- Halaman Docs dengan sidebar navigasi, changelog, dan fitur baru
+- Footer dengan link docs, repo GitHub, dan Saweria
+- SQLite audit logging (IP, keyword, platform, durasi, lokasi) untuk semua aktivitas
+- Forgot password via email (yagmail + Gmail App Password)
+- Session-based Instagram login via Session ID atau password
+- Twitter login via Auth Token (cookie) atau username/password (twikit)
+- Multi-lokasi input - bisa isi lebih dari satu kota sekaligus
+- Admin panel: platform status checker, test scraper per-platform, pip install dari UI
+
+**Improvements:**
+- Arsitektur backend direfactor ke modular (scraper.py, database.py, image_scraper_module.py)
+- WSGI entry point (`wsgi.py`) untuk PythonAnywhere
+- `.gitignore` yang proper - credentials & session files tidak ikut ke repo
+
+### v1.0.0 - 2024
+
+- Initial release sebagai Pet Scraper
+- Google News RSS scraping
+- Bing News scraping
+- Forum & social media scraping via Google search
+- Export ke Excel, CSV, JSON
+- Flask web interface
+
+---
+
 ## Setup Lokal
 
 ```bash
-git clone https://github.com/AliveNata/pet-scraper.git
-cd pet-scraper
+git clone https://github.com/AliveNata/alyx-scraper.git
+cd alyx-scraper
 
 # Buat virtual environment
 python -m venv venv
@@ -81,4 +121,4 @@ Lihat [DEPLOY.md](DEPLOY.md) untuk panduan lengkap.
 
 ## Lisensi
 
-MIT — gunakan dengan etika, hormati robots.txt dan hak cipta.
+MIT - gunakan dengan etika, hormati robots.txt dan hak cipta.
