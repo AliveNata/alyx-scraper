@@ -4,7 +4,7 @@ WSGI entry point untuk PythonAnywhere.
 Di PythonAnywhere → Web → WSGI configuration file:
   Ganti isi file menjadi:
     import sys, os
-    path = '/home/alivenata/pet-scraper'
+    path = '/home/alivenata/alyx-scraper'
     if path not in sys.path:
         sys.path.insert(0, path)
     from wsgi import application

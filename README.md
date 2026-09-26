@@ -2,7 +2,7 @@
 
 Multi-platform web scraper untuk riset dan analisis data dari berbagai sumber.
 
-**Live:** https://alivenata.pythonanywhere.com
+**Live:** https://scraper.alyxlabs.tech
 
 ---
 
@@ -37,6 +37,15 @@ Multi-platform web scraper untuk riset dan analisis data dari berbagai sumber.
 ---
 
 ## Changelog
+
+### v2.1.0 - Sep 2026 (Security hardening)
+
+- Auth admin pindah ke **session-only** - tidak ada lagi `ADMIN_KEY` yang lewat di URL (`?key=`) atau disuntik ke HTML
+- Password admin sekarang **di-hash** (werkzeug), bukan plaintext. Password plaintext lama otomatis di-upgrade ke hash saat login berikutnya
+- **Endpoint `pip install` dari UI dihapus** - jalur RCE, install dependency lewat SSH saja
+- Session admin punya **timeout 8 jam** (auto-logout)
+- Rate-limit di `/api/forgot-password` (maks 1 request per IP per menit)
+- `SECRET_KEY` & password admin wajib di-set lewat environment / config (lihat Setup)
 
 ### v2.0.0 - Mei 2026
 
@@ -92,12 +101,21 @@ pip install -r requirements.txt
 # Salin config
 cp config.example.json config.json
 # Edit config.json: ganti admin_password, email, dll.
+# admin_password boleh plaintext - otomatis di-hash saat login pertama.
 
 # Jalankan
 python app.py
 ```
 
 Buka **http://localhost:5000**
+
+### Environment variables (produksi)
+
+| Var | Wajib | Fungsi |
+|-----|-------|--------|
+| `SECRET_KEY` | Ya | Kunci penanda cookie session. Set ke nilai acak kuat, misal `openssl rand -hex 32`. Kalau tidak di-set, session admin bisa dipalsukan. |
+
+Deploy live: VPS + gunicorn (`gunicorn app:app -b 127.0.0.1:8001`) di belakang nginx, di-manage PM2. `wsgi.py` disediakan untuk opsi PythonAnywhere tapi bukan yang dipakai sekarang.
 
 ---
 

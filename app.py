@@ -1,12 +1,14 @@
 from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
 from threading import Thread, Lock
+from functools import wraps
+from datetime import timedelta
 import uuid
 import io
 import time
 import json
 import os
-import hashlib
 
+from werkzeug.security import generate_password_hash, check_password_hash
 import pandas as pd
 
 from scraper import UnifiedScraper, SCRAPERS
@@ -15,8 +17,8 @@ from database import log_audit, get_audit_logs, get_usage_stats, get_top_keyword
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.environ.get('SECRET_KEY', 'alivyx-secret-key-change-in-prod')
+app.permanent_session_lifetime = timedelta(hours=8)
 
-ADMIN_KEY = os.environ.get('ADMIN_KEY', 'alivyx2024admin')
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.json')
 
 _DEFAULT_CONFIG = {
@@ -42,6 +44,10 @@ def save_config(cfg):
 
 jobs = {}
 jobs_lock = Lock()
+
+# Rate-limit state for /api/forgot-password (per-IP, in-memory)
+_forgot_hits = {}
+_forgot_lock = Lock()
 
 
 def get_client_ip():
@@ -121,13 +127,29 @@ def admin_login():
     return render_template('admin_login.html', error=None)
 
 
+def _password_ok(pw, cfg):
+    """Verify pw against stored admin_password.
+    Supports werkzeug hashes; auto-upgrades a legacy plaintext value to a hash
+    on first successful login."""
+    stored = cfg.get('admin_password', '')
+    if not stored:
+        return False
+    if stored.startswith(('pbkdf2:', 'scrypt:')):
+        return check_password_hash(stored, pw)
+    # Legacy plaintext -> verify, then upgrade to a hash
+    if pw == stored:
+        cfg['admin_password'] = generate_password_hash(pw)
+        save_config(cfg)
+        return True
+    return False
+
+
 @app.route('/alyx-control-panel/login', methods=['POST'])
 def admin_login_post():
     pw = request.form.get('password', '')
-    # Check config override first, then fallback to default
     cfg = load_config()
-    correct_pw = cfg.get('admin_password', 'Alyvx@password!')
-    if pw == correct_pw:
+    if pw and _password_ok(pw, cfg):
+        session.permanent = True
         session['admin_auth'] = True
         return redirect(url_for('admin_dashboard'))
     return render_template('admin_login.html', error='Password salah. Coba lagi.')
@@ -137,7 +159,7 @@ def admin_login_post():
 def admin_dashboard():
     if not session.get('admin_auth'):
         return redirect(url_for('admin_login'))
-    return render_template('admin.html', admin_key=ADMIN_KEY)
+    return render_template('admin.html')
 
 
 @app.route('/alyx-control-panel/reset-password')
@@ -174,8 +196,8 @@ def admin_reset_password_post():
         return render_template('reset_password.html', token=token, valid=True,
                                error='Password tidak cocok.')
 
-    # Save new password & clear token
-    cfg['admin_password'] = new_pw
+    # Save new password (hashed) & clear token
+    cfg['admin_password'] = generate_password_hash(new_pw)
     cfg.pop('reset_token', None)
     save_config(cfg)
     return render_template('reset_password.html', token='', valid=False, success=True)
@@ -184,6 +206,14 @@ def admin_reset_password_post():
 @app.route('/api/forgot-password', methods=['POST'])
 def api_forgot_password():
     """Send reset email. Called from admin_login.html JS."""
+    # Rate-limit: max 1 request per IP per 60s (blunts email spam / token churn)
+    ip = get_client_ip()
+    now = time.time()
+    with _forgot_lock:
+        if now - _forgot_hits.get(ip, 0) < 60:
+            return jsonify({'ok': False, 'error': 'Terlalu sering. Coba lagi dalam 1 menit.'}), 429
+        _forgot_hits[ip] = now
+
     cfg = load_config()
     email_cfg = cfg.get('email', {})
     sender = email_cfg.get('gmail_user', '').strip()
@@ -445,9 +475,8 @@ def api_images_upload():
 # ─── Admin API ────────────────────────────────────────────────────────
 @app.route('/api/admin/logs')
 def api_admin_logs():
-    key = request.args.get('key', '')
-    if key != ADMIN_KEY:
-        return jsonify({'ok': False}), 403
+    if not session.get('admin_auth'):
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
 
     limit = int(request.args.get('limit', 200))
     offset = int(request.args.get('offset', 0))
@@ -462,9 +491,8 @@ def api_admin_logs():
 
 @app.route('/api/admin/stats')
 def api_admin_stats():
-    key = request.args.get('key', '')
-    if key != ADMIN_KEY:
-        return jsonify({'ok': False}), 403
+    if not session.get('admin_auth'):
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
 
     period = request.args.get('period', 'daily')
     days = int(request.args.get('days', 90))
@@ -486,17 +514,15 @@ def api_admin_stats():
 # ─── Settings API ─────────────────────────────────────────────────────
 @app.route('/api/admin/settings', methods=['GET'])
 def api_admin_settings_get():
-    key = request.args.get('key', '')
-    if key != ADMIN_KEY:
-        return jsonify({'ok': False}), 403
+    if not session.get('admin_auth'):
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
     return jsonify({'ok': True, 'config': load_config()})
 
 
 @app.route('/api/admin/settings', methods=['POST'])
 def api_admin_settings_post():
-    key = request.args.get('key', '')
-    if key != ADMIN_KEY:
-        return jsonify({'ok': False}), 403
+    if not session.get('admin_auth'):
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
     data = request.json or {}
     cfg = load_config()
     if 'twitter' in data:
@@ -520,9 +546,8 @@ def api_admin_settings_post():
 
 @app.route('/api/admin/test-email', methods=['POST'])
 def api_admin_test_email():
-    key = request.args.get('key', '')
-    if key != ADMIN_KEY:
-        return jsonify({'ok': False}), 403
+    if not session.get('admin_auth'):
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
     cfg = load_config()
     em = cfg.get('email', {})
     sender = em.get('gmail_user', '').strip()
@@ -545,9 +570,8 @@ def api_admin_test_email():
 
 @app.route('/api/admin/platform-status')
 def api_admin_platform_status():
-    key = request.args.get('key', '')
-    if key != ADMIN_KEY:
-        return jsonify({'ok': False}), 403
+    if not session.get('admin_auth'):
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
 
     cfg = load_config()
 
@@ -583,37 +607,10 @@ def api_admin_platform_status():
     })
 
 
-@app.route('/api/admin/pip-install', methods=['POST'])
-def api_admin_pip_install():
-    key = request.args.get('key', '')
-    if key != ADMIN_KEY:
-        return jsonify({'ok': False}), 403
-    import subprocess, sys
-    pkg = (request.json or {}).get('package', '').strip()
-    if not pkg or any(c in pkg for c in [';', '&', '|', '`', '$']):
-        return jsonify({'ok': False, 'error': 'Invalid package name'}), 400
-    try:
-        result = subprocess.run(
-            [sys.executable, '-m', 'pip', 'install', pkg],
-            capture_output=True, text=True, timeout=120
-        )
-        success = result.returncode == 0
-        return jsonify({
-            'ok': success,
-            'stdout': result.stdout[-3000:],
-            'stderr': result.stderr[-1000:],
-        })
-    except subprocess.TimeoutExpired:
-        return jsonify({'ok': False, 'error': 'Timeout (120s)'}), 500
-    except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
-
-
 @app.route('/api/admin/login-instagram', methods=['POST'])
 def api_admin_login_instagram():
-    key = request.args.get('key', '')
-    if key != ADMIN_KEY:
-        return jsonify({'ok': False}), 403
+    if not session.get('admin_auth'):
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
     data = request.json or {}
     username   = data.get('username', '').strip()
     session_id = data.get('session_id', '').strip()   # preferred: cookie-based
@@ -682,9 +679,8 @@ def api_admin_login_instagram():
 
 @app.route('/api/admin/instagram-status', methods=['GET'])
 def api_admin_instagram_status():
-    key = request.args.get('key', '')
-    if key != ADMIN_KEY:
-        return jsonify({'ok': False}), 403
+    if not session.get('admin_auth'):
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
     cfg = load_config()
     ig = cfg.get('instagram', {})
     username = ig.get('username', '')
@@ -695,9 +691,8 @@ def api_admin_instagram_status():
 
 @app.route('/api/admin/logout-instagram', methods=['POST'])
 def api_admin_logout_instagram():
-    key = request.args.get('key', '')
-    if key != ADMIN_KEY:
-        return jsonify({'ok': False}), 403
+    if not session.get('admin_auth'):
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
     cfg = load_config()
     ig = cfg.get('instagram', {})
     session_file = ig.get('session_file', '')
@@ -713,9 +708,8 @@ def api_admin_logout_instagram():
 
 @app.route('/api/admin/twitter-status', methods=['GET'])
 def api_admin_twitter_status():
-    key = request.args.get('key', '')
-    if key != ADMIN_KEY:
-        return jsonify({'ok': False}), 403
+    if not session.get('admin_auth'):
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
     cfg = load_config()
     tw = cfg.get('twitter', {})
     cookies_path = os.path.join(os.path.dirname(__file__), 'twitter_cookies.json')
@@ -726,9 +720,8 @@ def api_admin_twitter_status():
 
 @app.route('/api/admin/login-twitter', methods=['POST'])
 def api_admin_login_twitter():
-    key = request.args.get('key', '')
-    if key != ADMIN_KEY:
-        return jsonify({'ok': False}), 403
+    if not session.get('admin_auth'):
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
     data       = request.json or {}
     method     = data.get('method', 'password')   # 'cookie' or 'password'
     username   = data.get('username', '').strip()
@@ -852,9 +845,8 @@ def api_admin_login_twitter():
 
 @app.route('/api/admin/logout-twitter', methods=['POST'])
 def api_admin_logout_twitter():
-    key = request.args.get('key', '')
-    if key != ADMIN_KEY:
-        return jsonify({'ok': False}), 403
+    if not session.get('admin_auth'):
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
     cookies_path = os.path.join(os.path.dirname(__file__), 'twitter_cookies.json')
     if os.path.exists(cookies_path):
         try:
@@ -871,9 +863,8 @@ def api_admin_logout_twitter():
 
 @app.route('/api/admin/test-nitter', methods=['POST'])
 def api_admin_test_nitter():
-    key = request.args.get('key', '')
-    if key != ADMIN_KEY:
-        return jsonify({'ok': False}), 403
+    if not session.get('admin_auth'):
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
     data = request.json or {}
     instances = [s.strip() for s in data.get('instances', []) if s.strip()]
     results = []
@@ -889,9 +880,8 @@ def api_admin_test_nitter():
 @app.route('/api/admin/test-scraper', methods=['POST'])
 def api_admin_test_scraper():
     """Quick-test a single platform with a keyword. Returns count + sample."""
-    key = request.args.get('key', '')
-    if key != ADMIN_KEY:
-        return jsonify({'ok': False}), 403
+    if not session.get('admin_auth'):
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
 
     data = request.json or {}
     platform = data.get('platform', '')

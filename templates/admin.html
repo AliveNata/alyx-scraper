@@ -779,30 +779,6 @@ code.i { background: var(--glass); border: 1px solid var(--glass-b); padding: 1p
         </div>
       </div>
 
-      <!-- Package Manager -->
-      <div class="g-card">
-        <div class="g-card-head">
-          <div class="g-card-title"><i class="bi bi-box-seam-fill"></i> Package Manager</div>
-          <span style="font-size:.77rem;color:var(--t3)">pip install langsung dari browser</span>
-        </div>
-        <div class="g-card-body">
-          <div style="display:flex;gap:8px;margin-bottom:12px">
-            <input class="g-input" id="pipPkg" placeholder="nama-package (misal: twikit)" style="flex:1"
-              onkeydown="if(event.key==='Enter')pipInstall()">
-            <button class="g-btn g-btn-primary" onclick="pipInstall()" id="pipBtn">
-              <i class="bi bi-download"></i> Install
-            </button>
-          </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-            <button class="g-btn" style="font-size:.76rem;padding:4px 10px" onclick="quickInstall('twikit')">twikit</button>
-            <button class="g-btn" style="font-size:.76px;padding:4px 10px" onclick="quickInstall('instaloader')">instaloader</button>
-            <button class="g-btn" style="font-size:.76rem;padding:4px 10px" onclick="quickInstall('facebook-scraper')">facebook-scraper</button>
-            <button class="g-btn" style="font-size:.76rem;padding:4px 10px" onclick="quickInstall('lxml')">lxml</button>
-          </div>
-          <div id="pipOutput" style="display:none;background:rgba(0,0,0,.2);border:1px solid var(--glass-b);border-radius:10px;padding:12px;font-family:monospace;font-size:.76rem;color:var(--t2);max-height:200px;overflow-y:auto;white-space:pre-wrap;line-height:1.6"></div>
-        </div>
-      </div>
-
       <!-- Scraper Diagnostics -->
       <div class="g-card">
         <div class="g-card-head">
@@ -866,7 +842,6 @@ code.i { background: var(--glass); border: 1px solid var(--glass-b); padding: 1p
 
 {% block extra_js %}
 <script>
-const ADMIN_KEY = '{{ admin_key }}';
 let usageChart = null;
 
 function esc(s){ return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '' }
@@ -888,7 +863,7 @@ async function loadStats(){
   const period = document.getElementById('chartPeriod').value;
   const days   = document.getElementById('chartDays').value;
   try {
-    const r = await fetch(`/api/admin/stats?key=${ADMIN_KEY}&period=${period}&days=${days}`);
+    const r = await fetch(`/api/admin/stats?period=${period}&days=${days}`);
     const j = await r.json(); if(!j.ok) return;
     const s = j.summary || {};
 
@@ -984,7 +959,7 @@ async function loadLogs(){
   const action = document.getElementById('logAction').value;
   const from   = document.getElementById('logFrom').value;
   const to     = document.getElementById('logTo').value;
-  let url = `/api/admin/logs?key=${ADMIN_KEY}&limit=200`;
+  let url = `/api/admin/logs?limit=200`;
   if(action) url += '&action=' + action;
   if(from)   url += '&date_from=' + from;
   if(to)     url += '&date_to=' + to;
@@ -1021,7 +996,7 @@ async function loadLogs(){
 // ── Settings ──
 async function loadSettings(){
   try {
-    const r = await fetch(`/api/admin/settings?key=${ADMIN_KEY}`);
+    const r = await fetch(`/api/admin/settings`);
     const j = await r.json(); if(!j.ok) return;
     const tw = j.config?.twitter || {};
     document.getElementById('useTwikit').checked = !!tw.use_twikit;
@@ -1040,7 +1015,7 @@ async function saveSettings(){
     .split('\n').map(s => s.trim()).filter(Boolean);
   const msg = document.getElementById('saveMsg');
   try {
-    const r = await fetch(`/api/admin/settings?key=${ADMIN_KEY}`, {
+    const r = await fetch(`/api/admin/settings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ twitter: { use_twikit, nitter_instances } })
@@ -1068,7 +1043,7 @@ async function testNitter(){
   const statusEl = document.getElementById('nitterTestStatus');
   statusEl.innerHTML = '<span class="nitter-badge nitter-wait"><i class="bi bi-hourglass-split"></i> Testing...</span>';
   try {
-    const r = await fetch(`/api/admin/test-nitter?key=${ADMIN_KEY}`, {
+    const r = await fetch(`/api/admin/test-nitter`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ instances })
@@ -1095,7 +1070,7 @@ function toggleEmailPw(){
 
 async function loadEmailConfig(){
   try {
-    const r = await fetch(`/api/admin/settings?key=${ADMIN_KEY}`);
+    const r = await fetch(`/api/admin/settings`);
     const j = await r.json(); if(!j.ok) return;
     const em = j.config?.email || {};
     document.getElementById('emailUser').value = em.gmail_user || '';
@@ -1114,7 +1089,7 @@ async function saveEmailConfig(){
   const msg = document.getElementById('emailSaveMsg');
   btn.disabled = true;
   try {
-    const r = await fetch(`/api/admin/settings?key=${ADMIN_KEY}`, {
+    const r = await fetch(`/api/admin/settings`, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ email: {
@@ -1141,7 +1116,7 @@ async function testEmail(){
   btn.disabled = true;
   btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid var(--glass-b);border-top-color:var(--t1);border-radius:50%;animation:spin .7s linear infinite"></span> Mengirim...';
   try {
-    const r = await fetch(`/api/admin/test-email?key=${ADMIN_KEY}`, { method: 'POST' });
+    const r = await fetch(`/api/admin/test-email`, { method: 'POST' });
     const j = await r.json();
     if(j.ok){
       msg.style.color = '#22c55e';
@@ -1170,7 +1145,7 @@ function _statusBadge(level, label){
 
 async function loadPlatformStatus(){
   try {
-    const r = await fetch(`/api/admin/platform-status?key=${ADMIN_KEY}`);
+    const r = await fetch(`/api/admin/platform-status`);
     const j = await r.json();
     if(!j.ok) return;
     const s = j.status;
@@ -1256,7 +1231,7 @@ function onTwikitToggle(){
 
 async function checkTwitterStatus(){
   try {
-    const r = await fetch(`/api/admin/twitter-status?key=${ADMIN_KEY}`);
+    const r = await fetch(`/api/admin/twitter-status`);
     const j = await r.json();
     const loggedIn = j.ok && j.logged_in;
     document.getElementById('twLoggedIn').style.display  = loggedIn ? '' : 'none';
@@ -1300,7 +1275,7 @@ async function loginTwitter(){
   msg.textContent = useCookie ? 'Memverifikasi token...' : 'Menghubungi X/Twitter... (10-30 detik)';
 
   try {
-    const r = await fetch(`/api/admin/login-twitter?key=${ADMIN_KEY}`, {
+    const r = await fetch(`/api/admin/login-twitter`, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify(payload)
@@ -1324,7 +1299,7 @@ async function loginTwitter(){
 
 async function logoutTwitter(){
   if(!confirm('Hapus session Twitter/X?')) return;
-  await fetch(`/api/admin/logout-twitter?key=${ADMIN_KEY}`, { method: 'POST' });
+  await fetch(`/api/admin/logout-twitter`, { method: 'POST' });
   checkTwitterStatus();
   loadPlatformStatus();
 }
@@ -1341,7 +1316,7 @@ function igSwitchTab(method){
 // ── Instagram Login ──
 async function checkInstagramStatus(){
   try {
-    const r = await fetch(`/api/admin/instagram-status?key=${ADMIN_KEY}`);
+    const r = await fetch(`/api/admin/instagram-status`);
     const j = await r.json();
     const loggedIn = j.ok && j.logged_in;
     document.getElementById('igLoggedIn').style.display  = loggedIn ? '' : 'none';
@@ -1382,7 +1357,7 @@ async function loginInstagram(){
   msg.style.color = 'var(--t2)'; msg.textContent = 'Menghubungi Instagram...';
 
   try {
-    const r = await fetch(`/api/admin/login-instagram?key=${ADMIN_KEY}`, {
+    const r = await fetch(`/api/admin/login-instagram`, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify(payload)
@@ -1409,45 +1384,8 @@ async function loginInstagram(){
 
 async function logoutInstagram(){
   if(!confirm('Logout dari Instagram?')) return;
-  await fetch(`/api/admin/logout-instagram?key=${ADMIN_KEY}`, { method: 'POST' });
+  await fetch(`/api/admin/logout-instagram`, { method: 'POST' });
   checkInstagramStatus();
-}
-
-// ── Package Manager ──
-async function pipInstall(pkg){
-  pkg = pkg || document.getElementById('pipPkg').value.trim();
-  if(!pkg) return;
-  const btn = document.getElementById('pipBtn');
-  const out = document.getElementById('pipOutput');
-  btn.disabled = true;
-  btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></span> Installing...';
-  out.style.display = '';
-  out.textContent = `$ pip install ${pkg}\n\nMenginstall, harap tunggu...\n`;
-  try {
-    const r = await fetch(`/api/admin/pip-install?key=${ADMIN_KEY}`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ package: pkg })
-    });
-    const j = await r.json();
-    out.textContent = `$ pip install ${pkg}\n\n` + (j.stdout || '') + (j.stderr ? '\n[stderr]\n' + j.stderr : '');
-    out.scrollTop = out.scrollHeight;
-    if(j.ok){
-      out.style.borderColor = 'rgba(34,197,94,.35)';
-    } else {
-      out.style.borderColor = 'rgba(239,68,68,.35)';
-    }
-  } catch(e){
-    out.textContent += '\nError: ' + e.message;
-    out.style.borderColor = 'rgba(239,68,68,.35)';
-  }
-  btn.disabled = false;
-  btn.innerHTML = '<i class="bi bi-download"></i> Install';
-}
-
-function quickInstall(pkg){
-  document.getElementById('pipPkg').value = pkg;
-  pipInstall(pkg);
 }
 
 // ── Scraper Diagnostics ──
@@ -1466,7 +1404,7 @@ async function runDiag(){
   sampleEl.innerHTML = '';
 
   try {
-    const r = await fetch(`/api/admin/test-scraper?key=${ADMIN_KEY}`, {
+    const r = await fetch(`/api/admin/test-scraper`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ platform, keyword })
