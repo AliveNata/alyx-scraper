@@ -198,8 +198,10 @@ class BaseScraper:
         combined = ' '.join(str(t).lower() for t in texts if t)
         return all(w in combined for w in words)
 
-    def _ddg_fallback(self, query, platform, site_filter, max_results):
-        """DuckDuckGo HTML search — usually bypasses rate-limits that block Google."""
+    def _ddg_fallback(self, query, platform, site_filter, max_results, keyword=None):
+        """DuckDuckGo HTML search — usually bypasses rate-limits that block Google.
+        When `keyword` is given, drop results that don't actually mention it
+        (search engines rank navigational/homepage pages that aren't relevant)."""
         results = []
         try:
             from urllib.parse import unquote, parse_qs, urlparse as _up
@@ -227,10 +229,13 @@ class BaseScraper:
                         pass
                 if not href or not title:
                     continue
+                content = self.clean(snip_el.get_text()) if snip_el else title
+                if keyword and not self._kw_matches(keyword, title, content):
+                    continue
                 results.append({
                     'platform': platform,
                     'title':    title,
-                    'content':  self.clean(snip_el.get_text()) if snip_el else title,
+                    'content':  content,
                     'url':      href,
                     'date':     datetime.now().strftime('%Y-%m-%d %H:%M'),
                     'source':   platform,
@@ -243,8 +248,9 @@ class BaseScraper:
             pass
         return results
 
-    def _google_fallback(self, query, platform, site_filter, max_results):
-        """Google site-search fallback."""
+    def _google_fallback(self, query, platform, site_filter, max_results, keyword=None):
+        """Google site-search fallback. When `keyword` is given, drop results
+        that don't mention it (filters out navigational/homepage hits)."""
         results = []
         try:
             url = f"https://www.google.com/search?q={quote_plus(query)}+site:{site_filter}&num=10"
@@ -255,10 +261,14 @@ class BaseScraper:
                 a = g.find('a', href=True)
                 if t and a:
                     sn = g.find(['span', 'div'], class_=lambda c: c and 'VwiC3b' in str(c))
+                    title = self.clean(t.get_text())
+                    content = self.clean(sn.get_text()) if sn else title
+                    if keyword and not self._kw_matches(keyword, title, content):
+                        continue
                     results.append({
                         'platform': platform,
-                        'title': self.clean(t.get_text()),
-                        'content': self.clean(sn.get_text()) if sn else self.clean(t.get_text()),
+                        'title': title,
+                        'content': content,
                         'url': a['href'],
                         'date': datetime.now().strftime('%Y-%m-%d %H:%M'),
                         'source': platform,
@@ -513,7 +523,7 @@ class RedditScraper(BaseScraper):
                 self.update_status("[Reddit] Koneksi ke Reddit diblokir — coba Google fallback...")
             else:
                 self.update_status("[Reddit] Coba Google fallback...")
-            results = self._google_fallback(query, 'Reddit', 'reddit.com', max_results)
+            results = self._google_fallback(query, 'Reddit', 'reddit.com', max_results, keyword=keyword)
             for r in results:
                 r['keyword'] = keyword
                 r['location'] = location
@@ -580,14 +590,14 @@ class KaskusScraper(BaseScraper):
 
         # Strategy 1: DuckDuckGo (usually works without rate-limiting)
         self.update_status("[Kaskus] Coba DuckDuckGo (Kaskus React SPA)...")
-        results = self._ddg_fallback(query, 'Kaskus', 'kaskus.co.id', max_results)
+        results = self._ddg_fallback(query, 'Kaskus', 'kaskus.co.id', max_results, keyword=keyword)
         if results:
             self.update_status(f"[Kaskus] DuckDuckGo: {len(results)} hasil")
 
         # Strategy 2: Google fallback
         if not results:
             self.update_status("[Kaskus] Coba Google fallback...")
-            results = self._google_fallback(query, 'Kaskus', 'kaskus.co.id', max_results)
+            results = self._google_fallback(query, 'Kaskus', 'kaskus.co.id', max_results, keyword=keyword)
             if results:
                 self.update_status(f"[Kaskus] Google: {len(results)} hasil")
 
@@ -625,7 +635,7 @@ class TwitterScraper(BaseScraper):
             if not results:
                 self.update_status("[X/Twitter] Coba DuckDuckGo fallback...")
                 results = self._ddg_fallback(
-                    f"{keyword} {location}".strip(), 'X/Twitter', 'x.com', max_results
+                    f"{keyword} {location}".strip(), 'X/Twitter', 'x.com', max_results, keyword=keyword
                 )
                 for r in results:
                     r['keyword'] = keyword
@@ -634,7 +644,7 @@ class TwitterScraper(BaseScraper):
             if not results:
                 self.update_status("[X/Twitter] Coba Google fallback...")
                 results = self._google_fallback(
-                    f"{keyword} {location}".strip(), 'X/Twitter', 'x.com', max_results
+                    f"{keyword} {location}".strip(), 'X/Twitter', 'x.com', max_results, keyword=keyword
                 )
                 for r in results:
                     r['keyword'] = keyword
@@ -1057,7 +1067,7 @@ class FacebookScraper(BaseScraper):
         # Attempt 3: Google fallback (site:facebook.com)
         if not results:
             self.update_status("[Facebook] Coba Google fallback...")
-            results = self._google_fallback(query, 'Facebook', 'facebook.com', max_results)
+            results = self._google_fallback(query, 'Facebook', 'facebook.com', max_results, keyword=keyword)
             for r in results:
                 r['keyword'] = keyword
                 r['location'] = location
@@ -1255,7 +1265,7 @@ class ThreadsScraper(BaseScraper):
         # Attempt 2: Google fallback (site:threads.net)
         if not results:
             self.update_status("[Threads] Coba Google fallback (site:threads.net)...")
-            results = self._google_fallback(query, 'Threads', 'threads.net', max_results)
+            results = self._google_fallback(query, 'Threads', 'threads.net', max_results, keyword=keyword)
             for r in results:
                 r['keyword'] = keyword
                 r['location'] = location
@@ -1458,14 +1468,14 @@ class QuoraScraper(BaseScraper):
         # Attempt 3: DuckDuckGo (site:quora.com) — avoids Google rate-limits
         if not results:
             self.update_status("[Quora] Coba DuckDuckGo fallback...")
-            results = self._ddg_fallback(query, 'Quora', 'quora.com', max_results)
+            results = self._ddg_fallback(query, 'Quora', 'quora.com', max_results, keyword=keyword)
             if results:
                 self.update_status(f"[Quora] DuckDuckGo: {len(results)} results")
 
         # Attempt 4: Google fallback (site:quora.com)
         if not results:
             self.update_status("[Quora] Coba Google fallback...")
-            results = self._google_fallback(query, 'Quora', 'quora.com', max_results)
+            results = self._google_fallback(query, 'Quora', 'quora.com', max_results, keyword=keyword)
 
         for r in results:
             r['keyword'] = keyword
@@ -1646,10 +1656,10 @@ class InstagramScraper(BaseScraper):
         # Attempt 4: DuckDuckGo then Google fallback
         if not results:
             self.update_status("[Instagram] Coba DuckDuckGo fallback...")
-            results = self._ddg_fallback(query, 'Instagram', 'instagram.com', max_results)
+            results = self._ddg_fallback(query, 'Instagram', 'instagram.com', max_results, keyword=keyword)
         if not results:
             self.update_status("[Instagram] Coba Google fallback...")
-            results = self._google_fallback(query, 'Instagram', 'instagram.com', max_results)
+            results = self._google_fallback(query, 'Instagram', 'instagram.com', max_results, keyword=keyword)
         for r in results:
             r['keyword'] = keyword
             r['location'] = location
