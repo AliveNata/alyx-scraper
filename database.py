@@ -70,7 +70,8 @@ def get_audit_logs(limit=200, offset=0, action_filter=None, date_from=None, date
         query += " AND created_at >= ?"
         params.append(date_from)
     if date_to:
-        query += " AND created_at <= ?"
+        # inclusive of the whole date_to day (created_at carries a time component)
+        query += " AND created_at < date(?, '+1 day')"
         params.append(date_to)
 
     query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
@@ -85,26 +86,26 @@ def get_usage_stats(period='daily', days=90):
     conn = get_db()
     cutoff = (datetime.utcnow() - timedelta(days=days)).strftime('%Y-%m-%d')
 
-    if period == 'daily':
-        group_fmt = '%Y-%m-%d'
-    elif period == 'weekly':
-        group_fmt = '%Y-%W'
+    if period == 'weekly':
+        period_expr = "strftime('%Y-W%W', created_at)"
     elif period == 'monthly':
-        group_fmt = '%Y-%m'
+        period_expr = "strftime('%Y-%m', created_at)"
     elif period == 'quarterly':
-        group_fmt = '%Y-%m'
-    else:
-        group_fmt = '%Y-%m-%d'
+        # SQLite has no quarter token: derive Q1-Q4 from the month
+        period_expr = ("strftime('%Y', created_at) || '-Q' || "
+                       "((cast(strftime('%m', created_at) as integer) + 2) / 3)")
+    else:  # daily
+        period_expr = "strftime('%Y-%m-%d', created_at)"
 
     rows = conn.execute(f"""
-        SELECT strftime('{group_fmt}', created_at) as period,
+        SELECT {period_expr} as period,
                COUNT(*) as total_requests,
                COUNT(DISTINCT ip_address) as unique_users,
                SUM(results_count) as total_results,
                AVG(duration_seconds) as avg_duration
         FROM audit_logs
         WHERE created_at >= ? AND action = 'scrape'
-        GROUP BY strftime('{group_fmt}', created_at)
+        GROUP BY period
         ORDER BY period
     """, (cutoff,)).fetchall()
     conn.close()
@@ -125,16 +126,27 @@ def get_top_keywords(limit=20, days=30):
 
 
 def get_top_platforms(days=30):
+    # platform is stored comma-joined per scrape (e.g. "Reddit,X/Twitter"),
+    # so split and aggregate in Python instead of GROUP BY on the joined string.
     conn = get_db()
     cutoff = (datetime.utcnow() - timedelta(days=days)).strftime('%Y-%m-%d')
     rows = conn.execute("""
-        SELECT platform, COUNT(*) as count, SUM(results_count) as total_results
+        SELECT platform, results_count
         FROM audit_logs
         WHERE created_at >= ? AND action = 'scrape' AND platform IS NOT NULL
-        GROUP BY platform ORDER BY count DESC
     """, (cutoff,)).fetchall()
     conn.close()
-    return [dict(r) for r in rows]
+
+    agg = {}
+    for r in rows:
+        for p in (r['platform'] or '').split(','):
+            p = p.strip()
+            if not p:
+                continue
+            entry = agg.setdefault(p, {'platform': p, 'count': 0, 'total_results': 0})
+            entry['count'] += 1
+            entry['total_results'] += r['results_count'] or 0
+    return sorted(agg.values(), key=lambda e: e['count'], reverse=True)
 
 
 def get_summary_stats():

@@ -3,11 +3,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import quote_plus, urljoin, urlparse
 import re
 import os
-import time
-import random
-import hashlib
 import base64
-from io import BytesIO
 
 
 class ImageScraper:

@@ -47,6 +47,15 @@ Multi-platform web scraper untuk riset dan analisis data dari berbagai sumber.
 - Rate-limit di `/api/forgot-password` (maks 1 request per IP per menit)
 - `SECRET_KEY` & password admin wajib di-set lewat environment / config (lihat Setup)
 
+**Bug fixes:**
+- Statistik platform di admin dashboard sekarang dihitung per-platform (dulu string gabungan ke-`GROUP BY` utuh)
+- Perbandingan QoQ dikelompokkan per kuartal beneran (dulu identik dengan bulanan)
+- Filter `date_to` di audit log inklusif sampai akhir hari (dulu kelewat 1 hari)
+- Simpan Settings tidak lagi menghapus username Twitter yang tersimpan
+- Fitur upload gambar dilabel ulang "Upload & Cari" (mencari via nama file, bukan reverse image)
+- Job scraper lama dibersihkan dari memori (cegah kebocoran memori)
+- Hapus `analytics.py` (Streamlit lama yang sudah tidak terpakai) & `Procfile.txt`
+
 ### v2.0.0 - Mei 2026
 
 **New Features:**

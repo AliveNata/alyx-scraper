@@ -54,7 +54,18 @@ def get_client_ip():
     return request.headers.get('X-Forwarded-For', request.remote_addr or '127.0.0.1').split(',')[0].strip()
 
 
+def _prune_jobs(max_age=3600):
+    """Drop finished jobs older than max_age so the in-memory dict does not grow forever."""
+    now = time.time()
+    with jobs_lock:
+        stale = [jid for jid, r in jobs.items()
+                 if r.get('finished_at') and now - r['finished_at'] > max_age]
+        for jid in stale:
+            jobs.pop(jid, None)
+
+
 def create_job_record():
+    _prune_jobs()
     job_id = str(uuid.uuid4())
     rec = {
         'status': 'queued',
@@ -527,12 +538,13 @@ def api_admin_settings_post():
     cfg = load_config()
     if 'twitter' in data:
         tw = data['twitter']
-        cfg['twitter'] = {
-            'use_twikit': bool(tw.get('use_twikit', False)),
-            'nitter_instances': [
-                s.strip() for s in tw.get('nitter_instances', []) if s.strip()
-            ]
-        }
+        # Merge into existing twitter config so a saved login (username) is kept
+        cfg_tw = cfg.get('twitter', {})
+        cfg_tw['use_twikit'] = bool(tw.get('use_twikit', False))
+        cfg_tw['nitter_instances'] = [
+            s.strip() for s in tw.get('nitter_instances', []) if s.strip()
+        ]
+        cfg['twitter'] = cfg_tw
     if 'email' in data:
         em = data['email']
         cfg['email'] = {
