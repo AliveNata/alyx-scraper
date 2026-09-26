@@ -110,7 +110,9 @@ class BaseScraper:
             'User-Agent': BROWSER_UA,
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
-            'Accept-Encoding': 'gzip, deflate, br',
+            # Advertise only what requests can decode; 'br' (Brotli) needs the
+            # brotli package or responses come back as undecodable bytes.
+            'Accept-Encoding': 'gzip, deflate',
             'Connection': 'keep-alive',
             'DNT': '1',
         })
