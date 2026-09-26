@@ -49,6 +49,7 @@ Multi-platform web scraper untuk riset dan analisis data dari berbagai sumber.
 
 **New:**
 - Reverse image search asli untuk fitur upload via **Google Cloud Vision** (Web Detection). Set API key di Admin -> Settings -> Reverse Image Search. Tanpa key, upload jatuh ke pencarian nama file. Gratis s/d 1.000 request/bulan.
+- Reddit via **API resmi (OAuth application-only)**. Set client_id + client_secret (script app) di Admin -> Settings -> Reddit API. Tanpa kredensial, jatuh ke metode scraping lama. Lebih stabil karena tidak kena blok IP.
 
 **Bug fixes:**
 - Statistik platform di admin dashboard sekarang dihitung per-platform (dulu string gabungan ke-`GROUP BY` utuh)

@@ -601,6 +601,12 @@ def api_admin_settings_post():
         }
     if 'google_vision_key' in data:
         cfg['google_vision_key'] = (data.get('google_vision_key') or '').strip()
+    if 'reddit' in data:
+        rd = data['reddit']
+        cfg['reddit'] = {
+            'client_id':     (rd.get('client_id') or '').strip(),
+            'client_secret': (rd.get('client_secret') or '').strip(),
+        }
     save_config(cfg)
     return jsonify({'ok': True})
 

@@ -720,6 +720,42 @@ code.i { background: var(--glass); border: 1px solid var(--glass-b); padding: 1p
         </div>
       </div>
 
+      <!-- Reddit API (official OAuth) -->
+      <div class="g-card">
+        <div class="g-card-head">
+          <div class="g-card-title"><i class="bi bi-reddit"></i> Reddit API</div>
+          <span id="redditStatusBadge"></span>
+        </div>
+        <div class="g-card-body">
+          <div class="settings-hint" style="margin-bottom:16px">
+            Kredensial <strong>Reddit API resmi</strong> (script app) supaya scraping Reddit stabil, bukan lewat scraping yang diblok.
+            Bikin di <a href="https://www.reddit.com/prefs/apps" target="_blank" style="color:var(--accent)">reddit.com/prefs/apps</a> -> create app -> tipe <strong>script</strong>.
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;max-width:440px">
+            <div>
+              <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">Client ID</label>
+              <input class="g-input" id="redditId" placeholder="di bawah nama app" style="width:100%">
+            </div>
+            <div>
+              <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">Client Secret</label>
+              <div style="position:relative">
+                <input class="g-input" type="password" id="redditSecret" placeholder="secret" style="width:100%;padding-right:38px">
+                <button type="button" onclick="toggleRedditSecret()"
+                  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t3);cursor:pointer;font-size:.95rem">
+                  <i class="bi bi-eye" id="redditEye"></i>
+                </button>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <button class="g-btn g-btn-primary" onclick="saveRedditCfg()" id="redditSaveBtn">
+                <i class="bi bi-floppy-fill"></i> Simpan
+              </button>
+              <span id="redditSaveMsg" style="font-size:.8rem"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Instagram Login -->
       <div class="g-card">
         <div class="g-card-head">
@@ -1038,6 +1074,7 @@ async function loadSettings(){
   } catch(e){ console.error(e) }
   loadEmailConfig();
   loadVisionKey();
+  loadRedditCfg();
   checkInstagramStatus();
   checkTwitterStatus();
   loadPlatformStatus();
@@ -1092,6 +1129,49 @@ async function testNitter(){
   } catch(e){
     statusEl.innerHTML = '<span class="nitter-badge nitter-fail"><i class="bi bi-wifi-off"></i> Test gagal</span>';
   }
+}
+
+// ── Reddit API ──
+function toggleRedditSecret(){
+  const inp = document.getElementById('redditSecret');
+  const icon = document.getElementById('redditEye');
+  if(inp.type === 'password'){ inp.type = 'text'; icon.className = 'bi bi-eye-slash'; }
+  else { inp.type = 'password'; icon.className = 'bi bi-eye'; }
+}
+
+async function loadRedditCfg(){
+  try {
+    const r = await fetch(`/api/admin/settings`);
+    const j = await r.json(); if(!j.ok) return;
+    const rd = j.config?.reddit || {};
+    document.getElementById('redditId').value = rd.client_id || '';
+    document.getElementById('redditSecret').value = rd.client_secret || '';
+    const on = !!(rd.client_id && rd.client_secret);
+    document.getElementById('redditStatusBadge').innerHTML = on
+      ? '<span class="nitter-badge nitter-ok"><i class="bi bi-check-circle-fill"></i> Aktif</span>'
+      : '<span class="nitter-badge nitter-fail"><i class="bi bi-x-circle-fill"></i> Belum di-set</span>';
+  } catch(e){}
+}
+
+async function saveRedditCfg(){
+  const btn = document.getElementById('redditSaveBtn');
+  const msg = document.getElementById('redditSaveMsg');
+  btn.disabled = true;
+  try {
+    const r = await fetch(`/api/admin/settings`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ reddit: {
+        client_id:     document.getElementById('redditId').value.trim(),
+        client_secret: document.getElementById('redditSecret').value.trim(),
+      }})
+    });
+    const j = await r.json();
+    if(j.ok){ msg.style.color = '#22c55e'; msg.textContent = '✓ Tersimpan'; loadRedditCfg(); }
+    else { msg.style.color = '#ef4444'; msg.textContent = '✗ Gagal simpan'; }
+  } catch(e){ msg.style.color = '#ef4444'; msg.textContent = '✗ Error'; }
+  btn.disabled = false;
+  setTimeout(() => msg.textContent = '', 3000);
 }
 
 // ── Google Vision (reverse image) ──

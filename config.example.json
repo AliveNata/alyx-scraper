@@ -18,5 +18,9 @@
     "username": "",
     "session_file": ""
   },
-  "google_vision_key": ""
+  "google_vision_key": "",
+  "reddit": {
+    "client_id": "",
+    "client_secret": ""
+  }
 }

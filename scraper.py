@@ -27,6 +27,8 @@ BROWSER_UA = (
     'Chrome/124.0.0.0 Safari/537.36'
 )
 
+REDDIT_UA = 'python:alyx-scraper:2.0 (by /u/AliveNata)'
+
 
 def load_twitter_config():
     try:
@@ -34,6 +36,38 @@ def load_twitter_config():
             return json.load(f).get('twitter', {})
     except Exception:
         return {}
+
+
+def load_reddit_config():
+    try:
+        with open(CONFIG_PATH) as f:
+            return json.load(f).get('reddit', {})
+    except Exception:
+        return {}
+
+
+_reddit_token = {'token': None, 'exp': 0}
+
+
+def _reddit_get_token(client_id, client_secret):
+    """Fetch and cache an application-only OAuth token (valid ~1h)."""
+    if _reddit_token['token'] and _reddit_token['exp'] > time.time() + 30:
+        return _reddit_token['token']
+    try:
+        r = requests.post(
+            'https://www.reddit.com/api/v1/access_token',
+            auth=(client_id, client_secret),
+            data={'grant_type': 'client_credentials'},
+            headers={'User-Agent': REDDIT_UA}, timeout=15,
+        )
+        if r.status_code != 200:
+            return None
+        j = r.json()
+        _reddit_token['token'] = j.get('access_token')
+        _reddit_token['exp'] = time.time() + int(j.get('expires_in', 3600))
+        return _reddit_token['token']
+    except Exception:
+        return None
 
 
 def _parse_rss(content):
@@ -400,6 +434,15 @@ class RedditScraper(BaseScraper):
         results = []
         query = f"{keyword} {location}".strip()
 
+        # Official OAuth API first (reliable; not IP-blocked like the .json scrape)
+        rcfg = load_reddit_config()
+        cid = (rcfg.get('client_id') or os.environ.get('REDDIT_CLIENT_ID', '')).strip()
+        csec = (rcfg.get('client_secret') or os.environ.get('REDDIT_CLIENT_SECRET', '')).strip()
+        if cid and csec:
+            api_results = self._scrape_api(keyword, location, max_results, cid, csec)
+            if api_results:
+                return api_results
+
         # Reddit blocks browser UAs and requires a bot/script UA
         # Use a completely fresh requests call (no session headers)
         reddit_headers = {
@@ -476,6 +519,49 @@ class RedditScraper(BaseScraper):
                 r['location'] = location
 
         self.update_status(f"[Reddit] {len(results)} posts ditemukan")
+        return results
+
+    def _scrape_api(self, keyword, location, max_results, client_id, client_secret):
+        """Reddit official OAuth search (application-only). Returns [] on failure."""
+        results = []
+        try:
+            self.update_status("[Reddit] API resmi (OAuth)...")
+            token = _reddit_get_token(client_id, client_secret)
+            if not token:
+                self.update_status("[Reddit] API: gagal ambil token")
+                return []
+            query = f"{keyword} {location}".strip()
+            r = requests.get(
+                'https://oauth.reddit.com/search',
+                params={'q': query, 'limit': min(max_results, 25),
+                        'sort': 'relevance', 'type': 'link', 'raw_json': 1},
+                headers={'Authorization': f'bearer {token}', 'User-Agent': REDDIT_UA},
+                timeout=15,
+            )
+            if r.status_code != 200:
+                self.update_status(f"[Reddit] API HTTP {r.status_code}")
+                return []
+            for child in r.json().get('data', {}).get('children', []):
+                d = child.get('data', {})
+                title = self.clean(d.get('title', ''))
+                if not title:
+                    continue
+                content = self.clean(d.get('selftext', ''))[:300] or title
+                results.append({
+                    'platform': 'Reddit',
+                    'title': title,
+                    'content': content,
+                    'url': f"https://www.reddit.com{d.get('permalink', '')}",
+                    'date': datetime.utcfromtimestamp(d.get('created_utc', 0)).strftime('%Y-%m-%d %H:%M'),
+                    'source': f"r/{d.get('subreddit', 'unknown')}",
+                    'keyword': keyword,
+                    'location': location,
+                })
+                if len(results) >= max_results:
+                    break
+            self.update_status(f"[Reddit] API: {len(results)} posts")
+        except Exception as e:
+            self.update_status(f"[Reddit] API error: {str(e)[:60]}")
         return results
 
 
