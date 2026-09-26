@@ -43,6 +43,11 @@ body{background:transparent!important;color:var(--t1)!important;font-family:'Int
 .badge-improve{background:#3b82f6;color:#fff;font-size:.68rem;padding:2px 6px;border-radius:4px;font-weight:600}
 
 hr{border-color:var(--glass-b)!important}
+
+/* Bilingual: same layout, text swaps with the navbar language toggle */
+.lang-en{display:none}
+[data-lang="en"] .lang-id{display:none}
+[data-lang="en"] .lang-en{display:block}
 </style>
 {% endblock %}
 
@@ -64,13 +69,13 @@ hr{border-color:var(--glass-b)!important}
       <a href="#overview" class="active">Overview</a>
       <a href="#platforms">Platform</a>
 
-      <div class="sidebar-title">Fitur</div>
+      <div class="sidebar-title" data-i18n="doc_fitur">Fitur</div>
       <a href="#image-scraper">Image Scraper</a>
       <a href="#export">Export</a>
 
       <div class="sidebar-title">Changelog</div>
       <a href="#changelog">Changelog</a>
-      <a href="#new-features">Fitur Baru</a>
+      <a href="#new-features" data-i18n="doc_newfeat">Fitur Baru</a>
 
       <div class="sidebar-title">Repo</div>
       <a href="https://github.com/d60/twikit" target="_blank">twikit</a>
@@ -80,7 +85,7 @@ hr{border-color:var(--glass-b)!important}
       <a href="https://github.com/mahdidevlp/image-scraper" target="_blank">image-scraper</a>
 
       <div class="mt-4">
-        <a href="https://sociabuzz.com/alyxlabs/support" target="_blank" class="btn btn-sm w-100"><i class="bi bi-heart-fill"></i> Dukungan SociaBuzz</a>
+        <a href="https://sociabuzz.com/alyxlabs/support" target="_blank" class="btn btn-sm w-100"><i class="bi bi-heart-fill"></i> <span data-i18n="footer_sociabuzz">Dukungan SociaBuzz</span></a>
       </div>
     </div>
   </div>
@@ -91,9 +96,12 @@ hr{border-color:var(--glass-b)!important}
     <!-- Overview -->
     <div class="doc-section" id="overview">
       <h2><i class="bi bi-book"></i> Overview</h2>
-      <p><strong>Alyx Scraper</strong> adalah multi-platform web scraper yang memungkinkan Anda mengumpulkan data dari berbagai sumber secara langsung (direct scraping). Dibangun dengan Flask backend dan modern responsive UI.</p>
-      <h3>Fitur Utama</h3>
-      <ul>
+      <p class="lang-id"><strong>Alyx Scraper</strong> adalah multi-platform web scraper yang memungkinkan Anda mengumpulkan data dari berbagai sumber secara langsung (direct scraping). Dibangun dengan Flask backend dan modern responsive UI.</p>
+      <p class="lang-en"><strong>Alyx Scraper</strong> is a multi-platform web scraper that collects data from several sources directly. It runs on a Flask backend with a responsive UI.</p>
+
+      <h3 class="lang-id">Fitur Utama</h3>
+      <h3 class="lang-en">Main Features</h3>
+      <ul class="lang-id">
         <li><strong>Direct Scraping</strong> - Scrape langsung dari platform tanpa perantara API pihak ketiga</li>
         <li><strong>9 Platform</strong> - Google News, News Sites, Reddit, Kaskus, X/Twitter, Facebook, Threads, Quora, Instagram</li>
         <li><strong>Image Scraper</strong> - Cari gambar, scrape dari URL, upload untuk mencari gambar mirip</li>
@@ -102,6 +110,16 @@ hr{border-color:var(--glass-b)!important}
         <li><strong>Light/Dark Theme</strong> - Theme toggle dengan light sebagai default</li>
         <li><strong>Admin Dashboard</strong> - Monitoring penggunaan dan audit log (tersembunyi)</li>
       </ul>
+      <ul class="lang-en">
+        <li><strong>Direct Scraping</strong> - Scrape straight from each platform, no third-party API in between</li>
+        <li><strong>9 Platforms</strong> - Google News, News Sites, Reddit, Kaskus, X/Twitter, Facebook, Threads, Quora, Instagram</li>
+        <li><strong>Image Scraper</strong> - Search images, scrape from a URL, upload to find similar images</li>
+        <li><strong>Export</strong> - Download results as CSV, JSON, or XLSX</li>
+        <li><strong>Bilingual</strong> - Indonesian and English</li>
+        <li><strong>Light/Dark Theme</strong> - Theme toggle, light by default</li>
+        <li><strong>Admin Dashboard</strong> - Usage monitoring and audit log (hidden)</li>
+      </ul>
+
       <h3>Tech Stack</h3>
       <ul>
         <li><code>Flask</code> - Python web framework</li>
@@ -117,43 +135,53 @@ hr{border-color:var(--glass-b)!important}
     <!-- Platforms -->
     <div class="doc-section" id="platforms">
       <h2><i class="bi bi-grid"></i> Platform</h2>
-      <p>Alyx mendukung scraping langsung dari 9 platform berikut:</p>
+      <p class="lang-id">Alyx mendukung scraping langsung dari 9 platform berikut:</p>
+      <p class="lang-en">Alyx scrapes directly from these 9 platforms:</p>
       <div class="platform-grid">
         <div class="platform-item">
           <h5><i class="bi bi-newspaper text-primary"></i> Google News</h5>
-          <p>Scrape berita terbaru via Google News RSS feed. Mendukung pencarian berdasarkan keyword dan lokasi.</p>
+          <p class="lang-id">Scrape berita terbaru via Google News RSS feed. Mendukung pencarian berdasarkan keyword dan lokasi.</p>
+          <p class="lang-en">Scrape the latest news via the Google News RSS feed. Search by keyword and location.</p>
         </div>
         <div class="platform-item">
           <h5><i class="bi bi-globe text-success"></i> News Sites</h5>
-          <p>Scrape dari portal berita worldwide termasuk Indonesia (Detik, Kompas, Liputan6, CNN, BBC, Reuters).</p>
+          <p class="lang-id">Scrape dari portal berita worldwide termasuk Indonesia (Detik, Kompas, Liputan6, CNN, BBC, Reuters).</p>
+          <p class="lang-en">Scrape news portals worldwide including Indonesia (Detik, Kompas, Liputan6, CNN, BBC, Reuters).</p>
         </div>
         <div class="platform-item">
           <h5><i class="bi bi-reddit text-danger"></i> Reddit</h5>
-          <p>Direct scraping via Reddit JSON API. Mengambil post, subreddit, dan content secara langsung.</p>
+          <p class="lang-id">Scraping via Reddit API resmi (OAuth). Mengambil post, subreddit, dan konten secara langsung.</p>
+          <p class="lang-en">Scraping via the official Reddit API (OAuth). Pulls posts, subreddits, and content directly.</p>
         </div>
         <div class="platform-item">
           <h5><i class="bi bi-chat-dots text-info"></i> Kaskus</h5>
-          <p>Scrape langsung dari Kaskus.co.id - forum terbesar di Indonesia. Cari thread dan diskusi.</p>
+          <p class="lang-id">Scrape langsung dari Kaskus.co.id, forum terbesar di Indonesia. Cari thread dan diskusi.</p>
+          <p class="lang-en">Scrape straight from Kaskus.co.id, the largest forum in Indonesia. Find threads and discussions.</p>
         </div>
         <div class="platform-item">
           <h5><i class="bi bi-twitter-x"></i> X / Twitter</h5>
-          <p>Scraping via Nitter instances atau library <code>twikit</code>. Mendukung pencarian tweet terbaru.</p>
+          <p class="lang-id">Scraping via Nitter instances atau library <code>twikit</code>. Mendukung pencarian tweet terbaru.</p>
+          <p class="lang-en">Scraping via Nitter instances or the <code>twikit</code> library. Searches recent tweets.</p>
         </div>
         <div class="platform-item">
           <h5><i class="bi bi-facebook text-primary"></i> Facebook</h5>
-          <p>Direct scraping menggunakan <code>facebook-scraper</code> library. Scrape post dari halaman publik.</p>
+          <p class="lang-id">Direct scraping menggunakan library <code>facebook-scraper</code>. Scrape post dari halaman publik.</p>
+          <p class="lang-en">Direct scraping with the <code>facebook-scraper</code> library. Scrapes posts from public pages.</p>
         </div>
         <div class="platform-item">
           <h5><i class="bi bi-at"></i> Threads</h5>
-          <p>Scrape konten dari Threads (Meta). Mengambil post dan diskusi berdasarkan keyword.</p>
+          <p class="lang-id">Scrape konten dari Threads (Meta). Mengambil post dan diskusi berdasarkan keyword.</p>
+          <p class="lang-en">Scrape content from Threads (Meta). Pulls posts and discussions by keyword.</p>
         </div>
         <div class="platform-item">
           <h5><i class="bi bi-question-circle text-warning"></i> Quora</h5>
-          <p>Scrape pertanyaan dan jawaban dari Quora. Cocok untuk riset topik dan Q&amp;A.</p>
+          <p class="lang-id">Scrape pertanyaan dan jawaban dari Quora. Cocok untuk riset topik dan Q&amp;A.</p>
+          <p class="lang-en">Scrape questions and answers from Quora. Good for topic research and Q&amp;A.</p>
         </div>
         <div class="platform-item">
           <h5><i class="bi bi-instagram text-danger"></i> Instagram</h5>
-          <p>Scrape post publik dari Instagram berdasarkan keyword pencarian.</p>
+          <p class="lang-id">Scrape post publik dari Instagram berdasarkan keyword pencarian.</p>
+          <p class="lang-en">Scrape public posts from Instagram by search keyword.</p>
         </div>
       </div>
     </div>
@@ -161,31 +189,55 @@ hr{border-color:var(--glass-b)!important}
     <!-- Image Scraper -->
     <div class="doc-section" id="image-scraper">
       <h2><i class="bi bi-images"></i> Image Scraper</h2>
-      <p>Fitur Image Scraper memungkinkan Anda mencari dan mengumpulkan gambar dari web dengan 3 cara:</p>
-      <h3>1. Pencarian Gambar</h3>
-      <p>Masukkan kata kunci untuk mencari gambar dari web. Hasil akan ditampilkan dalam grid yang bisa diklik untuk melihat detail dan mencari gambar yang mirip.</p>
-      <h3>2. Scrape dari URL</h3>
-      <p>Masukkan URL halaman web untuk mengekstrak semua gambar yang ada di halaman tersebut. Mendukung tag <code>&lt;img&gt;</code>, <code>og:image</code>, dan <code>data-src</code> (lazy loading).</p>
-      <h3>3. Upload &amp; Cari Mirip</h3>
-      <p>Upload gambar dari komputer Anda (JPG, PNG, GIF, WebP) untuk mencari gambar yang mirip atau terkait. Mendukung drag &amp; drop.</p>
-      <h3>Fitur Tambahan</h3>
-      <ul>
+      <p class="lang-id">Fitur Image Scraper memungkinkan Anda mencari dan mengumpulkan gambar dari web dengan 3 cara:</p>
+      <p class="lang-en">The Image Scraper lets you find and collect images from the web in 3 ways:</p>
+
+      <h3 class="lang-id">1. Pencarian Gambar</h3>
+      <h3 class="lang-en">1. Image Search</h3>
+      <p class="lang-id">Masukkan kata kunci untuk mencari gambar dari web. Hasil ditampilkan dalam grid yang bisa diklik untuk melihat detail dan mencari gambar yang mirip.</p>
+      <p class="lang-en">Enter a keyword to search for images from the web. Results show in a grid you can click to see details and find similar images.</p>
+
+      <h3 class="lang-id">2. Scrape dari URL</h3>
+      <h3 class="lang-en">2. Scrape from a URL</h3>
+      <p class="lang-id">Masukkan URL halaman web untuk mengekstrak semua gambar di halaman tersebut. Mendukung tag <code>&lt;img&gt;</code>, <code>og:image</code>, dan <code>data-src</code> (lazy loading).</p>
+      <p class="lang-en">Enter a web page URL to extract every image on that page. Supports <code>&lt;img&gt;</code> tags, <code>og:image</code>, and <code>data-src</code> (lazy loading).</p>
+
+      <h3 class="lang-id">3. Upload &amp; Cari</h3>
+      <h3 class="lang-en">3. Upload &amp; Search</h3>
+      <p class="lang-id">Upload gambar dari komputer Anda (JPG, PNG, GIF, WebP). Dengan Google Vision API aktif, sistem mencari gambar yang mirip; tanpa itu, sistem mencari berdasarkan nama file. Mendukung drag &amp; drop.</p>
+      <p class="lang-en">Upload an image from your computer (JPG, PNG, GIF, WebP). With the Google Vision API enabled it finds visually similar images; without it, it searches by the file name. Supports drag and drop.</p>
+
+      <h3 class="lang-id">Fitur Tambahan</h3>
+      <h3 class="lang-en">Extra Features</h3>
+      <ul class="lang-id">
         <li><strong>Related Image Search</strong> - Klik gambar hasil, lalu klik "Cari Mirip" untuk mencari gambar serupa</li>
         <li><strong>Grid View</strong> - Tampilan grid responsif dengan preview</li>
         <li><strong>Modal Preview</strong> - Klik gambar untuk melihat ukuran penuh</li>
+      </ul>
+      <ul class="lang-en">
+        <li><strong>Related Image Search</strong> - Click a result, then "Cari Mirip" to find similar images</li>
+        <li><strong>Grid View</strong> - Responsive grid with previews</li>
+        <li><strong>Modal Preview</strong> - Click an image to see it full size</li>
       </ul>
     </div>
 
     <!-- Export -->
     <div class="doc-section" id="export">
       <h2><i class="bi bi-download"></i> Export</h2>
-      <p>Hasil scraping bisa di-download dalam 3 format:</p>
-      <ul>
+      <p class="lang-id">Hasil scraping bisa di-download dalam 3 format:</p>
+      <p class="lang-en">Scraping results can be downloaded in 3 formats:</p>
+      <ul class="lang-id">
         <li><strong>CSV</strong> - Comma-separated values, cocok untuk spreadsheet dan analisis data</li>
         <li><strong>JSON</strong> - JavaScript Object Notation, cocok untuk integrasi dengan aplikasi lain</li>
         <li><strong>XLSX</strong> - Microsoft Excel format, cocok untuk laporan dan presentasi</li>
       </ul>
-      <p>Setiap file export berisi kolom: Platform, Judul, Konten, URL, Tanggal, Sumber, Keyword, dan Lokasi.</p>
+      <ul class="lang-en">
+        <li><strong>CSV</strong> - Comma-separated values, good for spreadsheets and data analysis</li>
+        <li><strong>JSON</strong> - JavaScript Object Notation, good for integrating with other apps</li>
+        <li><strong>XLSX</strong> - Microsoft Excel format, good for reports and presentations</li>
+      </ul>
+      <p class="lang-id">Setiap file export berisi kolom: Platform, Judul, Konten, URL, Tanggal, Sumber, Keyword, dan Lokasi.</p>
+      <p class="lang-en">Each export file has these columns: Platform, Title, Content, URL, Date, Source, Keyword, and Location.</p>
     </div>
 
     <!-- Changelog -->
@@ -197,7 +249,7 @@ hr{border-color:var(--glass-b)!important}
           <span class="cl-version">v2.0.0</span>
           <span class="cl-date">2 Mei 2026</span>
         </div>
-        <ul>
+        <ul class="lang-id">
           <li><span class="badge-new">NEW</span> UI/UX revamp total dengan desain modern</li>
           <li><span class="badge-new">NEW</span> Direct scraping: Reddit, Kaskus, X/Twitter, Facebook, Threads, Quora, Instagram</li>
           <li><span class="badge-new">NEW</span> Image Scraper dengan pencarian, URL scraping, dan upload</li>
@@ -213,6 +265,22 @@ hr{border-color:var(--glass-b)!important}
           <li><span class="badge-improve">IMPROVE</span> Arsitektur backend direfactor ke modular</li>
           <li><span class="badge-improve">IMPROVE</span> SQLite audit logging untuk semua aktivitas</li>
         </ul>
+        <ul class="lang-en">
+          <li><span class="badge-new">NEW</span> Full UI/UX revamp with a modern design</li>
+          <li><span class="badge-new">NEW</span> Direct scraping: Reddit, Kaskus, X/Twitter, Facebook, Threads, Quora, Instagram</li>
+          <li><span class="badge-new">NEW</span> Image Scraper with search, URL scraping, and upload</li>
+          <li><span class="badge-new">NEW</span> Related image search from a selected image</li>
+          <li><span class="badge-new">NEW</span> Hidden admin dashboard with audit log</li>
+          <li><span class="badge-new">NEW</span> Chart.js usage graph (line chart by date)</li>
+          <li><span class="badge-new">NEW</span> WoW, MoM, QoQ, YoY comparison</li>
+          <li><span class="badge-new">NEW</span> Light/Dark theme toggle (light default)</li>
+          <li><span class="badge-new">NEW</span> Bilingual Indonesian/English with a flag toggle</li>
+          <li><span class="badge-new">NEW</span> News Sites worldwide including Indonesia</li>
+          <li><span class="badge-new">NEW</span> Docs page with changelog and new features</li>
+          <li><span class="badge-new">NEW</span> Footer with links to docs, repo, and SociaBuzz</li>
+          <li><span class="badge-improve">IMPROVE</span> Backend refactored into modules</li>
+          <li><span class="badge-improve">IMPROVE</span> SQLite audit logging for every activity</li>
+        </ul>
       </div>
 
       <div class="changelog-item">
@@ -220,7 +288,7 @@ hr{border-color:var(--glass-b)!important}
           <span class="cl-version">v1.0.0</span>
           <span class="cl-date">2024</span>
         </div>
-        <ul>
+        <ul class="lang-id">
           <li><span class="badge-new">NEW</span> Initial release - Pet Scraper</li>
           <li><span class="badge-new">NEW</span> Google News RSS scraping</li>
           <li><span class="badge-new">NEW</span> Bing News scraping</li>
@@ -228,48 +296,63 @@ hr{border-color:var(--glass-b)!important}
           <li><span class="badge-new">NEW</span> Export ke Excel, CSV, JSON</li>
           <li><span class="badge-new">NEW</span> Flask web interface</li>
         </ul>
+        <ul class="lang-en">
+          <li><span class="badge-new">NEW</span> Initial release - Pet Scraper</li>
+          <li><span class="badge-new">NEW</span> Google News RSS scraping</li>
+          <li><span class="badge-new">NEW</span> Bing News scraping</li>
+          <li><span class="badge-new">NEW</span> Forum &amp; social media scraping (via Google Search)</li>
+          <li><span class="badge-new">NEW</span> Export to Excel, CSV, JSON</li>
+          <li><span class="badge-new">NEW</span> Flask web interface</li>
+        </ul>
       </div>
     </div>
 
     <!-- New Features -->
     <div class="doc-section" id="new-features">
-      <h2><i class="bi bi-stars"></i> Fitur Baru</h2>
+      <h2 class="lang-id"><i class="bi bi-stars"></i> Fitur Baru</h2>
+      <h2 class="lang-en"><i class="bi bi-stars"></i> New Features</h2>
 
       <div class="row g-3">
         <div class="col-md-6">
           <div class="platform-item">
             <h5><i class="bi bi-palette text-primary"></i> Theme Toggle</h5>
-            <p>Switch antara Light dan Dark theme. Light theme menjadi default. Preferensi disimpan di browser.</p>
+            <p class="lang-id">Switch antara Light dan Dark theme. Light theme menjadi default. Preferensi disimpan di browser.</p>
+            <p class="lang-en">Switch between Light and Dark theme. Light is the default. The choice is saved in the browser.</p>
           </div>
         </div>
         <div class="col-md-6">
           <div class="platform-item">
             <h5><i class="bi bi-translate text-success"></i> Bilingual</h5>
-            <p>Dua bahasa: Bahasa Indonesia dan English. Toggle dengan tombol bendera di navbar.</p>
+            <p class="lang-id">Dua bahasa: Bahasa Indonesia dan English. Toggle dengan tombol bendera di navbar.</p>
+            <p class="lang-en">Two languages: Indonesian and English. Switch with the flag button in the navbar.</p>
           </div>
         </div>
         <div class="col-md-6">
           <div class="platform-item">
             <h5><i class="bi bi-images text-info"></i> Image Scraper</h5>
-            <p>Cari gambar, scrape dari URL, upload gambar untuk mencari yang mirip. Grid view dengan modal preview.</p>
+            <p class="lang-id">Cari gambar, scrape dari URL, upload gambar untuk mencari yang mirip. Grid view dengan modal preview.</p>
+            <p class="lang-en">Search images, scrape from a URL, upload an image to find similar ones. Grid view with a modal preview.</p>
           </div>
         </div>
         <div class="col-md-6">
           <div class="platform-item">
             <h5><i class="bi bi-shield-lock text-danger"></i> Admin Dashboard</h5>
-            <p>Halaman admin tersembunyi untuk monitoring audit log, usage chart, dan perbandingan WoW/MoM/QoQ/YoY.</p>
+            <p class="lang-id">Halaman admin tersembunyi untuk monitoring audit log, usage chart, dan perbandingan WoW/MoM/QoQ/YoY.</p>
+            <p class="lang-en">A hidden admin page for the audit log, usage chart, and WoW/MoM/QoQ/YoY comparison.</p>
           </div>
         </div>
         <div class="col-md-6">
           <div class="platform-item">
             <h5><i class="bi bi-arrow-repeat text-warning"></i> Direct Scraping</h5>
-            <p>Scrape langsung dari platform (Reddit API, Kaskus, Nitter, facebook-scraper) tanpa via Google Search.</p>
+            <p class="lang-id">Scrape langsung dari platform (Reddit API, Kaskus, Nitter, facebook-scraper) tanpa via Google Search.</p>
+            <p class="lang-en">Scrape straight from each platform (Reddit API, Kaskus, Nitter, facebook-scraper), not through Google Search.</p>
           </div>
         </div>
         <div class="col-md-6">
           <div class="platform-item">
             <h5><i class="bi bi-globe2 text-primary"></i> Worldwide News</h5>
-            <p>Scraping berita dari seluruh dunia termasuk Indonesia (Detik, Kompas, CNN, BBC, Reuters).</p>
+            <p class="lang-id">Scraping berita dari seluruh dunia termasuk Indonesia (Detik, Kompas, CNN, BBC, Reuters).</p>
+            <p class="lang-en">News scraping from around the world including Indonesia (Detik, Kompas, CNN, BBC, Reuters).</p>
           </div>
         </div>
       </div>
@@ -283,6 +366,15 @@ hr{border-color:var(--glass-b)!important}
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+// Sidebar labels that follow the navbar language toggle
+window.PAGE_L = {
+  id: { doc_fitur:'Fitur', doc_newfeat:'Fitur Baru' },
+  en: { doc_fitur:'Features', doc_newfeat:'New Features' }
+};
+// Rich doc content swaps via a data-lang attribute + CSS (keeps HTML formatting intact)
+window.onLangChange = function(){ document.documentElement.setAttribute('data-lang', currentLang); };
+document.documentElement.setAttribute('data-lang', currentLang);
+
 // Sidebar active highlight on scroll
 (function(){
   const sections = document.querySelectorAll('.doc-section');
