@@ -18,6 +18,11 @@ from database import log_audit, get_audit_logs, get_usage_stats, get_top_keyword
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.environ.get('SECRET_KEY', 'alivyx-secret-key-change-in-prod')
 app.permanent_session_lifetime = timedelta(hours=8)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_SECURE=True,   # served over HTTPS in prod; disabled for local dev in __main__
+)
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.json')
 
@@ -48,6 +53,30 @@ jobs_lock = Lock()
 # Rate-limit state for /api/forgot-password (per-IP, in-memory)
 _forgot_hits = {}
 _forgot_lock = Lock()
+
+# Brute-force guard for admin login (per-IP failed attempts, in-memory)
+_login_fails = {}
+_login_lock = Lock()
+_LOGIN_MAX_FAILS = 5
+_LOGIN_WINDOW = 300  # seconds
+
+
+def _login_blocked(ip):
+    now = time.time()
+    with _login_lock:
+        fails = [t for t in _login_fails.get(ip, []) if now - t < _LOGIN_WINDOW]
+        _login_fails[ip] = fails
+        return len(fails) >= _LOGIN_MAX_FAILS
+
+
+def _record_login_fail(ip):
+    with _login_lock:
+        _login_fails.setdefault(ip, []).append(time.time())
+
+
+def _clear_login_fails(ip):
+    with _login_lock:
+        _login_fails.pop(ip, None)
 
 
 def get_client_ip():
@@ -157,12 +186,18 @@ def _password_ok(pw, cfg):
 
 @app.route('/alyx-control-panel/login', methods=['POST'])
 def admin_login_post():
+    ip = get_client_ip()
+    if _login_blocked(ip):
+        return render_template('admin_login.html',
+                               error='Terlalu banyak percobaan gagal. Coba lagi dalam 5 menit.'), 429
     pw = request.form.get('password', '')
     cfg = load_config()
     if pw and _password_ok(pw, cfg):
+        _clear_login_fails(ip)
         session.permanent = True
         session['admin_auth'] = True
         return redirect(url_for('admin_dashboard'))
+    _record_login_fail(ip)
     return render_template('admin_login.html', error='Password salah. Coba lagi.')
 
 
@@ -923,5 +958,7 @@ def api_admin_test_scraper():
 
 
 if __name__ == "__main__":
+    # Local dev runs over http, so the Secure cookie flag would drop the session
+    app.config['SESSION_COOKIE_SECURE'] = False
     print("\n  Alyx Scraper running at http://localhost:5000\n")
     app.run(host="0.0.0.0", port=5000, debug=True)
