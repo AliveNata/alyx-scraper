@@ -17,5 +17,6 @@
   "instagram": {
     "username": "",
     "session_file": ""
-  }
+  },
+  "google_vision_key": ""
 }

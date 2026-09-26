@@ -504,8 +504,19 @@ def api_images_upload():
     content_type = file.content_type or 'image/jpeg'
 
     scraper = ImageScraper()
-    keywords = os.path.splitext(file.filename)[0].replace('-', ' ').replace('_', ' ')
-    images = scraper.search_images(keywords, max_images=20)
+    cfg = load_config()
+    vision_key = (cfg.get('google_vision_key') or os.environ.get('GOOGLE_VISION_API_KEY', '')).strip()
+
+    images = []
+    method = 'filename'
+    if vision_key:
+        images = scraper.google_reverse_search(data, vision_key, max_images=30)
+        if images:
+            method = 'vision'
+    if not images:
+        # No Vision key or no visual match -> fall back to filename keyword search
+        keywords = os.path.splitext(file.filename)[0].replace('-', ' ').replace('_', ' ')
+        images = scraper.search_images(keywords, max_images=20)
 
     log_audit(session_id=str(uuid.uuid4()), action='image_upload',
               keyword=file.filename, platform='Image Scraper', results_count=len(images),
@@ -513,6 +524,7 @@ def api_images_upload():
 
     return jsonify({
         'ok': True,
+        'method': method,
         'uploaded': {'data': b64, 'content_type': content_type, 'filename': file.filename},
         'related_images': images
     })
@@ -587,6 +599,8 @@ def api_admin_settings_post():
             'gmail_app_password': em.get('gmail_app_password', '').strip(),
             'reset_recipient':   em.get('reset_recipient', 'alivenata@gmail.com').strip(),
         }
+    if 'google_vision_key' in data:
+        cfg['google_vision_key'] = (data.get('google_vision_key') or '').strip()
     save_config(cfg)
     return jsonify({'ok': True})
 

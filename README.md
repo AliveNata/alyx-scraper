@@ -47,6 +47,9 @@ Multi-platform web scraper untuk riset dan analisis data dari berbagai sumber.
 - Rate-limit di `/api/forgot-password` (maks 1 request per IP per menit)
 - `SECRET_KEY` & password admin wajib di-set lewat environment / config (lihat Setup)
 
+**New:**
+- Reverse image search asli untuk fitur upload via **Google Cloud Vision** (Web Detection). Set API key di Admin -> Settings -> Reverse Image Search. Tanpa key, upload jatuh ke pencarian nama file. Gratis s/d 1.000 request/bulan.
+
 **Bug fixes:**
 - Statistik platform di admin dashboard sekarang dihitung per-platform (dulu string gabungan ke-`GROUP BY` utuh)
 - Perbandingan QoQ dikelompokkan per kuartal beneran (dulu identik dengan bulanan)

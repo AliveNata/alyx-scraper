@@ -123,6 +123,44 @@ class ImageScraper:
             self.update_status(f"Image search error: {str(e)[:60]}")
         return images
 
+    def google_reverse_search(self, image_bytes, api_key, max_images=30):
+        """Reverse image search via Google Cloud Vision Web Detection.
+        Returns visually-similar image results, or [] on any failure."""
+        self.update_status("Reverse image search (Google Vision)...")
+        images = []
+        try:
+            payload = {
+                "requests": [{
+                    "image": {"content": base64.b64encode(image_bytes).decode("utf-8")},
+                    "features": [{"type": "WEB_DETECTION", "maxResults": max_images}],
+                }]
+            }
+            resp = requests.post(
+                "https://vision.googleapis.com/v1/images:annotate",
+                params={"key": api_key}, json=payload, timeout=20,
+            )
+            resp.raise_for_status()
+            web = (resp.json().get("responses") or [{}])[0].get("webDetection", {})
+            entities = web.get("webEntities") or []
+            label = entities[0].get("description", "") if entities else ""
+            seen = set()
+            for sim in web.get("visuallySimilarImages", []):
+                url = sim.get("url", "")
+                if not url or url in seen:
+                    continue
+                seen.add(url)
+                images.append({
+                    "url": url, "alt": label or "Similar image",
+                    "width": "", "height": "",
+                    "source_page": "", "domain": urlparse(url).netloc,
+                })
+                if len(images) >= max_images:
+                    break
+            self.update_status(f"Google Vision: {len(images)} gambar mirip")
+        except Exception as e:
+            self.update_status(f"Vision error: {str(e)[:80]}")
+        return images
+
     def find_related_images(self, image_url=None, image_data=None, max_images=20):
         self.update_status("Searching related images...")
         images = []

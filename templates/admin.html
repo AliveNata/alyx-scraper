@@ -687,6 +687,39 @@ code.i { background: var(--glass); border: 1px solid var(--glass-b); padding: 1p
         </div>
       </div>
 
+      <!-- Reverse Image Search (Google Vision) -->
+      <div class="g-card">
+        <div class="g-card-head">
+          <div class="g-card-title"><i class="bi bi-card-image"></i> Reverse Image Search</div>
+          <span id="visionStatusBadge"></span>
+        </div>
+        <div class="g-card-body">
+          <div class="settings-hint" style="margin-bottom:16px">
+            API key <strong>Google Cloud Vision</strong> untuk fitur upload cari gambar mirip (Web Detection).
+            Kalau kosong, upload jatuh ke pencarian via nama file. Gratis s/d 1.000 request/bulan
+            (<a href="https://console.cloud.google.com/apis/library/vision.googleapis.com" target="_blank" style="color:var(--accent)">aktifkan Vision API</a>).
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;max-width:440px">
+            <div>
+              <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">Google Vision API Key</label>
+              <div style="position:relative">
+                <input class="g-input" type="password" id="visionKey" placeholder="AIza..." style="width:100%;padding-right:38px">
+                <button type="button" onclick="toggleVisionKey()"
+                  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t3);cursor:pointer;font-size:.95rem">
+                  <i class="bi bi-eye" id="visionEye"></i>
+                </button>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <button class="g-btn g-btn-primary" onclick="saveVisionKey()" id="visionSaveBtn">
+                <i class="bi bi-floppy-fill"></i> Simpan
+              </button>
+              <span id="visionSaveMsg" style="font-size:.8rem"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Instagram Login -->
       <div class="g-card">
         <div class="g-card-head">
@@ -1004,6 +1037,7 @@ async function loadSettings(){
     document.getElementById('nitterInstances').value = instances.join('\n');
   } catch(e){ console.error(e) }
   loadEmailConfig();
+  loadVisionKey();
   checkInstagramStatus();
   checkTwitterStatus();
   loadPlatformStatus();
@@ -1058,6 +1092,44 @@ async function testNitter(){
   } catch(e){
     statusEl.innerHTML = '<span class="nitter-badge nitter-fail"><i class="bi bi-wifi-off"></i> Test gagal</span>';
   }
+}
+
+// ── Google Vision (reverse image) ──
+function toggleVisionKey(){
+  const inp = document.getElementById('visionKey');
+  const icon = document.getElementById('visionEye');
+  if(inp.type === 'password'){ inp.type = 'text'; icon.className = 'bi bi-eye-slash'; }
+  else { inp.type = 'password'; icon.className = 'bi bi-eye'; }
+}
+
+async function loadVisionKey(){
+  try {
+    const r = await fetch(`/api/admin/settings`);
+    const j = await r.json(); if(!j.ok) return;
+    const key = j.config?.google_vision_key || '';
+    document.getElementById('visionKey').value = key;
+    document.getElementById('visionStatusBadge').innerHTML = key
+      ? '<span class="nitter-badge nitter-ok"><i class="bi bi-check-circle-fill"></i> Aktif</span>'
+      : '<span class="nitter-badge nitter-fail"><i class="bi bi-x-circle-fill"></i> Belum di-set</span>';
+  } catch(e){}
+}
+
+async function saveVisionKey(){
+  const btn = document.getElementById('visionSaveBtn');
+  const msg = document.getElementById('visionSaveMsg');
+  btn.disabled = true;
+  try {
+    const r = await fetch(`/api/admin/settings`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ google_vision_key: document.getElementById('visionKey').value.trim() })
+    });
+    const j = await r.json();
+    if(j.ok){ msg.style.color = '#22c55e'; msg.textContent = '✓ Tersimpan'; loadVisionKey(); }
+    else { msg.style.color = '#ef4444'; msg.textContent = '✗ Gagal simpan'; }
+  } catch(e){ msg.style.color = '#ef4444'; msg.textContent = '✗ Error'; }
+  btn.disabled = false;
+  setTimeout(() => msg.textContent = '', 3000);
 }
 
 // ── Email Config ──
