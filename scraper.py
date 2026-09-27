@@ -6,7 +6,7 @@ import random
 import re
 import os
 from datetime import datetime
-from urllib.parse import quote_plus, urljoin
+from urllib.parse import quote_plus, quote, urljoin
 import xml.etree.ElementTree as ET
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.json')
@@ -1726,10 +1726,57 @@ class GDELTScraper(BaseScraper):
             return datetime.now().strftime('%Y-%m-%d %H:%M')
 
 
+# ─────────────────────────────────────────────────────────────
+# Wikipedia — MediaWiki search API (id.wikipedia, free, no key).
+#             Reference/background + generous limits (scales well).
+# ─────────────────────────────────────────────────────────────
+class WikipediaScraper(BaseScraper):
+    def scrape(self, keyword, location='', max_results=15):
+        self.update_status(f"[Wikipedia] Mencari '{keyword}'...")
+        results = []
+        try:
+            params = {
+                'action': 'query', 'list': 'search', 'srsearch': keyword,
+                'format': 'json', 'srlimit': min(max_results, 20), 'utf8': 1,
+                'srprop': 'snippet|timestamp',
+            }
+            url = 'https://id.wikipedia.org/w/api.php?' + '&'.join(
+                f"{k}={quote_plus(str(v))}" for k, v in params.items())
+            resp = requests.get(url, headers={
+                'User-Agent': 'alyx-scraper/1.0 (research tool; +https://scraper.alyxlabs.tech)'
+            }, timeout=15)
+            for item in resp.json().get('query', {}).get('search', []):
+                title = item.get('title', '')
+                snippet = re.sub(r'<[^>]+>', '', item.get('snippet', '') or '')
+                if not title:
+                    continue
+                results.append({
+                    'platform': 'Wikipedia',
+                    'title': title,
+                    'content': self.clean(snippet),
+                    'url': 'https://id.wikipedia.org/wiki/' + quote(title.replace(' ', '_')),
+                    'date': self._wiki_date(item.get('timestamp', '')),
+                    'source': 'Wikipedia ID',
+                    'keyword': keyword,
+                    'location': location,
+                })
+            self.update_status(f"[Wikipedia] {len(results)} artikel ditemukan")
+        except Exception as e:
+            self.update_status(f"[Wikipedia] Error: {str(e)[:60]}")
+        return results
+
+    def _wiki_date(self, s):
+        try:
+            return datetime.strptime(s, '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d %H:%M')
+        except Exception:
+            return ''
+
+
 SCRAPERS = {
     'Google News': GoogleNewsScraper,
     'News Sites':  NewsSitesScraper,
     'GDELT':       GDELTScraper,
+    'Wikipedia':   WikipediaScraper,
     'Reddit':      RedditScraper,
     'Kaskus':      KaskusScraper,
     'X/Twitter':   TwitterScraper,
