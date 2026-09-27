@@ -637,10 +637,66 @@ class SemanticScholarScraper(BaseScraper):
         return results
 
 
+# ─────────────────────────────────────────────────────────────
+# YouTube — Data API v3 video search (needs a free API key).
+# ─────────────────────────────────────────────────────────────
+class YouTubeScraper(BaseScraper):
+    def scrape(self, keyword, location='', max_results=15):
+        self.update_status(f"[YouTube] Mencari '{keyword}'...")
+        results = []
+        key = ''
+        try:
+            with open(CONFIG_PATH) as f:
+                key = (json.load(f).get('youtube_key') or '').strip()
+        except Exception:
+            pass
+        key = key or os.environ.get('YOUTUBE_API_KEY', '')
+        if not key:
+            self.update_status("[YouTube] API key belum di-set (Admin -> Settings)")
+            return results
+        try:
+            params = {
+                'part': 'snippet', 'q': keyword, 'type': 'video',
+                'maxResults': min(max_results, 25), 'key': key,
+                'regionCode': 'ID', 'relevanceLanguage': 'id', 'order': 'relevance',
+            }
+            if self.date_from:
+                params['publishedAfter'] = self.date_from + 'T00:00:00Z'
+            if self.date_to:
+                params['publishedBefore'] = self.date_to + 'T23:59:59Z'
+            url = 'https://www.googleapis.com/youtube/v3/search?' + '&'.join(
+                f"{k}={quote_plus(str(v))}" for k, v in params.items())
+            resp = requests.get(url, timeout=15)
+            if resp.status_code != 200:
+                self.update_status(f"[YouTube] HTTP {resp.status_code} (cek key/kuota)")
+                return results
+            for it in resp.json().get('items', []):
+                sn = it.get('snippet', {})
+                vid = (it.get('id') or {}).get('videoId', '')
+                title = self.clean(sn.get('title', ''))
+                if not title or not vid:
+                    continue
+                results.append({
+                    'platform': 'YouTube',
+                    'title': title,
+                    'content': self.clean(sn.get('description', '')),
+                    'url': f'https://www.youtube.com/watch?v={vid}',
+                    'date': (sn.get('publishedAt', '') or '')[:10],
+                    'source': self.clean(sn.get('channelTitle', '')) or 'YouTube',
+                    'keyword': keyword,
+                    'location': location,
+                })
+            self.update_status(f"[YouTube] {len(results)} video ditemukan")
+        except Exception as e:
+            self.update_status(f"[YouTube] Error: {str(e)[:60]}")
+        return results
+
+
 SCRAPERS = {
     'Google News': GoogleNewsScraper,
     'News Sites':  NewsSitesScraper,
     'GDELT':       GDELTScraper,
+    'YouTube':     YouTubeScraper,
     'Wikipedia':   WikipediaScraper,
     'OpenAlex':    OpenAlexScraper,
     'Semantic Scholar': SemanticScholarScraper,

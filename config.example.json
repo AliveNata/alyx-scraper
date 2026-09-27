@@ -19,5 +19,6 @@
     "session_file": ""
   },
   "google_vision_key": "",
-  "semantic_scholar_key": ""
+  "semantic_scholar_key": "",
+  "youtube_key": ""
 }

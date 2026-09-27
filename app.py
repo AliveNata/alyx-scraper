@@ -667,6 +667,8 @@ def api_admin_settings_post():
         cfg['google_vision_key'] = (data.get('google_vision_key') or '').strip()
     if 'semantic_scholar_key' in data:
         cfg['semantic_scholar_key'] = (data.get('semantic_scholar_key') or '').strip()
+    if 'youtube_key' in data:
+        cfg['youtube_key'] = (data.get('youtube_key') or '').strip()
     if 'platforms_disabled' in data:
         cfg['platforms_disabled'] = [p for p in (data.get('platforms_disabled') or []) if p in SCRAPERS]
     save_config(cfg)
