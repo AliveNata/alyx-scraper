@@ -7,6 +7,7 @@ import re
 import os
 from datetime import datetime
 from urllib.parse import quote_plus, quote, urljoin
+from concurrent.futures import ThreadPoolExecutor
 import xml.etree.ElementTree as ET
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.json')
@@ -524,6 +525,67 @@ SCRAPERS = {
     'Wikipedia':   WikipediaScraper,
     'Kaskus':      KaskusScraper,
 }
+
+
+# ─────────────────────────────────────────────────────────────
+# Full-text article extraction (opt-in). trafilatura when available,
+# BeautifulSoup paragraph fallback otherwise. News sources only.
+# ─────────────────────────────────────────────────────────────
+FULLTEXT_PLATFORMS = {'Google News', 'News Sites', 'GDELT'}
+
+
+def fetch_full_text(url, timeout=12):
+    if not url:
+        return ''
+    try:
+        resp = requests.get(url, headers={'User-Agent': BROWSER_UA},
+                            timeout=timeout, allow_redirects=True)
+        if resp.status_code != 200 or not resp.text:
+            return ''
+        html = resp.text
+        try:
+            import trafilatura
+            txt = trafilatura.extract(html, include_comments=False, include_tables=False)
+            if txt and len(txt) > 120:
+                return txt.strip()
+        except Exception:
+            pass
+        # Fallback: strip chrome, join meaningful paragraphs
+        soup = BeautifulSoup(html, 'html.parser')
+        for tag in soup(['script', 'style', 'nav', 'header', 'footer', 'aside', 'form', 'figure']):
+            tag.decompose()
+        root = soup.find('article') or soup.find('main') or soup.body
+        if not root:
+            return ''
+        paras = [p.get_text(' ', strip=True) for p in root.find_all('p')]
+        return '\n'.join(p for p in paras if len(p) > 40).strip()
+    except Exception:
+        return ''
+
+
+def enrich_full_text(results, gui_callback=None, cap=40, workers=6):
+    """Fetch full article text for news results, in parallel. Sets r['full_text']."""
+    for r in results:
+        r.setdefault('full_text', '')
+    targets = [r for r in results
+               if r.get('url') and r.get('platform') in FULLTEXT_PLATFORMS][:cap]
+    if not targets:
+        return results
+    done = [0]
+
+    def work(r):
+        r['full_text'] = fetch_full_text(r['url'])
+        done[0] += 1
+        if gui_callback and done[0] % 5 == 0:
+            gui_callback(f"Teks lengkap: {done[0]}/{len(targets)}")
+        return r
+
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        list(ex.map(work, targets))
+    if gui_callback:
+        got = sum(1 for r in targets if r.get('full_text'))
+        gui_callback(f"Teks lengkap selesai: {got}/{len(targets)} artikel")
+    return results
 
 
 class UnifiedScraper:

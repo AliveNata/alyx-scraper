@@ -298,6 +298,14 @@ tbody tr:hover{background:var(--row-hover)}
   </div>
 </div>
 
+<div style="margin:-4px 0 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.85rem;color:var(--t2)">
+  <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+    <input type="checkbox" id="fullTextToggle">
+    <span data-i18n="fulltext_label">Ambil teks lengkap artikel</span>
+  </label>
+  <span style="color:var(--t3);font-size:.78rem" data-i18n="fulltext_hint">(lebih lambat, sumber berita saja)</span>
+</div>
+
 <div class="status-bar" id="statusBar">
   <i class="bi bi-info-circle"></i>
   <span id="statusText" data-i18n="status_ready">Siap untuk scraping.</span>
@@ -440,7 +448,7 @@ id:{
   keywords_label:'Keywords (pisah koma)',keywords_ph:'contoh: teknologi, AI, startup',
   location_label:'Lokasi',location_ph:'Jakarta',location_optional:'(opsional)',location_hint:'Kosongkan = pencarian umum · pisah koma untuk multi-lokasi',start_btn:'Mulai Scraping',
   platforms_label:'Pilih Platform',cat_news:'Berita',cat_forum:'Forum',cat_social:'Sosial',cat_ref:'Referensi',
-  meta_title:'Catatan Koleksi',meta_cite:'Salin Sitasi',meta_keyword:'Keyword',meta_source:'Sumber',meta_location:'Lokasi',meta_time:'Waktu koleksi',meta_total:'Total hasil',
+  meta_title:'Catatan Koleksi',meta_cite:'Salin Sitasi',meta_keyword:'Keyword',meta_source:'Sumber',meta_location:'Lokasi',meta_time:'Waktu koleksi',meta_total:'Total hasil',fulltext_label:'Ambil teks lengkap artikel',fulltext_hint:'(lebih lambat, sumber berita saja)',
   status_ready:'Siap untuk scraping.',results_title:'Hasil Scraping',
   filter_all:'Semua',search_ph:'Cari...',
   col_platform:'Platform',col_title:'Judul',col_keyword:'Keyword',col_date:'Tanggal',
@@ -455,7 +463,7 @@ en:{
   keywords_label:'Keywords (comma separated)',keywords_ph:'e.g.: technology, AI, startup',
   location_label:'Location',location_ph:'Jakarta',location_optional:'(optional)',location_hint:'Leave empty for general search · comma-separate for multi-location',start_btn:'Start Scraping',
   platforms_label:'Select Platforms',cat_news:'News',cat_forum:'Forums',cat_social:'Social',cat_ref:'Reference',
-  meta_title:'Collection Record',meta_cite:'Copy Citation',meta_keyword:'Keyword',meta_source:'Sources',meta_location:'Location',meta_time:'Collected at',meta_total:'Total results',
+  meta_title:'Collection Record',meta_cite:'Copy Citation',meta_keyword:'Keyword',meta_source:'Sources',meta_location:'Location',meta_time:'Collected at',meta_total:'Total results',fulltext_label:'Fetch full article text',fulltext_hint:'(slower, news sources only)',
   status_ready:'Ready to scrape.',results_title:'Scraping Results',
   filter_all:'All',search_ph:'Search...',
   col_platform:'Platform',col_title:'Title',col_keyword:'Keyword',col_date:'Date',
@@ -549,7 +557,7 @@ async function startScraping(){
   document.getElementById('startBtn').disabled=true;
   scrapeStart=Date.now();
   try{
-    const r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kw,location:loc,platforms:pls})});
+    const r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kw,location:loc,platforms:pls,full_text:document.getElementById('fullTextToggle').checked})});
     const d=await r.json();
     if(!d.ok){setStatus('Error: '+(d.error||''));showProg(false);document.getElementById('startBtn').disabled=false;toast('Error: '+(d.error||''),'err');return}
     currentJob=d.job_id;
@@ -658,6 +666,7 @@ function openDetail(i){
     '<div class="d-row"><div class="d-lbl">Keyword</div><div class="d-val">'+esc(r.keyword)+'</div></div>'+
     '<div class="d-row"><div class="d-lbl">Judul</div><div class="d-val" style="font-weight:600">'+esc(r.title)+'</div></div>'+
     (r.content?'<div class="d-row"><div class="d-lbl">Konten</div><div class="d-val" style="color:var(--t2)">'+esc(r.content.substring(0,500))+(r.content.length>500?'…':'')+'</div></div>':'')+
+    (r.full_text?'<div class="d-row"><div class="d-lbl">'+(currentLang==='id'?'Teks Lengkap':'Full Text')+'</div><div class="d-val" style="color:var(--t2);max-height:300px;overflow-y:auto;white-space:pre-wrap;line-height:1.6">'+esc(r.full_text)+'</div></div>':'')+
     '<div class="d-row"><div class="d-lbl">Tanggal</div><div class="d-val">'+esc(r.date)+'</div></div>'+
     (r.source?'<div class="d-row"><div class="d-lbl">Sumber</div><div class="d-val">'+esc(r.source)+'</div></div>':'')+
     (r.url?'<div class="d-row"><div class="d-lbl">URL</div><div class="d-val"><a href="'+esc(r.url)+'" target="_blank" style="color:var(--accent);word-break:break-all">'+esc(r.url)+'</a></div></div>':'');

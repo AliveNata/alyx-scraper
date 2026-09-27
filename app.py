@@ -113,7 +113,7 @@ def create_job_record():
     return job_id
 
 
-def run_scraper_job(job_id, keywords, locations, platforms, ip, ua):
+def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=False):
     with jobs_lock:
         jobs[job_id]['status'] = 'running'
         jobs[job_id]['message'] = 'Starting scraper...'
@@ -126,6 +126,11 @@ def run_scraper_job(job_id, keywords, locations, platforms, ip, ua):
 
         scraper = UnifiedScraper(gui_callback=cb)
         results = scraper.scrape_keywords(keywords, locations, platforms)
+
+        if full_text:
+            cb('Mengambil teks lengkap artikel...')
+            from scraper import enrich_full_text
+            enrich_full_text(results, gui_callback=cb)
 
         with jobs_lock:
             jobs[job_id]['results'] = results
@@ -339,6 +344,7 @@ def api_start():
     keywords_text = payload.get('keywords', '').strip()
     location_raw  = payload.get('location', '').strip()
     platforms = payload.get('platforms', [])
+    full_text = bool(payload.get('full_text', False))
 
     if not keywords_text or not platforms:
         return jsonify({'ok': False, 'error': 'Keywords and at least one platform required'}), 400
@@ -361,7 +367,7 @@ def api_start():
     ip = get_client_ip()
     ua = request.headers.get('User-Agent', '')
 
-    t = Thread(target=run_scraper_job, args=(job_id, keywords, locations, platforms, ip, ua))
+    t = Thread(target=run_scraper_job, args=(job_id, keywords, locations, platforms, ip, ua, full_text))
     t.daemon = True
     t.start()
 
