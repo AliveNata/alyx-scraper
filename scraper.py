@@ -1689,7 +1689,7 @@ class GDELTScraper(BaseScraper):
         try:
             params = {
                 'query': keyword, 'mode': 'ArtList', 'format': 'json',
-                'maxrecords': min(max_results, 75), 'timespan': '3months',
+                'maxrecords': min(max_results, 75), 'timespan': '3m',
                 'sort': 'DateDesc',
             }
             url = 'https://api.gdeltproject.org/api/v2/doc/doc?' + '&'.join(
