@@ -119,7 +119,7 @@ def create_job_record():
     return job_id
 
 
-def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=False):
+def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=False, date_from=None, date_to=None):
     with jobs_lock:
         jobs[job_id]['status'] = 'running'
         jobs[job_id]['message'] = 'Starting scraper...'
@@ -131,7 +131,8 @@ def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=Fa
                 jobs[job_id]['message'] = msg
 
         scraper = UnifiedScraper(gui_callback=cb)
-        results = scraper.scrape_keywords(keywords, locations, platforms)
+        results = scraper.scrape_keywords(keywords, locations, platforms,
+                                          date_from=date_from, date_to=date_to)
 
         if full_text:
             cb('Mengambil teks lengkap artikel...')
@@ -351,6 +352,8 @@ def api_start():
     location_raw  = payload.get('location', '').strip()
     platforms = payload.get('platforms', [])
     full_text = bool(payload.get('full_text', False))
+    date_from = (payload.get('date_from') or '').strip() or None
+    date_to = (payload.get('date_to') or '').strip() or None
 
     # Only allow platforms the admin has enabled
     _enabled = set(enabled_platforms())
@@ -373,11 +376,13 @@ def api_start():
         jobs[job_id]['locations'] = locations
         jobs[job_id]['location']  = location_raw
         jobs[job_id]['platforms'] = platforms
+        jobs[job_id]['date_from'] = date_from
+        jobs[job_id]['date_to']   = date_to
 
     ip = get_client_ip()
     ua = request.headers.get('User-Agent', '')
 
-    t = Thread(target=run_scraper_job, args=(job_id, keywords, locations, platforms, ip, ua, full_text))
+    t = Thread(target=run_scraper_job, args=(job_id, keywords, locations, platforms, ip, ua, full_text, date_from, date_to))
     t.daemon = True
     t.start()
 
@@ -415,6 +420,7 @@ def build_metadata(rec):
         'tool': 'Alyx Scraper',
         'keywords': rec.get('keywords', []),
         'location': rec.get('location', ''),
+        'date_range': ' s/d '.join(x for x in [rec.get('date_from'), rec.get('date_to')] if x),
         'sources': rec.get('platforms', []),
         'collected_at': collected_at,
         'duration_seconds': duration,
@@ -430,6 +436,7 @@ def _meta_rows(meta):
         ('Tool', meta['tool']),
         ('Keyword', ', '.join(meta['keywords'])),
         ('Lokasi', meta['location'] or '-'),
+        ('Rentang tanggal', meta.get('date_range') or '-'),
         ('Sumber', ', '.join(meta['sources'])),
         ('Waktu koleksi', meta['collected_at']),
         ('Durasi (detik)', meta['duration_seconds']),

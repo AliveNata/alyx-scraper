@@ -88,6 +88,8 @@ def _rss_link(item):
 class BaseScraper:
     def __init__(self, gui_callback=None):
         self.gui_callback = gui_callback
+        self.date_from = None   # 'YYYY-MM-DD', used by historical sources
+        self.date_to = None
         self.session = requests.Session()
         self.session.headers.update({
             'User-Agent': BROWSER_UA,
@@ -435,9 +437,13 @@ class GDELTScraper(BaseScraper):
         try:
             params = {
                 'query': keyword, 'mode': 'ArtList', 'format': 'json',
-                'maxrecords': min(max_results, 75), 'timespan': '3m',
-                'sort': 'DateDesc',
+                'maxrecords': min(max_results, 75), 'sort': 'DateDesc',
             }
+            if self.date_from and self.date_to:
+                params['startdatetime'] = self.date_from.replace('-', '') + '000000'
+                params['enddatetime'] = self.date_to.replace('-', '') + '235959'
+            else:
+                params['timespan'] = '3m'
             url = 'https://api.gdeltproject.org/api/v2/doc/doc?' + '&'.join(
                 f"{k}={quote_plus(str(v))}" for k, v in params.items())
             resp = requests.get(url, headers={'User-Agent': BROWSER_UA}, timeout=20)
@@ -528,6 +534,13 @@ class OpenAlexScraper(BaseScraper):
         try:
             url = ('https://api.openalex.org/works?search=' + quote_plus(keyword)
                    + f'&per-page={min(max_results, 25)}&mailto=alivenata@gmail.com')
+            if self.date_from or self.date_to:
+                parts = []
+                if self.date_from:
+                    parts.append('from_publication_date:' + self.date_from)
+                if self.date_to:
+                    parts.append('to_publication_date:' + self.date_to)
+                url += '&filter=' + quote_plus(','.join(parts))
             resp = requests.get(url, headers={
                 'User-Agent': 'alyx-scraper/1.0 (mailto:alivenata@gmail.com)'}, timeout=15)
             for w in resp.json().get('results', []):
@@ -701,7 +714,7 @@ class UnifiedScraper:
         self.gui_callback = gui_callback
         self.results = []
 
-    def scrape_keywords(self, keywords, locations, selected_platforms):
+    def scrape_keywords(self, keywords, locations, selected_platforms, date_from=None, date_to=None):
         self.results = []
         total_kw = len(keywords)
         total_loc = len(locations)
@@ -721,6 +734,8 @@ class UnifiedScraper:
                         continue
                     try:
                         scraper = scraper_cls(gui_callback=self.gui_callback)
+                        scraper.date_from = date_from
+                        scraper.date_to = date_to
                         platform_results = scraper.scrape(keyword, location)
                         count = len(platform_results)
                         platform_counts[platform_name] = platform_counts.get(platform_name, 0) + count

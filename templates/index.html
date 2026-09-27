@@ -275,6 +275,20 @@ tbody tr:hover{background:var(--row-hover)}
     </div>
   </div>
 
+  <div class="form-row" style="margin-top:10px">
+    <div class="form-col">
+      <label class="form-label" data-i18n="date_from_label">Dari tanggal <span style="font-weight:400;color:var(--t3)" data-i18n="date_optional">(opsional)</span></label>
+      <input id="dateFrom" type="date" class="ifield">
+    </div>
+    <div class="form-col">
+      <label class="form-label" data-i18n="date_to_label">Sampai tanggal</label>
+      <input id="dateTo" type="date" class="ifield">
+    </div>
+    <div class="form-col" style="display:flex;align-items:flex-end">
+      <span style="font-size:.78rem;color:var(--t3);line-height:1.4" data-i18n="date_hint">Berlaku untuk GDELT & jurnal (sumber historis). Berita RSS selalu terbaru.</span>
+    </div>
+  </div>
+
   <div class="prog-wrap" id="progWrap" style="display:none"><div class="prog-bar" id="progBar"></div></div>
 
   <div>
@@ -467,7 +481,7 @@ id:{
   keywords_label:'Keywords (pisah koma)',keywords_ph:'contoh: teknologi, AI, startup',
   location_label:'Lokasi',location_ph:'Jakarta',location_optional:'(opsional)',location_hint:'Kosongkan = pencarian umum · pisah koma untuk multi-lokasi',start_btn:'Mulai Scraping',
   platforms_label:'Pilih Platform',cat_news:'Berita',cat_forum:'Forum',cat_social:'Sosial',cat_ref:'Referensi',cat_journal:'Jurnal',
-  meta_title:'Catatan Koleksi',meta_cite:'Salin Sitasi',meta_keyword:'Keyword',meta_source:'Sumber',meta_location:'Lokasi',meta_time:'Waktu koleksi',meta_total:'Total hasil',fulltext_label:'Ambil teks lengkap artikel',fulltext_hint:'(lebih lambat, sumber berita saja)',
+  meta_title:'Catatan Koleksi',meta_cite:'Salin Sitasi',meta_keyword:'Keyword',meta_source:'Sumber',meta_location:'Lokasi',meta_time:'Waktu koleksi',meta_total:'Total hasil',fulltext_label:'Ambil teks lengkap artikel',fulltext_hint:'(lebih lambat, sumber berita saja)',date_from_label:'Dari tanggal',date_to_label:'Sampai tanggal',date_optional:'(opsional)',date_hint:'Berlaku untuk GDELT & jurnal (sumber historis). Berita RSS selalu terbaru.',
   status_ready:'Siap untuk scraping.',results_title:'Hasil Scraping',
   filter_all:'Semua',search_ph:'Cari...',
   col_platform:'Platform',col_title:'Judul',col_keyword:'Keyword',col_date:'Tanggal',
@@ -482,7 +496,7 @@ en:{
   keywords_label:'Keywords (comma separated)',keywords_ph:'e.g.: technology, AI, startup',
   location_label:'Location',location_ph:'Jakarta',location_optional:'(optional)',location_hint:'Leave empty for general search · comma-separate for multi-location',start_btn:'Start Scraping',
   platforms_label:'Select Platforms',cat_news:'News',cat_forum:'Forums',cat_social:'Social',cat_ref:'Reference',cat_journal:'Journals',
-  meta_title:'Collection Record',meta_cite:'Copy Citation',meta_keyword:'Keyword',meta_source:'Sources',meta_location:'Location',meta_time:'Collected at',meta_total:'Total results',fulltext_label:'Fetch full article text',fulltext_hint:'(slower, news sources only)',
+  meta_title:'Collection Record',meta_cite:'Copy Citation',meta_keyword:'Keyword',meta_source:'Sources',meta_location:'Location',meta_time:'Collected at',meta_total:'Total results',fulltext_label:'Fetch full article text',fulltext_hint:'(slower, news sources only)',date_from_label:'From date',date_to_label:'To date',date_optional:'(optional)',date_hint:'Applies to GDELT & journals (historical sources). RSS news is always recent.',
   status_ready:'Ready to scrape.',results_title:'Scraping Results',
   filter_all:'All',search_ph:'Search...',
   col_platform:'Platform',col_title:'Title',col_keyword:'Keyword',col_date:'Date',
@@ -577,7 +591,7 @@ async function startScraping(){
   document.getElementById('startBtn').disabled=true;
   scrapeStart=Date.now();
   try{
-    const r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kw,location:loc,platforms:pls,full_text:document.getElementById('fullTextToggle').checked})});
+    const r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kw,location:loc,platforms:pls,full_text:document.getElementById('fullTextToggle').checked,date_from:document.getElementById('dateFrom').value||'',date_to:document.getElementById('dateTo').value||''})});
     const d=await r.json();
     if(!d.ok){setStatus('Error: '+(d.error||''));showProg(false);document.getElementById('startBtn').disabled=false;toast('Error: '+(d.error||''),'err');return}
     currentJob=d.job_id;
