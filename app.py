@@ -648,6 +648,8 @@ def api_admin_settings_post():
         }
     if 'google_vision_key' in data:
         cfg['google_vision_key'] = (data.get('google_vision_key') or '').strip()
+    if 'semantic_scholar_key' in data:
+        cfg['semantic_scholar_key'] = (data.get('semantic_scholar_key') or '').strip()
     save_config(cfg)
     return jsonify({'ok': True})
 

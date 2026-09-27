@@ -291,6 +291,11 @@ tbody tr:hover{background:var(--row-hover)}
         <label class="chip cat-n"><input type="checkbox" class="pcb" value="Wikipedia"><i class="bi bi-book-half"></i> Wikipedia</label>
       </div>
       <div class="plat-row">
+        <span class="plat-row-label" data-i18n="cat_journal">Jurnal</span>
+        <label class="chip cat-n"><input type="checkbox" class="pcb" value="OpenAlex"><i class="bi bi-mortarboard"></i> OpenAlex</label>
+        <label class="chip cat-n"><input type="checkbox" class="pcb" value="Semantic Scholar"><i class="bi bi-journal-richtext"></i> Semantic Scholar</label>
+      </div>
+      <div class="plat-row">
         <span class="plat-row-label" data-i18n="cat_forum">Forum</span>
         <label class="chip cat-f"><input type="checkbox" class="pcb" value="Kaskus"><i class="bi bi-chat-dots"></i> Kaskus</label>
       </div>
@@ -447,7 +452,7 @@ id:{
   stat_results:'Total Hasil',stat_platforms:'Platform Aktif',stat_keywords:'Keywords',stat_duration:'Durasi',
   keywords_label:'Keywords (pisah koma)',keywords_ph:'contoh: teknologi, AI, startup',
   location_label:'Lokasi',location_ph:'Jakarta',location_optional:'(opsional)',location_hint:'Kosongkan = pencarian umum · pisah koma untuk multi-lokasi',start_btn:'Mulai Scraping',
-  platforms_label:'Pilih Platform',cat_news:'Berita',cat_forum:'Forum',cat_social:'Sosial',cat_ref:'Referensi',
+  platforms_label:'Pilih Platform',cat_news:'Berita',cat_forum:'Forum',cat_social:'Sosial',cat_ref:'Referensi',cat_journal:'Jurnal',
   meta_title:'Catatan Koleksi',meta_cite:'Salin Sitasi',meta_keyword:'Keyword',meta_source:'Sumber',meta_location:'Lokasi',meta_time:'Waktu koleksi',meta_total:'Total hasil',fulltext_label:'Ambil teks lengkap artikel',fulltext_hint:'(lebih lambat, sumber berita saja)',
   status_ready:'Siap untuk scraping.',results_title:'Hasil Scraping',
   filter_all:'Semua',search_ph:'Cari...',
@@ -462,7 +467,7 @@ en:{
   stat_results:'Total Results',stat_platforms:'Active Platforms',stat_keywords:'Keywords',stat_duration:'Duration',
   keywords_label:'Keywords (comma separated)',keywords_ph:'e.g.: technology, AI, startup',
   location_label:'Location',location_ph:'Jakarta',location_optional:'(optional)',location_hint:'Leave empty for general search · comma-separate for multi-location',start_btn:'Start Scraping',
-  platforms_label:'Select Platforms',cat_news:'News',cat_forum:'Forums',cat_social:'Social',cat_ref:'Reference',
+  platforms_label:'Select Platforms',cat_news:'News',cat_forum:'Forums',cat_social:'Social',cat_ref:'Reference',cat_journal:'Journals',
   meta_title:'Collection Record',meta_cite:'Copy Citation',meta_keyword:'Keyword',meta_source:'Sources',meta_location:'Location',meta_time:'Collected at',meta_total:'Total results',fulltext_label:'Fetch full article text',fulltext_hint:'(slower, news sources only)',
   status_ready:'Ready to scrape.',results_title:'Scraping Results',
   filter_all:'All',search_ph:'Search...',
@@ -510,6 +515,7 @@ function platCat(p){
   if(p==='News Sites')return 'cat-ns';
   if(p==='GDELT')return 'cat-n';
   if(p==='Wikipedia')return 'cat-n';
+  if(['OpenAlex','Semantic Scholar'].includes(p))return 'cat-n';
   if(p==='Kaskus')return 'cat-f';
   return 'cat-d';
 }

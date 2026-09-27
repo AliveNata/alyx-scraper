@@ -518,11 +518,119 @@ class WikipediaScraper(BaseScraper):
             return ''
 
 
+# ─────────────────────────────────────────────────────────────
+# OpenAlex — scholarly works API (free, no key). Journals/papers.
+# ─────────────────────────────────────────────────────────────
+class OpenAlexScraper(BaseScraper):
+    def scrape(self, keyword, location='', max_results=15):
+        self.update_status(f"[OpenAlex] Mencari '{keyword}'...")
+        results = []
+        try:
+            url = ('https://api.openalex.org/works?search=' + quote_plus(keyword)
+                   + f'&per-page={min(max_results, 25)}&mailto=alivenata@gmail.com')
+            resp = requests.get(url, headers={
+                'User-Agent': 'alyx-scraper/1.0 (mailto:alivenata@gmail.com)'}, timeout=15)
+            for w in resp.json().get('results', []):
+                title = self.clean(w.get('title') or w.get('display_name') or '')
+                if not title:
+                    continue
+                abstract = self._abstract(w.get('abstract_inverted_index'))
+                authors = [(a.get('author') or {}).get('display_name', '')
+                           for a in (w.get('authorships') or [])][:4]
+                venue = ((w.get('primary_location') or {}).get('source') or {}).get('display_name', '') or 'OpenAlex'
+                link = w.get('doi') or (w.get('open_access') or {}).get('oa_url') or w.get('id', '')
+                byline = ', '.join(a for a in authors if a)
+                content = (byline + '. ' if byline else '') + abstract
+                results.append({
+                    'platform': 'OpenAlex',
+                    'title': title,
+                    'content': self.clean(content)[:1000],
+                    'url': link,
+                    'date': str(w.get('publication_year') or ''),
+                    'source': venue,
+                    'keyword': keyword,
+                    'location': location,
+                })
+                if len(results) >= max_results:
+                    break
+            self.update_status(f"[OpenAlex] {len(results)} paper ditemukan")
+        except Exception as e:
+            self.update_status(f"[OpenAlex] Error: {str(e)[:60]}")
+        return results
+
+    def _abstract(self, inv):
+        """Reconstruct abstract text from OpenAlex inverted-index format."""
+        if not inv:
+            return ''
+        pos = {}
+        for word, idxs in inv.items():
+            for i in idxs:
+                pos[i] = word
+        return ' '.join(pos[i] for i in sorted(pos))
+
+
+# ─────────────────────────────────────────────────────────────
+# Semantic Scholar — academic graph API (free, no key). Papers.
+# ─────────────────────────────────────────────────────────────
+class SemanticScholarScraper(BaseScraper):
+    def scrape(self, keyword, location='', max_results=15):
+        self.update_status(f"[Semantic Scholar] Mencari '{keyword}'...")
+        results = []
+        try:
+            fields = 'title,abstract,year,venue,authors,externalIds,openAccessPdf,url'
+            url = ('https://api.semanticscholar.org/graph/v1/paper/search?query='
+                   + quote_plus(keyword) + f'&limit={min(max_results, 20)}&fields={fields}')
+            headers = {'User-Agent': 'alyx-scraper/1.0 (mailto:alivenata@gmail.com)'}
+            key = ''
+            try:
+                with open(CONFIG_PATH) as f:
+                    key = (json.load(f).get('semantic_scholar_key') or '').strip()
+            except Exception:
+                pass
+            key = key or os.environ.get('SEMANTIC_SCHOLAR_KEY', '')
+            if key:
+                headers['x-api-key'] = key
+            resp = requests.get(url, headers=headers, timeout=15)
+            if resp.status_code != 200:
+                self.update_status(f"[Semantic Scholar] HTTP {resp.status_code} (rate limit?)")
+                return results
+            for p in resp.json().get('data', []):
+                title = self.clean(p.get('title') or '')
+                if not title:
+                    continue
+                abstract = p.get('abstract') or ''
+                authors = [a.get('name', '') for a in (p.get('authors') or [])][:4]
+                doi = (p.get('externalIds') or {}).get('DOI')
+                link = ((p.get('openAccessPdf') or {}).get('url')
+                        or (('https://doi.org/' + doi) if doi else '')
+                        or p.get('url', ''))
+                byline = ', '.join(a for a in authors if a)
+                content = (byline + '. ' if byline else '') + abstract
+                results.append({
+                    'platform': 'Semantic Scholar',
+                    'title': title,
+                    'content': self.clean(content)[:1000],
+                    'url': link,
+                    'date': str(p.get('year') or ''),
+                    'source': self.clean(p.get('venue') or '') or 'Semantic Scholar',
+                    'keyword': keyword,
+                    'location': location,
+                })
+                if len(results) >= max_results:
+                    break
+            self.update_status(f"[Semantic Scholar] {len(results)} paper ditemukan")
+        except Exception as e:
+            self.update_status(f"[Semantic Scholar] Error: {str(e)[:60]}")
+        return results
+
+
 SCRAPERS = {
     'Google News': GoogleNewsScraper,
     'News Sites':  NewsSitesScraper,
     'GDELT':       GDELTScraper,
     'Wikipedia':   WikipediaScraper,
+    'OpenAlex':    OpenAlexScraper,
+    'Semantic Scholar': SemanticScholarScraper,
     'Kaskus':      KaskusScraper,
 }
 

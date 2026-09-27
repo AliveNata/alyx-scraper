@@ -19,8 +19,5 @@
     "session_file": ""
   },
   "google_vision_key": "",
-  "reddit": {
-    "client_id": "",
-    "client_secret": ""
-  }
+  "semantic_scholar_key": ""
 }

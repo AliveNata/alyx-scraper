@@ -560,6 +560,38 @@ code.i { background: var(--glass); border: 1px solid var(--glass-b); padding: 1p
         </div>
       </div>
 
+      <!-- Semantic Scholar API key -->
+      <div class="g-card">
+        <div class="g-card-head">
+          <div class="g-card-title"><i class="bi bi-mortarboard-fill"></i> Semantic Scholar</div>
+          <span id="s2StatusBadge"></span>
+        </div>
+        <div class="g-card-body">
+          <div class="settings-hint" style="margin-bottom:16px">
+            API key <strong>Semantic Scholar</strong> (gratis) supaya pencarian jurnal stabil. Tanpa key, pool publik sering kena rate-limit.
+            Minta di <a href="https://www.semanticscholar.org/product/api" target="_blank" style="color:var(--accent)">semanticscholar.org/product/api</a>.
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;max-width:440px">
+            <div>
+              <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">Semantic Scholar API Key</label>
+              <div style="position:relative">
+                <input class="g-input" type="password" id="s2Key" placeholder="key" style="width:100%;padding-right:38px">
+                <button type="button" onclick="toggleS2Key()"
+                  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t3);cursor:pointer;font-size:.95rem">
+                  <i class="bi bi-eye" id="s2Eye"></i>
+                </button>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <button class="g-btn g-btn-primary" onclick="saveS2Key()" id="s2SaveBtn">
+                <i class="bi bi-floppy-fill"></i> Simpan
+              </button>
+              <span id="s2SaveMsg" style="font-size:.8rem"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Scraper Diagnostics -->
       <div class="g-card">
         <div class="g-card-head">
@@ -754,6 +786,7 @@ async function loadLogs(){
 async function loadSettings(){
   loadEmailConfig();
   loadVisionKey();
+  loadS2Key();
 }
 
 async function saveSettings(){
@@ -848,6 +881,35 @@ async function saveRedditCfg(){
   } catch(e){ msg.style.color = '#ef4444'; msg.textContent = '✗ Error'; }
   btn.disabled = false;
   setTimeout(() => msg.textContent = '', 3000);
+}
+
+// ── Semantic Scholar API key ──
+function toggleS2Key(){
+  const inp=document.getElementById('s2Key'), icon=document.getElementById('s2Eye');
+  if(inp.type==='password'){inp.type='text';icon.className='bi bi-eye-slash';}
+  else{inp.type='password';icon.className='bi bi-eye';}
+}
+async function loadS2Key(){
+  try{
+    const r=await fetch(`/api/admin/settings`); const j=await r.json(); if(!j.ok)return;
+    const key=j.config?.semantic_scholar_key||'';
+    document.getElementById('s2Key').value=key;
+    document.getElementById('s2StatusBadge').innerHTML=key
+      ?'<span class="nitter-badge nitter-ok"><i class="bi bi-check-circle-fill"></i> Aktif</span>'
+      :'<span class="nitter-badge nitter-fail"><i class="bi bi-x-circle-fill"></i> Belum di-set</span>';
+  }catch(e){}
+}
+async function saveS2Key(){
+  const btn=document.getElementById('s2SaveBtn'), msg=document.getElementById('s2SaveMsg');
+  btn.disabled=true;
+  try{
+    const r=await fetch(`/api/admin/settings`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({semantic_scholar_key:document.getElementById('s2Key').value.trim()})});
+    const j=await r.json();
+    if(j.ok){msg.style.color='#22c55e';msg.textContent='✓ Tersimpan';loadS2Key();}
+    else{msg.style.color='#ef4444';msg.textContent='✗ Gagal simpan';}
+  }catch(e){msg.style.color='#ef4444';msg.textContent='✗ Error';}
+  btn.disabled=false; setTimeout(()=>msg.textContent='',3000);
 }
 
 // ── Google Vision (reverse image) ──
