@@ -447,6 +447,20 @@ tbody tr:hover{background:var(--row-hover)}
 
 {% block extra_js %}
 <script>
+window.ENABLED_PLATFORMS = {{ enabled_platforms|tojson }};
+function applyEnabledPlatforms(){
+  const en = window.ENABLED_PLATFORMS || [];
+  document.querySelectorAll('.pcb').forEach(cb=>{
+    const chip = cb.closest('.chip');
+    if(!en.includes(cb.value)){ cb.checked=false; if(chip) chip.style.display='none'; }
+  });
+  document.querySelectorAll('.plat-row').forEach(row=>{
+    const vis=[...row.querySelectorAll('.chip')].some(c=>c.style.display!=='none');
+    if(!vis) row.style.display='none';
+  });
+}
+applyEnabledPlatforms();
+
 window.PAGE_L = {
 id:{
   stat_results:'Total Hasil',stat_platforms:'Platform Aktif',stat_keywords:'Keywords',stat_duration:'Durasi',

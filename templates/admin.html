@@ -474,6 +474,23 @@ code.i { background: var(--glass); border: 1px solid var(--glass-b); padding: 1p
   <div id="tab-settings" style="display:none">
     <div style="max-width:700px;display:flex;flex-direction:column;gap:16px">
 
+      <!-- Platform Availability -->
+      <div class="g-card">
+        <div class="g-card-head">
+          <div class="g-card-title"><i class="bi bi-toggles"></i> Platform Aktif</div>
+          <span id="platSaveMsg" style="font-size:.8rem"></span>
+        </div>
+        <div class="g-card-body">
+          <div class="settings-hint" style="margin-bottom:14px">
+            Nyalakan/matikan sumber yang muncul di halaman scraper. Matikan yang belum siap (mis. butuh API key).
+          </div>
+          <div id="platformToggles" style="display:flex;flex-direction:column;gap:8px;max-width:440px"></div>
+          <button class="g-btn g-btn-primary" onclick="savePlatforms()" id="platSaveBtn" style="margin-top:14px">
+            <i class="bi bi-floppy-fill"></i> Simpan
+          </button>
+        </div>
+      </div>
+
       <!-- Email Configuration -->
       <div class="g-card">
         <div class="g-card-head">
@@ -632,6 +649,31 @@ code.i { background: var(--glass); border: 1px solid var(--glass-b); padding: 1p
 {% block extra_js %}
 <script>
 let usageChart = null;
+window.ALL_PLATFORMS = {{ all_platforms|tojson }};
+
+// ── Platform Availability ──
+async function loadPlatforms(){
+  try{
+    const r=await fetch(`/api/admin/settings`); const j=await r.json(); if(!j.ok)return;
+    const disabled=new Set(j.config?.platforms_disabled||[]);
+    document.getElementById('platformToggles').innerHTML=(window.ALL_PLATFORMS||[]).map(p=>
+      '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.9rem">'+
+      '<input type="checkbox" class="plat-toggle" value="'+p+'" '+(disabled.has(p)?'':'checked')+'>'+
+      '<span>'+p+'</span></label>').join('');
+  }catch(e){}
+}
+async function savePlatforms(){
+  const btn=document.getElementById('platSaveBtn'), msg=document.getElementById('platSaveMsg');
+  const disabled=[...document.querySelectorAll('.plat-toggle')].filter(c=>!c.checked).map(c=>c.value);
+  btn.disabled=true;
+  try{
+    const r=await fetch(`/api/admin/settings`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({platforms_disabled:disabled})});
+    const j=await r.json();
+    msg.style.color=j.ok?'#22c55e':'#ef4444'; msg.textContent=j.ok?'✓ Tersimpan':'✗ Gagal';
+  }catch(e){msg.style.color='#ef4444';msg.textContent='✗ Error';}
+  btn.disabled=false; setTimeout(()=>msg.textContent='',3000);
+}
 
 function esc(s){ return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '' }
 
@@ -784,6 +826,7 @@ async function loadLogs(){
 
 // ── Settings ──
 async function loadSettings(){
+  loadPlatforms();
   loadEmailConfig();
   loadVisionKey();
   loadS2Key();

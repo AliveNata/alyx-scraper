@@ -712,7 +712,7 @@ class UnifiedScraper:
                 loc_label = f" [{location}]" if location else ""
                 if self.gui_callback:
                     self.gui_callback(
-                        f"Keyword {ki}/{total_kw}: '{keyword}'{loc_label} — "
+                        f"Keyword {ki}/{total_kw}: '{keyword}'{loc_label} - "
                         f"memproses {len(selected_platforms)} platform..."
                     )
                 for platform_name in selected_platforms:
@@ -739,10 +739,33 @@ class UnifiedScraper:
                                 f"✗ {platform_name}: {str(e)[:60]}"
                             )
 
-        # Final summary with per-platform breakdown
+        # Dedup across sources (same URL or identical title)
+        before = len(self.results)
+        self.results = self._dedup(self.results)
+        for i, r in enumerate(self.results, 1):
+            r['id'] = i
+
         summary = " | ".join(f"{p}: {c}" for p, c in platform_counts.items())
+        removed = before - len(self.results)
         if self.gui_callback:
-            self.gui_callback(
-                f"Selesai! {len(self.results)} hasil — {summary}"
-            )
+            extra = f" ({removed} duplikat dibuang)" if removed else ""
+            self.gui_callback(f"Selesai! {len(self.results)} hasil{extra} - {summary}")
         return self.results
+
+    @staticmethod
+    def _norm(s):
+        return re.sub(r'\s+', ' ', re.sub(r'[^\w\s]', '', (s or '').lower())).strip()
+
+    def _dedup(self, results):
+        seen_url, seen_title, out = set(), set(), []
+        for r in results:
+            url = (r.get('url') or '').strip().rstrip('/').lower()
+            tkey = self._norm(r.get('title'))
+            if (url and url in seen_url) or (tkey and tkey in seen_title):
+                continue
+            if url:
+                seen_url.add(url)
+            if tkey:
+                seen_title.add(tkey)
+            out.append(r)
+        return out

@@ -48,6 +48,12 @@ def save_config(cfg):
     with open(CONFIG_PATH, 'w') as f:
         json.dump(cfg, f, indent=2, ensure_ascii=False)
 
+
+def enabled_platforms():
+    """Platforms the admin has left on (not in config 'platforms_disabled')."""
+    disabled = set(load_config().get('platforms_disabled', []))
+    return [p for p in SCRAPERS.keys() if p not in disabled]
+
 jobs = {}
 jobs_lock = Lock()
 
@@ -158,7 +164,7 @@ def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=Fa
 # ─── Pages ───────────────────────────────────────────────────────────
 @app.route('/')
 def index():
-    return render_template('index.html', platforms=list(SCRAPERS.keys()))
+    return render_template('index.html', enabled_platforms=enabled_platforms())
 
 
 @app.route('/docs')
@@ -211,7 +217,7 @@ def admin_login_post():
 def admin_dashboard():
     if not session.get('admin_auth'):
         return redirect(url_for('admin_login'))
-    return render_template('admin.html')
+    return render_template('admin.html', all_platforms=list(SCRAPERS.keys()))
 
 
 @app.route('/alyx-control-panel/reset-password')
@@ -345,6 +351,10 @@ def api_start():
     location_raw  = payload.get('location', '').strip()
     platforms = payload.get('platforms', [])
     full_text = bool(payload.get('full_text', False))
+
+    # Only allow platforms the admin has enabled
+    _enabled = set(enabled_platforms())
+    platforms = [p for p in platforms if p in _enabled]
 
     if not keywords_text or not platforms:
         return jsonify({'ok': False, 'error': 'Keywords and at least one platform required'}), 400
@@ -650,6 +660,8 @@ def api_admin_settings_post():
         cfg['google_vision_key'] = (data.get('google_vision_key') or '').strip()
     if 'semantic_scholar_key' in data:
         cfg['semantic_scholar_key'] = (data.get('semantic_scholar_key') or '').strip()
+    if 'platforms_disabled' in data:
+        cfg['platforms_disabled'] = [p for p in (data.get('platforms_disabled') or []) if p in SCRAPERS]
     save_config(cfg)
     return jsonify({'ok': True})
 
