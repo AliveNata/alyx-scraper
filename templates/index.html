@@ -292,16 +292,7 @@ tbody tr:hover{background:var(--row-hover)}
       </div>
       <div class="plat-row">
         <span class="plat-row-label" data-i18n="cat_forum">Forum</span>
-        <label class="chip cat-f"><input type="checkbox" class="pcb" value="Reddit"><i class="bi bi-reddit"></i> Reddit</label>
         <label class="chip cat-f"><input type="checkbox" class="pcb" value="Kaskus"><i class="bi bi-chat-dots"></i> Kaskus</label>
-        <label class="chip cat-f"><input type="checkbox" class="pcb" value="Quora"><i class="bi bi-quora"></i> Quora</label>
-      </div>
-      <div class="plat-row">
-        <span class="plat-row-label" data-i18n="cat_social">Sosial</span>
-        <label class="chip cat-s"><input type="checkbox" class="pcb" value="X/Twitter"><i class="bi bi-twitter-x"></i> X / Twitter</label>
-        <label class="chip cat-s"><input type="checkbox" class="pcb" value="Threads"><i class="bi bi-at"></i> Threads</label>
-        <label class="chip cat-s"><input type="checkbox" class="pcb" value="Facebook"><i class="bi bi-facebook"></i> Facebook</label>
-        <label class="chip cat-s"><input type="checkbox" class="pcb" value="Instagram"><i class="bi bi-instagram"></i> Instagram</label>
       </div>
     </div>
   </div>
@@ -502,8 +493,7 @@ function platCat(p){
   if(p==='News Sites')return 'cat-ns';
   if(p==='GDELT')return 'cat-n';
   if(p==='Wikipedia')return 'cat-n';
-  if(['Reddit','Kaskus','Quora'].includes(p))return 'cat-f';
-  if(['X/Twitter','Threads','Facebook','Instagram'].includes(p))return 'cat-s';
+  if(p==='Kaskus')return 'cat-f';
   return 'cat-d';
 }
 
