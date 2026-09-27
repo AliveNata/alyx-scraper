@@ -155,6 +155,10 @@ select.input-sm option{background:var(--modal-bg)}
 .dl-grp{display:flex;gap:4px}
 .btn-dl{padding:6px 9px;background:var(--glass);border:1px solid var(--glass-b);border-radius:8px;color:var(--t2);font-size:.81rem;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
 .btn-dl:hover{border-color:rgba(99,102,241,.4);color:var(--accent)}
+.plat-logo{filter:brightness(0);opacity:.85}
+[data-theme="dark"] .plat-logo{filter:brightness(0) invert(1);opacity:.9}
+.chip i{color:#111}
+[data-theme="dark"] .chip i{color:#eee}
 
 /* Filter chips row */
 .filter-chips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--glass-b)}
@@ -296,18 +300,18 @@ tbody tr:hover{background:var(--row-hover)}
     <div class="plat-groups">
       <div class="plat-row">
         <span class="plat-row-label" data-i18n="cat_news">Berita</span>
-        <label class="chip cat-n active"><input type="checkbox" class="pcb" value="Google News" checked><img src="/static/logos/google-news.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain;background:#fff;border-radius:3px;padding:1px"> Google News</label>
-        <label class="chip cat-ns active"><input type="checkbox" class="pcb" value="News Sites" checked><img src="/static/logos/news-sites.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain;background:#fff;border-radius:3px;padding:1px"> News Sites</label>
+        <label class="chip cat-n active"><input type="checkbox" class="pcb" value="Google News" checked><img src="/static/logos/google-news.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain" class="plat-logo"> Google News</label>
+        <label class="chip cat-ns active"><input type="checkbox" class="pcb" value="News Sites" checked><img src="/static/logos/news-sites.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain" class="plat-logo"> News Sites</label>
         <label class="chip cat-n active"><input type="checkbox" class="pcb" value="GDELT" checked><i class="bi bi-globe-americas"></i> GDELT</label>
       </div>
       <div class="plat-row">
         <span class="plat-row-label" data-i18n="cat_ref">Referensi</span>
-        <label class="chip cat-n"><input type="checkbox" class="pcb" value="Wikipedia"><img src="/static/logos/wikipedia.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain;background:#fff;border-radius:3px;padding:1px"> Wikipedia</label>
+        <label class="chip cat-n"><input type="checkbox" class="pcb" value="Wikipedia"><img src="/static/logos/wikipedia.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain" class="plat-logo"> Wikipedia</label>
       </div>
       <div class="plat-row">
         <span class="plat-row-label" data-i18n="cat_journal">Jurnal</span>
-        <label class="chip cat-n"><input type="checkbox" class="pcb" value="OpenAlex"><img src="/static/logos/openalex.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain;background:#fff;border-radius:3px;padding:1px"> OpenAlex</label>
-        <label class="chip cat-n"><input type="checkbox" class="pcb" value="Semantic Scholar"><img src="/static/logos/semantic-scholar.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain;background:#fff;border-radius:3px;padding:1px"> Semantic Scholar</label>
+        <label class="chip cat-n"><input type="checkbox" class="pcb" value="OpenAlex"><img src="/static/logos/openalex.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain" class="plat-logo"> OpenAlex</label>
+        <label class="chip cat-n"><input type="checkbox" class="pcb" value="Semantic Scholar"><img src="/static/logos/semantic-scholar.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain" class="plat-logo"> Semantic Scholar</label>
       </div>
       <div class="plat-row">
         <span class="plat-row-label" data-i18n="cat_video">Video</span>
@@ -315,7 +319,7 @@ tbody tr:hover{background:var(--row-hover)}
       </div>
       <div class="plat-row">
         <span class="plat-row-label" data-i18n="cat_forum">Forum</span>
-        <label class="chip cat-f"><input type="checkbox" class="pcb" value="Kaskus"><img src="/static/logos/kaskus.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain;background:#fff;border-radius:3px;padding:1px"> Kaskus</label>
+        <label class="chip cat-f"><input type="checkbox" class="pcb" value="Kaskus"><img src="/static/logos/kaskus.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain" class="plat-logo"> Kaskus</label>
       </div>
     </div>
   </div>

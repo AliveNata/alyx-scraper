@@ -77,12 +77,12 @@ hr{border-color:var(--glass-b)!important}
       <a href="#changelog">Changelog</a>
       <a href="#new-features" data-i18n="doc_newfeat">Fitur Baru</a>
 
-      <div class="sidebar-title">Repo</div>
-      <a href="https://github.com/d60/twikit" target="_blank">twikit</a>
-      <a href="https://github.com/kevinzg/facebook-scraper" target="_blank">facebook-scraper</a>
-      <a href="https://github.com/adrian-dip/quora-scraper" target="_blank">quora-scraper</a>
-      <a href="https://github.com/Zeeshanahmad4/Threads-Scraper" target="_blank">Threads-Scraper</a>
-      <a href="https://github.com/mahdidevlp/image-scraper" target="_blank">image-scraper</a>
+      <div class="sidebar-title">Sumber &amp; API</div>
+      <a href="https://docs.openalex.org" target="_blank">OpenAlex API</a>
+      <a href="https://api.semanticscholar.org" target="_blank">Semantic Scholar API</a>
+      <a href="https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/" target="_blank">GDELT DOC API</a>
+      <a href="https://developers.google.com/youtube/v3" target="_blank">YouTube Data API</a>
+      <a href="https://trafilatura.readthedocs.io" target="_blank">trafilatura</a>
 
       <div class="mt-4">
         <a href="https://sociabuzz.com/alyxlabs/support" target="_blank" class="btn btn-sm w-100"><img src="/static/sociabuzz.png" alt="SociaBuzz" style="height:1.1em;width:1.1em;vertical-align:-0.2em;border-radius:3px"> <span data-i18n="footer_sociabuzz">Dukungan SociaBuzz</span></a>
@@ -102,22 +102,24 @@ hr{border-color:var(--glass-b)!important}
       <h3 class="lang-id">Fitur Utama</h3>
       <h3 class="lang-en">Main Features</h3>
       <ul class="lang-id">
-        <li><strong>Direct Scraping</strong> - Scrape langsung dari platform tanpa perantara API pihak ketiga</li>
-        <li><strong>9 Platform</strong> - Google News, News Sites, Reddit, Kaskus, X/Twitter, Facebook, Threads, Quora, Instagram</li>
-        <li><strong>Image Scraper</strong> - Cari gambar, scrape dari URL, upload untuk mencari gambar mirip</li>
-        <li><strong>Export</strong> - Download hasil dalam format CSV, JSON, atau XLSX</li>
-        <li><strong>Bilingual</strong> - Bahasa Indonesia dan English</li>
-        <li><strong>Light/Dark Theme</strong> - Theme toggle dengan light sebagai default</li>
-        <li><strong>Admin Dashboard</strong> - Monitoring penggunaan dan audit log (tersembunyi)</li>
+        <li><strong>8 Sumber Terkurasi</strong> - Google News, News Sites, GDELT, YouTube, Wikipedia, OpenAlex, Semantic Scholar, Kaskus</li>
+        <li><strong>Teks Lengkap Artikel</strong> - Ambil isi artikel penuh (bukan cuma cuplikan) untuk analisis konten</li>
+        <li><strong>Filter Tanggal &amp; Dedup</strong> - Rentang tanggal untuk sumber historis, hasil duplikat dibuang otomatis</li>
+        <li><strong>Catatan Koleksi &amp; Sitasi</strong> - Metadata pengumpulan (keyword, sumber, waktu WIB) siap untuk bab Metodologi</li>
+        <li><strong>Analisis</strong> - Frekuensi kata terbanyak dan distribusi waktu</li>
+        <li><strong>Export</strong> - CSV, JSON, XLSX, atau Markdown (dengan metadata)</li>
+        <li><strong>Bilingual &amp; Light/Dark</strong> - Indonesia/English, tema terang sebagai default</li>
+        <li><strong>Admin Dashboard</strong> - Toggle platform, kunci API, audit log (tersembunyi)</li>
       </ul>
       <ul class="lang-en">
-        <li><strong>Direct Scraping</strong> - Scrape straight from each platform, no third-party API in between</li>
-        <li><strong>9 Platforms</strong> - Google News, News Sites, Reddit, Kaskus, X/Twitter, Facebook, Threads, Quora, Instagram</li>
-        <li><strong>Image Scraper</strong> - Search images, scrape from a URL, upload to find similar images</li>
-        <li><strong>Export</strong> - Download results as CSV, JSON, or XLSX</li>
-        <li><strong>Bilingual</strong> - Indonesian and English</li>
-        <li><strong>Light/Dark Theme</strong> - Theme toggle, light by default</li>
-        <li><strong>Admin Dashboard</strong> - Usage monitoring and audit log (hidden)</li>
+        <li><strong>8 Curated Sources</strong> - Google News, News Sites, GDELT, YouTube, Wikipedia, OpenAlex, Semantic Scholar, Kaskus</li>
+        <li><strong>Full Article Text</strong> - Fetch full article bodies (not just snippets) for content analysis</li>
+        <li><strong>Date Filter &amp; Dedup</strong> - Date range for historical sources, duplicates removed automatically</li>
+        <li><strong>Collection Record &amp; Citation</strong> - Provenance metadata (keyword, sources, time) ready for a methodology section</li>
+        <li><strong>Analysis</strong> - Top-term frequency and timeline distribution</li>
+        <li><strong>Export</strong> - CSV, JSON, XLSX, or Markdown (with metadata)</li>
+        <li><strong>Bilingual &amp; Light/Dark</strong> - Indonesian/English, light theme by default</li>
+        <li><strong>Admin Dashboard</strong> - Platform toggle, API keys, audit log (hidden)</li>
       </ul>
 
       <h3>Tech Stack</h3>
@@ -135,53 +137,48 @@ hr{border-color:var(--glass-b)!important}
     <!-- Platforms -->
     <div class="doc-section" id="platforms">
       <h2><i class="bi bi-grid"></i> Platform</h2>
-      <p class="lang-id">AlyxLabs mendukung scraping langsung dari 9 platform berikut:</p>
-      <p class="lang-en">AlyxLabs scrapes directly from these 9 platforms:</p>
+      <p class="lang-id">AlyxLabs mengumpulkan data dari 8 sumber terkurasi berikut. Yang butuh API key gratis bisa dinyalakan/dimatikan admin.</p>
+      <p class="lang-en">AlyxLabs collects from these 8 curated sources. Those needing a free API key can be toggled by the admin.</p>
       <div class="platform-grid">
         <div class="platform-item">
           <h5><i class="bi bi-newspaper text-primary"></i> Google News</h5>
-          <p class="lang-id">Scrape berita terbaru via Google News RSS feed. Mendukung pencarian berdasarkan keyword dan lokasi.</p>
-          <p class="lang-en">Scrape the latest news via the Google News RSS feed. Search by keyword and location.</p>
+          <p class="lang-id">Berita terbaru via Google News RSS. Reliable, tanpa API key.</p>
+          <p class="lang-en">Latest news via Google News RSS. Reliable, no API key.</p>
         </div>
         <div class="platform-item">
           <h5><i class="bi bi-globe text-success"></i> News Sites</h5>
-          <p class="lang-id">Scrape dari portal berita worldwide termasuk Indonesia (Detik, Kompas, Liputan6, CNN, BBC, Reuters).</p>
-          <p class="lang-en">Scrape news portals worldwide including Indonesia (Detik, Kompas, Liputan6, CNN, BBC, Reuters).</p>
+          <p class="lang-id">Portal berita Indonesia + dunia (Detik, Kompas, Liputan6, CNN, BBC) via RSS. Reliable.</p>
+          <p class="lang-en">Indonesian + global news portals (Detik, Kompas, Liputan6, CNN, BBC) via RSS. Reliable.</p>
         </div>
         <div class="platform-item">
-          <h5><i class="bi bi-reddit text-danger"></i> Reddit</h5>
-          <p class="lang-id">Scraping via Reddit API resmi (OAuth). Mengambil post, subreddit, dan konten secara langsung.</p>
-          <p class="lang-en">Scraping via the official Reddit API (OAuth). Pulls posts, subreddits, and content directly.</p>
+          <h5><i class="bi bi-globe-americas text-info"></i> GDELT</h5>
+          <p class="lang-id">Indeks berita global (DOC 2.0 API) dengan cakupan historis. Rate-limit 1 request/5 detik.</p>
+          <p class="lang-en">Global news index (DOC 2.0 API) with historical coverage. Rate limit 1 request/5s.</p>
         </div>
         <div class="platform-item">
-          <h5><i class="bi bi-chat-dots text-info"></i> Kaskus</h5>
-          <p class="lang-id">Scrape langsung dari Kaskus.co.id, forum terbesar di Indonesia. Cari thread dan diskusi.</p>
-          <p class="lang-en">Scrape straight from Kaskus.co.id, the largest forum in Indonesia. Find threads and discussions.</p>
+          <h5><i class="bi bi-youtube text-danger"></i> YouTube</h5>
+          <p class="lang-id">Cari video via YouTube Data API v3. Butuh API key gratis (set di Admin).</p>
+          <p class="lang-en">Video search via YouTube Data API v3. Needs a free API key (set in Admin).</p>
         </div>
         <div class="platform-item">
-          <h5><i class="bi bi-twitter-x"></i> X / Twitter</h5>
-          <p class="lang-id">Scraping via Nitter instances atau library <code>twikit</code>. Mendukung pencarian tweet terbaru.</p>
-          <p class="lang-en">Scraping via Nitter instances or the <code>twikit</code> library. Searches recent tweets.</p>
+          <h5><i class="bi bi-book-half text-secondary"></i> Wikipedia</h5>
+          <p class="lang-id">Cari artikel referensi via MediaWiki API (id.wikipedia). Reliable, tanpa key.</p>
+          <p class="lang-en">Reference articles via the MediaWiki API (id.wikipedia). Reliable, no key.</p>
         </div>
         <div class="platform-item">
-          <h5><i class="bi bi-facebook text-primary"></i> Facebook</h5>
-          <p class="lang-id">Direct scraping menggunakan library <code>facebook-scraper</code>. Scrape post dari halaman publik.</p>
-          <p class="lang-en">Direct scraping with the <code>facebook-scraper</code> library. Scrapes posts from public pages.</p>
+          <h5><i class="bi bi-mortarboard text-primary"></i> OpenAlex</h5>
+          <p class="lang-id">Jurnal &amp; paper akademik (judul, penulis, tahun, abstrak, DOI). Cakupan jurnal Indonesia bagus, tanpa key.</p>
+          <p class="lang-en">Academic journals &amp; papers (title, authors, year, abstract, DOI). Good Indonesian journal coverage, no key.</p>
         </div>
         <div class="platform-item">
-          <h5><i class="bi bi-at"></i> Threads</h5>
-          <p class="lang-id">Scrape konten dari Threads (Meta). Mengambil post dan diskusi berdasarkan keyword.</p>
-          <p class="lang-en">Scrape content from Threads (Meta). Pulls posts and discussions by keyword.</p>
+          <h5><i class="bi bi-journal-richtext text-info"></i> Semantic Scholar</h5>
+          <p class="lang-id">Paper akademik via Semantic Scholar API. Butuh API key gratis agar stabil (set di Admin).</p>
+          <p class="lang-en">Academic papers via the Semantic Scholar API. Needs a free API key to be stable (set in Admin).</p>
         </div>
         <div class="platform-item">
-          <h5><i class="bi bi-question-circle text-warning"></i> Quora</h5>
-          <p class="lang-id">Scrape pertanyaan dan jawaban dari Quora. Cocok untuk riset topik dan Q&amp;A.</p>
-          <p class="lang-en">Scrape questions and answers from Quora. Good for topic research and Q&amp;A.</p>
-        </div>
-        <div class="platform-item">
-          <h5><i class="bi bi-instagram text-danger"></i> Instagram</h5>
-          <p class="lang-id">Scrape post publik dari Instagram berdasarkan keyword pencarian.</p>
-          <p class="lang-en">Scrape public posts from Instagram by search keyword.</p>
+          <h5><i class="bi bi-chat-dots text-warning"></i> Kaskus</h5>
+          <p class="lang-id">Thread &amp; diskusi dari Kaskus.co.id via indeks pencarian. Kadang flaky.</p>
+          <p class="lang-en">Threads &amp; discussions from Kaskus.co.id via search indexing. Occasionally flaky.</p>
         </div>
       </div>
     </div>
@@ -224,20 +221,22 @@ hr{border-color:var(--glass-b)!important}
     <!-- Export -->
     <div class="doc-section" id="export">
       <h2><i class="bi bi-download"></i> Export</h2>
-      <p class="lang-id">Hasil scraping bisa di-download dalam 3 format:</p>
-      <p class="lang-en">Scraping results can be downloaded in 3 formats:</p>
+      <p class="lang-id">Pilih format lewat dropdown lalu klik tombol download. Tersedia 4 format:</p>
+      <p class="lang-en">Pick a format from the dropdown then click the download button. Four formats:</p>
       <ul class="lang-id">
-        <li><strong>CSV</strong> - Comma-separated values, cocok untuk spreadsheet dan analisis data</li>
-        <li><strong>JSON</strong> - JavaScript Object Notation, cocok untuk integrasi dengan aplikasi lain</li>
-        <li><strong>XLSX</strong> - Microsoft Excel format, cocok untuk laporan dan presentasi</li>
+        <li><strong>CSV</strong> - Comma-separated values (metadata koleksi ada di baris komentar <code>#</code>), cocok untuk spreadsheet dan analisis</li>
+        <li><strong>JSON</strong> - Struktur <code>{ metadata, data }</code>, cocok untuk integrasi/pemrograman</li>
+        <li><strong>XLSX</strong> - Excel dengan sheet <strong>Metadata</strong> + sheet <strong>Hasil</strong> terpisah</li>
+        <li><strong>Markdown</strong> - Dokumen rapi berisi metadata + tiap hasil (termasuk teks lengkap), enak dibaca</li>
       </ul>
       <ul class="lang-en">
-        <li><strong>CSV</strong> - Comma-separated values, good for spreadsheets and data analysis</li>
-        <li><strong>JSON</strong> - JavaScript Object Notation, good for integrating with other apps</li>
-        <li><strong>XLSX</strong> - Microsoft Excel format, good for reports and presentations</li>
+        <li><strong>CSV</strong> - Comma-separated values (collection metadata in leading <code>#</code> comment lines), good for spreadsheets and analysis</li>
+        <li><strong>JSON</strong> - A <code>{ metadata, data }</code> structure, good for integration/programming</li>
+        <li><strong>XLSX</strong> - Excel with a separate <strong>Metadata</strong> sheet + <strong>Hasil</strong> sheet</li>
+        <li><strong>Markdown</strong> - A readable document with metadata + each result (including full text)</li>
       </ul>
-      <p class="lang-id">Setiap file export berisi kolom: Platform, Judul, Konten, URL, Tanggal, Sumber, Keyword, dan Lokasi.</p>
-      <p class="lang-en">Each export file has these columns: Platform, Title, Content, URL, Date, Source, Keyword, and Location.</p>
+      <p class="lang-id">Kolom data: Platform, Judul, Konten, Teks Lengkap, URL, Tanggal, Sumber, Keyword, Lokasi. Setiap export juga membawa <strong>Catatan Koleksi</strong> (keyword, sumber, waktu WIB, total) untuk keperluan metodologi.</p>
+      <p class="lang-en">Data columns: Platform, Title, Content, Full Text, URL, Date, Source, Keyword, Location. Every export also carries the <strong>Collection Record</strong> (keyword, sources, WIB time, total) for methodology use.</p>
     </div>
 
     <!-- Changelog -->
@@ -344,8 +343,8 @@ hr{border-color:var(--glass-b)!important}
         <div class="col-md-6">
           <div class="platform-item">
             <h5><i class="bi bi-arrow-repeat text-warning"></i> Direct Scraping</h5>
-            <p class="lang-id">Scrape langsung dari platform (Reddit API, Kaskus, Nitter, facebook-scraper) tanpa via Google Search.</p>
-            <p class="lang-en">Scrape straight from each platform (Reddit API, Kaskus, Nitter, facebook-scraper), not through Google Search.</p>
+            <p class="lang-id">Teks lengkap artikel, filter tanggal, dedup lintas-sumber, analisis kata &amp; timeline, catatan koleksi + sitasi, export Markdown.</p>
+            <p class="lang-en">Full article text, date filter, cross-source dedup, term &amp; timeline analysis, collection record + citation, Markdown export.</p>
           </div>
         </div>
         <div class="col-md-6">

@@ -1,42 +1,56 @@
-# Alyx Scraper
+# AlyxLabs Scraper
 
-Multi-platform web scraper untuk riset dan analisis data dari berbagai sumber.
+Alat riset & monitoring media + akademik Indonesia. Kumpulkan data dari berbagai sumber terkurasi, lengkap dengan dokumentasi koleksi dan analisis yang siap untuk skripsi/thesis.
 
 **Live:** https://scraper.alyxlabs.tech
 
 ---
 
-## Platform yang Didukung
+## Sumber yang Didukung (8)
 
-| Platform | Metode |
-|----------|--------|
-| Google News | RSS Feed |
-| News Sites | Bing News HTML |
-| Reddit | JSON API langsung |
-| Kaskus | Direct HTML scraping |
-| X / Twitter | Nitter / twikit |
-| Facebook | facebook-scraper |
-| Threads | Google search index |
-| Quora | Direct + Google index |
-| Instagram | instaloader (session) |
+| Sumber | Metode | API key |
+|--------|--------|---------|
+| Google News | RSS feed | - |
+| News Sites | Bing News RSS + 18 feed RSS Indonesia | - |
+| GDELT | DOC 2.0 API (berita global, historis) | - |
+| YouTube | Data API v3 (cari video) | Gratis (wajib) |
+| Wikipedia | MediaWiki API (id.wikipedia) | - |
+| OpenAlex | Works API (jurnal/paper: judul, penulis, abstrak, DOI) | - |
+| Semantic Scholar | Graph API (paper akademik) | Gratis (disarankan) |
+| Kaskus | Indeks pencarian (forum Indonesia) | - |
+
+Sumber yang butuh API key gratis bisa dinyalakan/dimatikan admin. Twitter/X, Instagram, Facebook, Threads, Reddit dihapus karena tidak reliable dari server (blokir IP / API berbayar).
 
 ---
 
 ## Fitur
 
-- **Direct Scraping** dari 9 platform
-- **Image Scraper** - URL, pencarian, upload & cari mirip
-- **Export** ke CSV / JSON / XLSX
-- **Light / Dark Theme** (light default)
-- **Bilingual** Indonesia / English
-- **Admin Dashboard** tersembunyi di `/alyx-control-panel`
-  - Audit log (IP, keyword, durasi, lokasi)
-  - Line chart usage by date
-  - Perbandingan WoW, MoM, QoQ, YoY
+- **8 sumber terkurasi** - berita, video, referensi, jurnal, forum
+- **Teks lengkap artikel** (trafilatura) untuk analisis konten
+- **Filter rentang tanggal** untuk sumber historis (GDELT, jurnal)
+- **Deduplikasi** lintas-sumber otomatis
+- **Catatan Koleksi + sitasi** - metadata pengumpulan (keyword, sumber, waktu WIB) siap untuk bab Metodologi
+- **Analisis** - frekuensi kata terbanyak & distribusi waktu
+- **Export** CSV / JSON / XLSX / Markdown (dengan metadata)
+- **Image Scraper** - pencarian, scrape URL, upload (reverse search via Google Vision)
+- **Bilingual** Indonesia / English, **Light/Dark** theme
+- **Admin Dashboard** (`/alyx-control-panel`) - toggle platform, kunci API, audit log, chart usage
 
 ---
 
 ## Changelog
+
+### v3.0.0 - Sep 2026 (Fokus riset)
+
+- **Rebrand** ke AlyxLabs (logo + favicon baru)
+- **Sumber dirombak** jadi 8 yang reliable: hapus Reddit + sosial (Twitter/IG/FB/Threads) + Quora; tambah **GDELT, YouTube, Wikipedia, OpenAlex, Semantic Scholar**
+- **Teks lengkap artikel** (opt-in, trafilatura) untuk berita
+- **Filter rentang tanggal** (GDELT + jurnal), **dedup** lintas-sumber
+- **Catatan Koleksi + Salin sitasi**; metadata ikut di semua export
+- **Export Markdown** (dropdown format + tombol download)
+- **Analisis** kata terbanyak & **timeline** (panel collapsible)
+- **Admin**: toggle nyala/mati platform, kunci API (Vision, Semantic Scholar, YouTube)
+- Bug fix: relevansi hasil forum, filter tanggal audit, statistik platform, dedup
 
 ### v2.1.0 - Sep 2026 (Security hardening)
 
