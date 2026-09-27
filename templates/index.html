@@ -319,6 +319,13 @@ tbody tr:hover{background:var(--row-hover)}
       </div>
     </div>
   </div>
+  <div id="collectionMeta" style="display:none;padding:12px 16px;border-top:1px solid var(--glass-b);font-size:.82rem;color:var(--t2);background:var(--glass)">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div style="font-weight:600;color:var(--t1)"><i class="bi bi-journal-check"></i> <span data-i18n="meta_title">Catatan Koleksi</span></div>
+      <button class="btn-dl" onclick="copyCitation()"><i class="bi bi-quote"></i> <span data-i18n="meta_cite">Salin Sitasi</span></button>
+    </div>
+    <div id="collectionMetaBody" style="margin-top:8px;line-height:1.7"></div>
+  </div>
   <div class="filter-chips" id="filterChips">
     <span class="fchip active" data-plat=""><i class="bi bi-grid"></i> <span data-i18n="filter_all">Semua</span></span>
   </div>
@@ -433,6 +440,7 @@ id:{
   keywords_label:'Keywords (pisah koma)',keywords_ph:'contoh: teknologi, AI, startup',
   location_label:'Lokasi',location_ph:'Jakarta',location_optional:'(opsional)',location_hint:'Kosongkan = pencarian umum · pisah koma untuk multi-lokasi',start_btn:'Mulai Scraping',
   platforms_label:'Pilih Platform',cat_news:'Berita',cat_forum:'Forum',cat_social:'Sosial',cat_ref:'Referensi',
+  meta_title:'Catatan Koleksi',meta_cite:'Salin Sitasi',meta_keyword:'Keyword',meta_source:'Sumber',meta_location:'Lokasi',meta_time:'Waktu koleksi',meta_total:'Total hasil',
   status_ready:'Siap untuk scraping.',results_title:'Hasil Scraping',
   filter_all:'Semua',search_ph:'Cari...',
   col_platform:'Platform',col_title:'Judul',col_keyword:'Keyword',col_date:'Tanggal',
@@ -447,6 +455,7 @@ en:{
   keywords_label:'Keywords (comma separated)',keywords_ph:'e.g.: technology, AI, startup',
   location_label:'Location',location_ph:'Jakarta',location_optional:'(optional)',location_hint:'Leave empty for general search · comma-separate for multi-location',start_btn:'Start Scraping',
   platforms_label:'Select Platforms',cat_news:'News',cat_forum:'Forums',cat_social:'Social',cat_ref:'Reference',
+  meta_title:'Collection Record',meta_cite:'Copy Citation',meta_keyword:'Keyword',meta_source:'Sources',meta_location:'Location',meta_time:'Collected at',meta_total:'Total results',
   status_ready:'Ready to scrape.',results_title:'Scraping Results',
   filter_all:'All',search_ph:'Search...',
   col_platform:'Platform',col_title:'Title',col_keyword:'Keyword',col_date:'Date',
@@ -458,9 +467,9 @@ en:{
 }
 };
 
-window.onLangChange = function(){ rebuildFilterChips() };
+window.onLangChange = function(){ rebuildFilterChips(); if(allMeta) renderMeta(allMeta); };
 
-let currentJob=null, pollTimer=null, allResults=[], selImgUrl='';
+let currentJob=null, pollTimer=null, allResults=[], allMeta=null, selImgUrl='';
 let filterPlatform='', scrapeStart=null, _viewData=[];
 
 function showTab(tab){
@@ -574,8 +583,35 @@ async function loadResults(){
   const r=await fetch('/api/results/'+currentJob),j=await r.json();
   if(!j.ok)return;
   allResults=j.results||[];
+  allMeta=j.metadata||null;renderMeta(allMeta);
   document.getElementById('statResults').textContent=allResults.length;
   filterPlatform='';rebuildFilterChips();filterResults();
+}
+
+function renderMeta(m){
+  const box=document.getElementById('collectionMeta');
+  if(!m){box.style.display='none';return}
+  const per=Object.entries(m.per_source||{}).map(([k,v])=>esc(k)+': '+v).join(', ');
+  const rows=[[tr('meta_keyword'),esc((m.keywords||[]).join(', '))||'-']];
+  if(m.location)rows.push([tr('meta_location'),esc(m.location)]);
+  rows.push([tr('meta_source'),esc((m.sources||[]).join(', '))]);
+  rows.push([tr('meta_time'),esc(m.collected_at||'-')]);
+  rows.push([tr('meta_total'),(m.total_results||0)+(per?' ('+per+')':'')]);
+  document.getElementById('collectionMetaBody').innerHTML=
+    rows.map(([k,v])=>'<div><strong>'+k+':</strong> '+v+'</div>').join('');
+  box.style.display='';
+}
+
+function copyCitation(){
+  if(!allMeta)return;
+  const m=allMeta, kw=(m.keywords||[]).join(', '), src=(m.sources||[]).join(', ');
+  const cite=currentLang==='id'
+    ? 'Data dikumpulkan pada '+(m.collected_at||'-')+' menggunakan Alyx Scraper (keyword: "'+kw+'"; sumber: '+src+'; '+(m.total_results||0)+' item). Diakses dari https://scraper.alyxlabs.tech.'
+    : 'Data collected on '+(m.collected_at||'-')+' using Alyx Scraper (keyword: "'+kw+'"; sources: '+src+'; '+(m.total_results||0)+' items). Retrieved from https://scraper.alyxlabs.tech.';
+  navigator.clipboard.writeText(cite).then(
+    ()=>toast(currentLang==='id'?'Sitasi disalin!':'Citation copied!'),
+    ()=>toast(currentLang==='id'?'Gagal menyalin':'Copy failed','err')
+  );
 }
 
 function rebuildFilterChips(){

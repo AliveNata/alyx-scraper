@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
 from threading import Thread, Lock
 from functools import wraps
-from datetime import timedelta
+from datetime import datetime, timezone, timedelta
+from collections import Counter
 import uuid
 import io
 import time
@@ -381,13 +382,55 @@ def api_status(job_id):
         })
 
 
+WIB = timezone(timedelta(hours=7))
+
+
+def build_metadata(rec):
+    """Collection provenance, for research/methodology documentation."""
+    results = rec.get('results', [])
+    per_source = dict(Counter(r.get('platform', '?') for r in results))
+    fin = rec.get('finished_at') or rec.get('started_at')
+    collected_at = (datetime.fromtimestamp(fin, WIB).strftime('%Y-%m-%d %H:%M:%S WIB')
+                    if fin else '')
+    duration = None
+    if rec.get('finished_at') and rec.get('started_at'):
+        duration = round(rec['finished_at'] - rec['started_at'], 1)
+    return {
+        'tool': 'Alyx Scraper',
+        'keywords': rec.get('keywords', []),
+        'location': rec.get('location', ''),
+        'sources': rec.get('platforms', []),
+        'collected_at': collected_at,
+        'duration_seconds': duration,
+        'total_results': len(results),
+        'per_source': per_source,
+        'note': 'Snapshot koleksi; hasil scraping dapat berubah seiring waktu.',
+    }
+
+
+def _meta_rows(meta):
+    """Ordered (label, value) pairs for the CSV/XLSX metadata block."""
+    return [
+        ('Tool', meta['tool']),
+        ('Keyword', ', '.join(meta['keywords'])),
+        ('Lokasi', meta['location'] or '-'),
+        ('Sumber', ', '.join(meta['sources'])),
+        ('Waktu koleksi', meta['collected_at']),
+        ('Durasi (detik)', meta['duration_seconds']),
+        ('Total hasil', meta['total_results']),
+        ('Per sumber', '; '.join(f'{k}: {v}' for k, v in meta['per_source'].items())),
+        ('Catatan', meta['note']),
+    ]
+
+
 @app.route('/api/results/<job_id>')
 def api_results(job_id):
     with jobs_lock:
         rec = jobs.get(job_id)
         if not rec:
             return jsonify({'ok': False, 'error': 'Job not found'}), 404
-        return jsonify({'ok': True, 'results': rec['results']})
+        return jsonify({'ok': True, 'results': rec['results'],
+                        'metadata': build_metadata(rec)})
 
 
 @app.route('/api/download/<job_id>/<fmt>')
@@ -397,36 +440,43 @@ def api_download(job_id, fmt):
         if not rec:
             return "Job not found", 404
         data = rec.get('results', [])
+        meta = build_metadata(rec)
 
     if not data:
         return "No data", 400
 
     df = pd.DataFrame(data)
+    stamp = job_id[:8]
 
     if fmt == 'csv':
+        # Metadata as leading comment lines (parse with comment='#')
+        header = ''.join(f'# {k}: {v}\n' for k, v in _meta_rows(meta))
         buf = io.StringIO()
-        df.to_csv(buf, index=False, encoding='utf-8-sig')
-        buf.seek(0)
+        df.to_csv(buf, index=False)
+        content = header + buf.getvalue()
         return send_file(
-            io.BytesIO(buf.getvalue().encode('utf-8-sig')),
+            io.BytesIO(content.encode('utf-8-sig')),
             mimetype='text/csv', as_attachment=True,
-            download_name=f'alivyx_{job_id[:8]}.csv'
+            download_name=f'alyx_{stamp}.csv'
         )
     elif fmt == 'json':
         buf = io.BytesIO()
-        buf.write(json.dumps({'data': data}, ensure_ascii=False, indent=2).encode('utf-8'))
+        buf.write(json.dumps({'metadata': meta, 'data': data},
+                             ensure_ascii=False, indent=2).encode('utf-8'))
         buf.seek(0)
         return send_file(buf, mimetype='application/json', as_attachment=True,
-                         download_name=f'alivyx_{job_id[:8]}.json')
+                         download_name=f'alyx_{stamp}.json')
     elif fmt == 'xlsx':
         buf = io.BytesIO()
+        meta_df = pd.DataFrame(_meta_rows(meta), columns=['Field', 'Value'])
         with pd.ExcelWriter(buf, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name='results')
+            meta_df.to_excel(writer, index=False, sheet_name='Metadata')
+            df.to_excel(writer, index=False, sheet_name='Hasil')
         buf.seek(0)
         return send_file(buf,
                          mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                          as_attachment=True,
-                         download_name=f'alivyx_{job_id[:8]}.xlsx')
+                         download_name=f'alyx_{stamp}.xlsx')
     return "Unsupported format", 400
 
 
