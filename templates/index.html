@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Alyx Scraper{% endblock %}
+{% block title %}AlyxLabs Scraper{% endblock %}
 
 {% block nav_tabs %}
 <ul class="alyx-nav-tabs">
@@ -116,12 +116,12 @@ input.ifield:focus{border-color:rgba(99,102,241,.5);box-shadow:0 0 0 3px rgba(99
 .chip:hover{transform:translateY(-1px)}
 .chip input{display:none}
 
-/* Chip active — light */
+/* Chip active - light */
 .chip.cat-n.active{border-color:#ef4444;background:rgba(239,68,68,.08);color:#dc2626}
 .chip.cat-ns.active{border-color:#3b82f6;background:rgba(59,130,246,.08);color:#2563eb}
 .chip.cat-f.active{border-color:#f59e0b;background:rgba(245,158,11,.08);color:#d97706}
 .chip.cat-s.active{border-color:#ec4899;background:rgba(236,72,153,.08);color:#db2777}
-/* Chip active — dark (override) */
+/* Chip active - dark (override) */
 [data-theme="dark"] .chip.cat-n.active{color:#fca5a5;background:rgba(239,68,68,.12);box-shadow:0 0 10px rgba(239,68,68,.18)}
 [data-theme="dark"] .chip.cat-ns.active{color:#93c5fd;background:rgba(59,130,246,.12);box-shadow:0 0 10px rgba(59,130,246,.18)}
 [data-theme="dark"] .chip.cat-f.active{color:#fcd34d;background:rgba(245,158,11,.12);box-shadow:0 0 10px rgba(245,158,11,.18)}
@@ -247,7 +247,7 @@ tbody tr:hover{background:var(--row-hover)}
   <div class="stat-card">
     <div class="stat-icon"><i class="bi bi-clock-fill"></i></div>
     <div class="stat-label" data-i18n="stat_duration">Durasi</div>
-    <div class="stat-value" id="statDuration" style="font-size:1.3rem">—</div>
+    <div class="stat-value" id="statDuration" style="font-size:1.3rem">-</div>
   </div>
 </div>
 
@@ -296,18 +296,18 @@ tbody tr:hover{background:var(--row-hover)}
     <div class="plat-groups">
       <div class="plat-row">
         <span class="plat-row-label" data-i18n="cat_news">Berita</span>
-        <label class="chip cat-n active"><input type="checkbox" class="pcb" value="Google News" checked><i class="bi bi-newspaper"></i> Google News</label>
-        <label class="chip cat-ns active"><input type="checkbox" class="pcb" value="News Sites" checked><i class="bi bi-globe"></i> News Sites</label>
+        <label class="chip cat-n active"><input type="checkbox" class="pcb" value="Google News" checked><img src="/static/logos/google-news.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain;background:#fff;border-radius:3px;padding:1px"> Google News</label>
+        <label class="chip cat-ns active"><input type="checkbox" class="pcb" value="News Sites" checked><img src="/static/logos/news-sites.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain;background:#fff;border-radius:3px;padding:1px"> News Sites</label>
         <label class="chip cat-n active"><input type="checkbox" class="pcb" value="GDELT" checked><i class="bi bi-globe-americas"></i> GDELT</label>
       </div>
       <div class="plat-row">
         <span class="plat-row-label" data-i18n="cat_ref">Referensi</span>
-        <label class="chip cat-n"><input type="checkbox" class="pcb" value="Wikipedia"><i class="bi bi-book-half"></i> Wikipedia</label>
+        <label class="chip cat-n"><input type="checkbox" class="pcb" value="Wikipedia"><img src="/static/logos/wikipedia.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain;background:#fff;border-radius:3px;padding:1px"> Wikipedia</label>
       </div>
       <div class="plat-row">
         <span class="plat-row-label" data-i18n="cat_journal">Jurnal</span>
-        <label class="chip cat-n"><input type="checkbox" class="pcb" value="OpenAlex"><i class="bi bi-mortarboard"></i> OpenAlex</label>
-        <label class="chip cat-n"><input type="checkbox" class="pcb" value="Semantic Scholar"><i class="bi bi-journal-richtext"></i> Semantic Scholar</label>
+        <label class="chip cat-n"><input type="checkbox" class="pcb" value="OpenAlex"><img src="/static/logos/openalex.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain;background:#fff;border-radius:3px;padding:1px"> OpenAlex</label>
+        <label class="chip cat-n"><input type="checkbox" class="pcb" value="Semantic Scholar"><img src="/static/logos/semantic-scholar.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain;background:#fff;border-radius:3px;padding:1px"> Semantic Scholar</label>
       </div>
       <div class="plat-row">
         <span class="plat-row-label" data-i18n="cat_video">Video</span>
@@ -315,7 +315,7 @@ tbody tr:hover{background:var(--row-hover)}
       </div>
       <div class="plat-row">
         <span class="plat-row-label" data-i18n="cat_forum">Forum</span>
-        <label class="chip cat-f"><input type="checkbox" class="pcb" value="Kaskus"><i class="bi bi-chat-dots"></i> Kaskus</label>
+        <label class="chip cat-f"><input type="checkbox" class="pcb" value="Kaskus"><img src="/static/logos/kaskus.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain;background:#fff;border-radius:3px;padding:1px"> Kaskus</label>
       </div>
     </div>
   </div>
@@ -343,28 +343,32 @@ tbody tr:hover{background:var(--row-hover)}
     </div>
     <div class="res-ctrls">
       <input class="input-sm" id="filterSearch" style="width:140px" oninput="filterResults()" placeholder="Cari..." data-i18n-ph="search_ph">
-      <div class="dl-grp">
-        <button class="btn-dl" onclick="dl('csv')"><i class="bi bi-filetype-csv"></i> CSV</button>
-        <button class="btn-dl" onclick="dl('json')"><i class="bi bi-filetype-json"></i> JSON</button>
-        <button class="btn-dl" onclick="dl('xlsx')"><i class="bi bi-file-earmark-excel"></i> XLSX</button>
+      <div class="dl-grp" style="align-items:center">
+        <select id="dlFormat" class="input-sm" style="width:auto;padding:6px 8px">
+          <option value="csv">CSV</option>
+          <option value="json">JSON</option>
+          <option value="xlsx">XLSX</option>
+          <option value="md">Markdown</option>
+        </select>
+        <button class="btn-dl" onclick="dl(document.getElementById('dlFormat').value)" title="Download"><i class="bi bi-download"></i></button>
       </div>
     </div>
   </div>
   <div id="collectionMeta" style="display:none;padding:12px 16px;border-top:1px solid var(--glass-b);font-size:.82rem;color:var(--t2);background:var(--glass)">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
       <div style="font-weight:600;color:var(--t1)"><i class="bi bi-journal-check"></i> <span data-i18n="meta_title">Catatan Koleksi</span></div>
-      <button class="btn-dl" onclick="copyCitation()"><i class="bi bi-quote"></i> <span data-i18n="meta_cite">Salin Sitasi</span></button>
+      <button class="btn-dl" onclick="copyCitation()"><i class="bi bi-quote"></i> <span data-i18n="meta_cite">Salin</span></button>
     </div>
     <div id="collectionMetaBody" style="margin-top:8px;line-height:1.7"></div>
   </div>
-  <div id="analysisPanel" style="display:none;padding:12px 16px;border-top:1px solid var(--glass-b);font-size:.82rem;background:var(--glass)">
-    <div style="font-weight:600;color:var(--t1);margin-bottom:8px"><i class="bi bi-bar-chart-line"></i> <span data-i18n="analysis_title">Analisis: Kata Terbanyak</span></div>
-    <div id="analysisBody"></div>
-  </div>
-  <div id="timelinePanel" style="display:none;padding:12px 16px;border-top:1px solid var(--glass-b);font-size:.82rem;background:var(--glass)">
-    <div style="font-weight:600;color:var(--t1);margin-bottom:8px"><i class="bi bi-calendar3"></i> <span data-i18n="timeline_title">Distribusi Waktu</span></div>
-    <div id="timelineBody"></div>
-  </div>
+  <details id="analysisPanel" style="display:none;padding:12px 16px;border-top:1px solid var(--glass-b);font-size:.82rem;background:var(--glass)">
+    <summary style="cursor:pointer;font-weight:600;color:var(--t1)"><i class="bi bi-bar-chart-line"></i> <span data-i18n="analysis_title">Analisis: Kata Terbanyak</span></summary>
+    <div id="analysisBody" style="margin-top:10px"></div>
+  </details>
+  <details id="timelinePanel" style="display:none;padding:12px 16px;border-top:1px solid var(--glass-b);font-size:.82rem;background:var(--glass)">
+    <summary style="cursor:pointer;font-weight:600;color:var(--t1)"><i class="bi bi-calendar3"></i> <span data-i18n="timeline_title">Distribusi Waktu</span></summary>
+    <div id="timelineBody" style="margin-top:10px"></div>
+  </details>
   <div class="filter-chips" id="filterChips">
     <span class="fchip active" data-plat=""><i class="bi bi-grid"></i> <span data-i18n="filter_all">Semua</span></span>
   </div>
@@ -493,7 +497,7 @@ id:{
   keywords_label:'Keywords (pisah koma)',keywords_ph:'contoh: teknologi, AI, startup',
   location_label:'Lokasi',location_ph:'Jakarta',location_optional:'(opsional)',location_hint:'Kosongkan = pencarian umum · pisah koma untuk multi-lokasi',start_btn:'Mulai Scraping',
   platforms_label:'Pilih Platform',cat_news:'Berita',cat_forum:'Forum',cat_social:'Sosial',cat_ref:'Referensi',cat_journal:'Jurnal',cat_video:'Video',
-  meta_title:'Catatan Koleksi',meta_cite:'Salin Sitasi',meta_keyword:'Keyword',meta_source:'Sumber',meta_location:'Lokasi',meta_time:'Waktu koleksi',meta_total:'Total hasil',fulltext_label:'Ambil teks lengkap artikel',fulltext_hint:'(lebih lambat, sumber berita saja)',date_from_label:'Dari tanggal',date_to_label:'Sampai tanggal',date_optional:'(opsional)',date_hint:'Berlaku untuk GDELT & jurnal (sumber historis). Berita RSS selalu terbaru.',analysis_title:'Analisis: Kata Terbanyak',timeline_title:'Distribusi Waktu',
+  meta_title:'Catatan Koleksi',meta_cite:'Salin',meta_keyword:'Keyword',meta_source:'Sumber',meta_location:'Lokasi',meta_time:'Waktu koleksi',meta_total:'Total hasil',fulltext_label:'Ambil teks lengkap artikel',fulltext_hint:'(lebih lambat, sumber berita saja)',date_from_label:'Dari tanggal',date_to_label:'Sampai tanggal',date_optional:'(opsional)',date_hint:'Berlaku untuk GDELT & jurnal (sumber historis). Berita RSS selalu terbaru.',analysis_title:'Analisis: Kata Terbanyak',timeline_title:'Distribusi Waktu',
   status_ready:'Siap untuk scraping.',results_title:'Hasil Scraping',
   filter_all:'Semua',search_ph:'Cari...',
   col_platform:'Platform',col_title:'Judul',col_keyword:'Keyword',col_date:'Tanggal',
@@ -508,7 +512,7 @@ en:{
   keywords_label:'Keywords (comma separated)',keywords_ph:'e.g.: technology, AI, startup',
   location_label:'Location',location_ph:'Jakarta',location_optional:'(optional)',location_hint:'Leave empty for general search · comma-separate for multi-location',start_btn:'Start Scraping',
   platforms_label:'Select Platforms',cat_news:'News',cat_forum:'Forums',cat_social:'Social',cat_ref:'Reference',cat_journal:'Journals',cat_video:'Video',
-  meta_title:'Collection Record',meta_cite:'Copy Citation',meta_keyword:'Keyword',meta_source:'Sources',meta_location:'Location',meta_time:'Collected at',meta_total:'Total results',fulltext_label:'Fetch full article text',fulltext_hint:'(slower, news sources only)',date_from_label:'From date',date_to_label:'To date',date_optional:'(optional)',date_hint:'Applies to GDELT & journals (historical sources). RSS news is always recent.',analysis_title:'Analysis: Top Terms',timeline_title:'Timeline',
+  meta_title:'Collection Record',meta_cite:'Copy',meta_keyword:'Keyword',meta_source:'Sources',meta_location:'Location',meta_time:'Collected at',meta_total:'Total results',fulltext_label:'Fetch full article text',fulltext_hint:'(slower, news sources only)',date_from_label:'From date',date_to_label:'To date',date_optional:'(optional)',date_hint:'Applies to GDELT & journals (historical sources). RSS news is always recent.',analysis_title:'Analysis: Top Terms',timeline_title:'Timeline',
   status_ready:'Ready to scrape.',results_title:'Scraping Results',
   filter_all:'All',search_ph:'Search...',
   col_platform:'Platform',col_title:'Title',col_keyword:'Keyword',col_date:'Date',
@@ -593,12 +597,29 @@ document.getElementById('filterChips').addEventListener('click',e=>{
   chip.classList.add('active');filterResults();
 });
 
+function shakeDates(){
+  ['dateFrom','dateTo'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.style.borderColor='#ef4444';
+    el.animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},
+      {transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'translateX(0)'}],{duration:400});
+    setTimeout(()=>{el.style.borderColor='';},1500);
+  });
+  document.getElementById('dateFrom').scrollIntoView({block:'center'});
+}
+
 async function startScraping(){
   const kw=document.getElementById('keywords').value.trim();
   const loc=document.getElementById('location').value.trim();
   const pls=Array.from(document.querySelectorAll('.pcb:checked')).map(e=>e.value);
   if(!kw){toast(currentLang==='id'?'Masukkan keywords!':'Enter keywords!','err');return}
   if(!pls.length){toast(currentLang==='id'?'Pilih minimal 1 platform!':'Select at least 1 platform!','err');return}
+  const df=document.getElementById('dateFrom').value, dt=document.getElementById('dateTo').value;
+  if(pls.some(p=>['GDELT','OpenAlex','Semantic Scholar'].includes(p)) && (!df||!dt)){
+    shakeDates();
+    toast(currentLang==='id'?'Pilih rentang tanggal (dari & sampai) untuk GDELT/Jurnal':'Pick a date range (from & to) for GDELT/Journal','err');
+    return;
+  }
   setStatus(currentLang==='id'?'Memulai...':'Starting...',true);
   showProg(true,true);
   document.getElementById('startBtn').disabled=true;
@@ -623,7 +644,7 @@ async function poll(){
       clearInterval(pollTimer);pollTimer=null;showProg(false);
       await loadResults();
       document.getElementById('startBtn').disabled=false;
-      const dur=scrapeStart?((Date.now()-scrapeStart)/1000).toFixed(1)+'s':'—';
+      const dur=scrapeStart?((Date.now()-scrapeStart)/1000).toFixed(1)+'s':'-';
       document.getElementById('statDuration').textContent=dur;
       toast((currentLang==='id'?'Selesai! ':'Done! ')+j.count+' hasil','ok');
     }else if(j.status==='error'){
@@ -713,8 +734,8 @@ function copyCitation(){
   if(!allMeta)return;
   const m=allMeta, kw=(m.keywords||[]).join(', '), src=(m.sources||[]).join(', ');
   const cite=currentLang==='id'
-    ? 'Data dikumpulkan pada '+(m.collected_at||'-')+' menggunakan Alyx Scraper (keyword: "'+kw+'"; sumber: '+src+'; '+(m.total_results||0)+' item). Diakses dari https://scraper.alyxlabs.tech.'
-    : 'Data collected on '+(m.collected_at||'-')+' using Alyx Scraper (keyword: "'+kw+'"; sources: '+src+'; '+(m.total_results||0)+' items). Retrieved from https://scraper.alyxlabs.tech.';
+    ? 'Data dikumpulkan pada '+(m.collected_at||'-')+' menggunakan AlyxLabs Scraper (keyword: "'+kw+'"; sumber: '+src+'; '+(m.total_results||0)+' item). Diakses dari https://scraper.alyxlabs.tech.'
+    : 'Data collected on '+(m.collected_at||'-')+' using AlyxLabs Scraper (keyword: "'+kw+'"; sources: '+src+'; '+(m.total_results||0)+' items). Retrieved from https://scraper.alyxlabs.tech.';
   navigator.clipboard.writeText(cite).then(
     ()=>toast(currentLang==='id'?'Sitasi disalin!':'Citation copied!'),
     ()=>toast(currentLang==='id'?'Gagal menyalin':'Copy failed','err')
@@ -776,7 +797,7 @@ function clearResults(){
   allResults=[];_viewData=[];filterPlatform='';
   render([]);rebuildFilterChips();setStatus(tr('status_ready'));
   document.getElementById('statResults').textContent='0';
-  document.getElementById('statDuration').textContent='—';
+  document.getElementById('statDuration').textContent='-';
   currentJob=null;
 }
 

@@ -150,7 +150,7 @@ class BaseScraper:
         return all(w in combined for w in words)
 
     def _ddg_fallback(self, query, platform, site_filter, max_results, keyword=None):
-        """DuckDuckGo HTML search — usually bypasses rate-limits that block Google.
+        """DuckDuckGo HTML search - usually bypasses rate-limits that block Google.
         When `keyword` is given, drop results that don't actually mention it
         (search engines rank navigational/homepage pages that aren't relevant)."""
         results = []
@@ -172,7 +172,7 @@ class BaseScraper:
                     continue
                 title = self.clean(title_el.get_text())
                 href  = title_el.get('href', '')
-                # DDG wraps URLs in redirect — extract the real one
+                # DDG wraps URLs in redirect - extract the real one
                 if 'uddg=' in href:
                     try:
                         href = unquote(parse_qs(_up(href).query).get('uddg', [href])[0])
@@ -232,7 +232,7 @@ class BaseScraper:
 
 
 # ─────────────────────────────────────────────────────────────
-# Google News — RSS (always works)
+# Google News - RSS (always works)
 # ─────────────────────────────────────────────────────────────
 class GoogleNewsScraper(BaseScraper):
     def scrape(self, keyword, location='', max_results=15):
@@ -271,7 +271,7 @@ class GoogleNewsScraper(BaseScraper):
 
 
 # ─────────────────────────────────────────────────────────────
-# News Sites — Bing RSS + 16 ID RSS feeds
+# News Sites - Bing RSS + 16 ID RSS feeds
 # ─────────────────────────────────────────────────────────────
 class NewsSitesScraper(BaseScraper):
     ID_RSS = [
@@ -386,7 +386,7 @@ class NewsSitesScraper(BaseScraper):
 
 
 # ─────────────────────────────────────────────────────────────
-# Kaskus — DuckDuckGo / Google search engine first
+# Kaskus - DuckDuckGo / Google search engine first
 # NOTE: Modern Kaskus is a React SPA. requests.get() returns an empty
 #       HTML shell with no thread content, so HTML parsing never works.
 #       We skip straight to search-engine indexing which DOES have the
@@ -420,7 +420,7 @@ class KaskusScraper(BaseScraper):
 
 
 # ─────────────────────────────────────────────────────────────
-# GDELT — global news index (DOC 2.0 API, free, no key).
+# GDELT - global news index (DOC 2.0 API, free, no key).
 #         Research-grade coverage; rate limit is 1 request / 5s.
 # ─────────────────────────────────────────────────────────────
 _gdelt_last = [0.0]
@@ -479,7 +479,7 @@ class GDELTScraper(BaseScraper):
 
 
 # ─────────────────────────────────────────────────────────────
-# Wikipedia — MediaWiki search API (id.wikipedia, free, no key).
+# Wikipedia - MediaWiki search API (id.wikipedia, free, no key).
 #             Reference/background + generous limits (scales well).
 # ─────────────────────────────────────────────────────────────
 class WikipediaScraper(BaseScraper):
@@ -525,7 +525,7 @@ class WikipediaScraper(BaseScraper):
 
 
 # ─────────────────────────────────────────────────────────────
-# OpenAlex — scholarly works API (free, no key). Journals/papers.
+# OpenAlex - scholarly works API (free, no key). Journals/papers.
 # ─────────────────────────────────────────────────────────────
 class OpenAlexScraper(BaseScraper):
     def scrape(self, keyword, location='', max_results=15):
@@ -583,7 +583,7 @@ class OpenAlexScraper(BaseScraper):
 
 
 # ─────────────────────────────────────────────────────────────
-# Semantic Scholar — academic graph API (free, no key). Papers.
+# Semantic Scholar - academic graph API (free, no key). Papers.
 # ─────────────────────────────────────────────────────────────
 class SemanticScholarScraper(BaseScraper):
     def scrape(self, keyword, location='', max_results=15):
@@ -638,7 +638,7 @@ class SemanticScholarScraper(BaseScraper):
 
 
 # ─────────────────────────────────────────────────────────────
-# YouTube — Data API v3 video search (needs a free API key).
+# YouTube - Data API v3 video search (needs a free API key).
 # ─────────────────────────────────────────────────────────────
 class YouTubeScraper(BaseScraper):
     def scrape(self, keyword, location='', max_results=15):

@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{% block title %}Alyx{% endblock %}</title>
+<title>{% block title %}AlyxLabs{% endblock %}</title>
+<link rel="icon" type="image/png" href="/static/favicon.png">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -157,7 +158,7 @@ html[data-theme="dark"]::before{
 
 <nav class="alyx-nav">
 <div class="alyx-nav-c">
-  <a class="alyx-brand" href="/"><i class="bi bi-layers-fill"></i>Alyx</a>
+  <a class="alyx-brand" href="/"><img src="/static/brand.png" alt="AlyxLabs" style="height:1.4em;width:1.4em;vertical-align:-0.3em;margin-right:6px">AlyxLabs</a>
   {% block nav_tabs %}{% endblock %}
   <div class="alyx-nav-actions">
     {% block nav_actions_extra %}{% endblock %}
@@ -180,7 +181,7 @@ html[data-theme="dark"]::before{
 
     <div>
       <div class="alyx-foot-brand-name">
-        <i class="bi bi-layers-fill"></i> Alyx Scraper
+        <img src="/static/brand.png" alt="AlyxLabs" style="height:1.2em;width:1.2em;vertical-align:-0.25em;margin-right:4px"> AlyxLabs
       </div>
 
       <div class="alyx-foot-tagline" data-i18n="footer_desc">
@@ -211,8 +212,8 @@ html[data-theme="dark"]::before{
   const currentYear = new Date().getFullYear();
 
   document.getElementById("footerCopyright").innerHTML = `
-    &copy; 2024-${currentYear}
-    <a href="https://alyxdev.netlify.app" target="_blank">Alyx</a>.
+    &copy; ${currentYear}
+    <a href="https://alyxlabs.tech/" target="_blank">AlyxLabs</a>.
     All rights reserved.
   `;
 </script>

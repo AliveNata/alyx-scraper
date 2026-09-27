@@ -294,18 +294,18 @@ def api_forgot_password():
     try:
         import yagmail
         yag = yagmail.SMTP(sender, app_pw)
-        subject = 'Reset Password — Alyx Admin'
+        subject = 'Reset Password - AlyxLabs Admin'
         body = f"""
 <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px">
     <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);
       display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.1rem;font-weight:700">A</div>
-    <span style="font-weight:800;font-size:1.1rem;color:#6366f1">Alyx Admin</span>
+    <span style="font-weight:800;font-size:1.1rem;color:#6366f1">AlyxLabs Admin</span>
   </div>
 
   <h2 style="font-size:1.3rem;font-weight:700;color:#0f172a;margin:0 0 8px">Reset Password</h2>
   <p style="color:#64748b;font-size:.92rem;line-height:1.6;margin:0 0 24px">
-    Kami menerima permintaan reset password untuk akun Alyx Admin.<br>
+    Kami menerima permintaan reset password untuk akun AlyxLabs Admin.<br>
     Klik tombol di bawah untuk membuat password baru.
   </p>
 
@@ -324,7 +324,7 @@ def api_forgot_password():
 
   <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0">
   <p style="color:#cbd5e1;font-size:.75rem;margin:0">
-    © 2024-2026 Alyx Scraper. Jangan balas email ini.
+    © 2024-2026 AlyxLabs Scraper. Jangan balas email ini.
   </p>
 </div>
 """
@@ -417,7 +417,7 @@ def build_metadata(rec):
     if rec.get('finished_at') and rec.get('started_at'):
         duration = round(rec['finished_at'] - rec['started_at'], 1)
     return {
-        'tool': 'Alyx Scraper',
+        'tool': 'AlyxLabs Scraper',
         'keywords': rec.get('keywords', []),
         'location': rec.get('location', ''),
         'date_range': ' s/d '.join(x for x in [rec.get('date_from'), rec.get('date_to')] if x),
@@ -500,6 +500,31 @@ def api_download(job_id, fmt):
                          mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                          as_attachment=True,
                          download_name=f'alyx_{stamp}.xlsx')
+    elif fmt == 'md':
+        lines = ['# Hasil Scraping - AlyxLabs', '']
+        for k, v in _meta_rows(meta):
+            lines.append(f'- **{k}:** {v}')
+        lines += ['', '---', '']
+        for i, r in enumerate(data, 1):
+            lines.append(f"## {i}. {r.get('title', '')}")
+            meta_line = f"**Platform:** {r.get('platform', '')}"
+            if r.get('source'):
+                meta_line += f" | **Sumber:** {r.get('source')}"
+            if r.get('date'):
+                meta_line += f" | **Tanggal:** {r.get('date')}"
+            lines.append(meta_line)
+            if r.get('url'):
+                lines.append(f"URL: {r.get('url')}")
+            lines.append('')
+            if r.get('content'):
+                lines.append(r.get('content'))
+            if r.get('full_text'):
+                lines += ['', '**Teks lengkap:**', '', r.get('full_text')]
+            lines += ['', '---', '']
+        content = '\n'.join(lines)
+        return send_file(io.BytesIO(content.encode('utf-8')),
+                         mimetype='text/markdown', as_attachment=True,
+                         download_name=f'alyx_{stamp}.md')
     return "Unsupported format", 400
 
 
@@ -691,8 +716,8 @@ def api_admin_test_email():
         yag = yagmail.SMTP(sender, app_pw)
         yag.send(
             to=recipient,
-            subject='Test Email — Alyx Admin',
-            contents=f'<p>✅ Konfigurasi email Alyx berhasil! Pengirim: <strong>{sender}</strong></p>'
+            subject='Test Email - AlyxLabs Admin',
+            contents=f'<p>✅ Konfigurasi email AlyxLabs berhasil! Pengirim: <strong>{sender}</strong></p>'
         )
         return jsonify({'ok': True, 'recipient': recipient})
     except Exception as e:
@@ -735,5 +760,5 @@ def api_admin_test_scraper():
 if __name__ == "__main__":
     # Local dev runs over http, so the Secure cookie flag would drop the session
     app.config['SESSION_COOKIE_SECURE'] = False
-    print("\n  Alyx Scraper running at http://localhost:5000\n")
+    print("\n  AlyxLabs Scraper running at http://localhost:5000\n")
     app.run(host="0.0.0.0", port=5000, debug=True)

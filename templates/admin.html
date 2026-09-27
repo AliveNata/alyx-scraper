@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Alyx Admin{% endblock %}
+{% block title %}AlyxLabs Admin{% endblock %}
 
 {% block nav_actions_extra %}
 <a href="/" class="alyx-btn-icon" title="Kembali ke utama" style="font-size:.9rem"><i class="bi bi-arrow-left"></i></a>
@@ -327,42 +327,42 @@ code.i { background: var(--glass); border: 1px solid var(--glass-b); padding: 1p
       <div class="g-card stat-card">
         <div class="stat-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)"><i class="bi bi-send-fill"></i></div>
         <div class="stat-body">
-          <div class="stat-val" id="sTotalScrapes">—</div>
+          <div class="stat-val" id="sTotalScrapes">-</div>
           <div class="stat-lbl">Total Scrapes</div>
         </div>
       </div>
       <div class="g-card stat-card">
         <div class="stat-icon" style="background:linear-gradient(135deg,#10b981,#059669)"><i class="bi bi-people-fill"></i></div>
         <div class="stat-body">
-          <div class="stat-val" id="sUniqueUsers">—</div>
+          <div class="stat-val" id="sUniqueUsers">-</div>
           <div class="stat-lbl">Unique Users</div>
         </div>
       </div>
       <div class="g-card stat-card">
         <div class="stat-icon" style="background:linear-gradient(135deg,#a855f7,#7c3aed)"><i class="bi bi-collection-fill"></i></div>
         <div class="stat-body">
-          <div class="stat-val" id="sTotalResults">—</div>
+          <div class="stat-val" id="sTotalResults">-</div>
           <div class="stat-lbl">Total Results</div>
         </div>
       </div>
       <div class="g-card stat-card">
         <div class="stat-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706)"><i class="bi bi-stopwatch-fill"></i></div>
         <div class="stat-body">
-          <div class="stat-val" id="sAvgDuration">—</div>
+          <div class="stat-val" id="sAvgDuration">-</div>
           <div class="stat-lbl">Avg Duration (s)</div>
         </div>
       </div>
       <div class="g-card stat-card">
         <div class="stat-icon" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8)"><i class="bi bi-key-fill"></i></div>
         <div class="stat-body">
-          <div class="stat-val" id="sUniqueKw">—</div>
+          <div class="stat-val" id="sUniqueKw">-</div>
           <div class="stat-lbl">Unique Keywords</div>
         </div>
       </div>
       <div class="g-card stat-card">
         <div class="stat-icon" style="background:linear-gradient(135deg,#ec4899,#be185d)"><i class="bi bi-calendar-check-fill"></i></div>
         <div class="stat-body">
-          <div class="stat-val" id="sToday">—</div>
+          <div class="stat-val" id="sToday">-</div>
           <div class="stat-lbl">Today</div>
         </div>
       </div>
@@ -403,22 +403,22 @@ code.i { background: var(--glass); border: 1px solid var(--glass-b); padding: 1p
           <div class="cmp-grid">
             <div class="cmp-card">
               <div class="cmp-period">WoW</div>
-              <div class="cmp-val cmp-neutral" id="compWoW">—</div>
+              <div class="cmp-val cmp-neutral" id="compWoW">-</div>
               <div class="cmp-label">Week over Week</div>
             </div>
             <div class="cmp-card">
               <div class="cmp-period">MoM</div>
-              <div class="cmp-val cmp-neutral" id="compMoM">—</div>
+              <div class="cmp-val cmp-neutral" id="compMoM">-</div>
               <div class="cmp-label">Month over Month</div>
             </div>
             <div class="cmp-card">
               <div class="cmp-period">QoQ</div>
-              <div class="cmp-val cmp-neutral" id="compQoQ">—</div>
+              <div class="cmp-val cmp-neutral" id="compQoQ">-</div>
               <div class="cmp-label">Quarter over Quarter</div>
             </div>
             <div class="cmp-card">
               <div class="cmp-period">YoY</div>
-              <div class="cmp-val cmp-neutral" id="compYoY">—</div>
+              <div class="cmp-val cmp-neutral" id="compYoY">-</div>
               <div class="cmp-label">Year over Year</div>
             </div>
           </div>
@@ -786,7 +786,13 @@ function renderChart(usage){
       interaction: { intersect: false, mode: 'index' },
       plugins: {
         legend: {
-          labels: { color: textC, font: { size: 12, family: 'Inter' }, usePointStyle: true, pointStyleWidth: 8 }
+          labels: {
+            color: textC, font: { size: 12, family: 'Inter' }, usePointStyle: true, boxWidth: 8, boxHeight: 8,
+            generateLabels: (chart) => chart.data.datasets.map((ds, i) => ({
+              text: ds.label, fillStyle: ds.borderColor, strokeStyle: ds.borderColor,
+              lineWidth: 0, pointStyle: 'circle', hidden: !chart.isDatasetVisible(i), datasetIndex: i
+            }))
+          }
         }
       },
       scales: {
@@ -812,7 +818,7 @@ function computeComparisons(usage){
 
 function setComp(id, val){
   const el = document.getElementById(id);
-  if(val === null){ el.textContent = '—'; el.className = 'cmp-val cmp-neutral'; return }
+  if(val === null){ el.textContent = '-'; el.className = 'cmp-val cmp-neutral'; return }
   el.textContent = (val > 0 ? '+' : '') + val.toFixed(1) + '%';
   el.className   = 'cmp-val ' + (val > 0 ? 'cmp-up' : val < 0 ? 'cmp-down' : 'cmp-neutral');
 }
@@ -1173,11 +1179,11 @@ async function loadPlatformStatus(){
         note:'Mobile HTML + GraphQL API + Google fallback. Konten mayoritas Bahasa Inggris.' },
       { name:'Instagram', method:'instaloader', methodColor: s.instagram ? '#16a34a' : '#dc2626',
         auth: s.instagram ? '✓ Logged in' : '✗ Belum login', authColor: s.instagram ? '#16a34a' : '#ef4444',
-        status: s.instagram ? _statusBadge('ready', `Ready (@${s.instagram_user})`) : _statusBadge('notready','Not Ready — Login dulu'),
+        status: s.instagram ? _statusBadge('ready', `Ready (@${s.instagram_user})`) : _statusBadge('notready','Not Ready - Login dulu'),
         note: s.instagram ? `Session aktif sebagai @${s.instagram_user}` : 'Buka Settings → Instagram Login' },
       { name:'Facebook', method:'mbasic + page scrape', methodColor: s.facebook_pkg ? '#d97706' : '#dc2626',
         auth:'✓ Tidak perlu (public)', authColor:'#16a34a',
-        status: s.facebook_pkg ? _statusBadge('warn','Limited (no login)') : _statusBadge('warn','Limited — install pkg'),
+        status: s.facebook_pkg ? _statusBadge('warn','Limited (no login)') : _statusBadge('warn','Limited - install pkg'),
         note: s.facebook_pkg
           ? 'mbasic search + scrape 18 news pages. Login = hasil lebih banyak.'
           : 'Install dulu: <code class="i">pip install facebook-scraper</code>' },

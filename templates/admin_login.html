@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Login — Alyx Admin{% endblock %}
+{% block title %}Login - AlyxLabs Admin{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -84,9 +84,9 @@ body{display:flex;flex-direction:column;min-height:100vh}
   <div class="login-card">
     <div class="login-logo">
       <div class="login-logo-icon"><i class="bi bi-layers-fill"></i></div>
-      <span class="login-logo-text">Alyx</span>
+      <span class="login-logo-text">AlyxLabs</span>
     </div>
-    <p class="login-sub" data-i18n="login_sub">Admin Dashboard — masukkan password untuk lanjut</p>
+    <p class="login-sub" data-i18n="login_sub">Admin Dashboard - masukkan password untuk lanjut</p>
 
     {% if error %}
     <div class="error-box">
@@ -120,7 +120,7 @@ body{display:flex;flex-direction:column;min-height:100vh}
     </div>
 
     <p class="login-footer">
-      <a href="/"><i class="bi bi-arrow-left"></i> <span data-i18n="login_back">Kembali ke Alyx</span></a>
+      <a href="/"><i class="bi bi-arrow-left"></i> <span data-i18n="login_back">Kembali ke AlyxLabsLabs</span></a>
     </p>
   </div>
 </div>
@@ -153,16 +153,16 @@ body{display:flex;flex-direction:column;min-height:100vh}
 <script>
 window.PAGE_L = {
   id:{
-    login_sub:'Admin Dashboard — masukkan password untuk lanjut',
+    login_sub:'Admin Dashboard - masukkan password untuk lanjut',
     login_pw_label:'Password', login_pw_ph:'Masukkan password',
-    login_btn:'Masuk', login_back:'Kembali ke Alyx',
+    login_btn:'Masuk', login_back:'Kembali ke AlyxLabs',
     login_forgot:'Lupa Password?',
     fp_title:'Email Terkirim!',
   },
   en:{
-    login_sub:'Admin Dashboard — enter password to continue',
+    login_sub:'Admin Dashboard - enter password to continue',
     login_pw_label:'Password', login_pw_ph:'Enter password',
-    login_btn:'Sign In', login_back:'Back to Alyx',
+    login_btn:'Sign In', login_back:'Back to AlyxLabs',
     login_forgot:'Forgot Password?',
     fp_title:'Email Sent!',
   }
@@ -200,7 +200,7 @@ async function sendForgotPassword(){
     }
   } catch(e) {
     if(titleEl) titleEl.textContent = 'Error';
-    msgEl.textContent = 'Network error — pastikan server berjalan.';
+    msgEl.textContent = 'Network error - pastikan server berjalan.';
     toast.style.borderColor = 'rgba(239,68,68,.4)';
   }
 
