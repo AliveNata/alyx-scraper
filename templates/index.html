@@ -357,6 +357,10 @@ tbody tr:hover{background:var(--row-hover)}
     </div>
     <div id="collectionMetaBody" style="margin-top:8px;line-height:1.7"></div>
   </div>
+  <div id="analysisPanel" style="display:none;padding:12px 16px;border-top:1px solid var(--glass-b);font-size:.82rem;background:var(--glass)">
+    <div style="font-weight:600;color:var(--t1);margin-bottom:8px"><i class="bi bi-bar-chart-line"></i> <span data-i18n="analysis_title">Analisis: Kata Terbanyak</span></div>
+    <div id="analysisBody"></div>
+  </div>
   <div class="filter-chips" id="filterChips">
     <span class="fchip active" data-plat=""><i class="bi bi-grid"></i> <span data-i18n="filter_all">Semua</span></span>
   </div>
@@ -485,7 +489,7 @@ id:{
   keywords_label:'Keywords (pisah koma)',keywords_ph:'contoh: teknologi, AI, startup',
   location_label:'Lokasi',location_ph:'Jakarta',location_optional:'(opsional)',location_hint:'Kosongkan = pencarian umum · pisah koma untuk multi-lokasi',start_btn:'Mulai Scraping',
   platforms_label:'Pilih Platform',cat_news:'Berita',cat_forum:'Forum',cat_social:'Sosial',cat_ref:'Referensi',cat_journal:'Jurnal',cat_video:'Video',
-  meta_title:'Catatan Koleksi',meta_cite:'Salin Sitasi',meta_keyword:'Keyword',meta_source:'Sumber',meta_location:'Lokasi',meta_time:'Waktu koleksi',meta_total:'Total hasil',fulltext_label:'Ambil teks lengkap artikel',fulltext_hint:'(lebih lambat, sumber berita saja)',date_from_label:'Dari tanggal',date_to_label:'Sampai tanggal',date_optional:'(opsional)',date_hint:'Berlaku untuk GDELT & jurnal (sumber historis). Berita RSS selalu terbaru.',
+  meta_title:'Catatan Koleksi',meta_cite:'Salin Sitasi',meta_keyword:'Keyword',meta_source:'Sumber',meta_location:'Lokasi',meta_time:'Waktu koleksi',meta_total:'Total hasil',fulltext_label:'Ambil teks lengkap artikel',fulltext_hint:'(lebih lambat, sumber berita saja)',date_from_label:'Dari tanggal',date_to_label:'Sampai tanggal',date_optional:'(opsional)',date_hint:'Berlaku untuk GDELT & jurnal (sumber historis). Berita RSS selalu terbaru.',analysis_title:'Analisis: Kata Terbanyak',
   status_ready:'Siap untuk scraping.',results_title:'Hasil Scraping',
   filter_all:'Semua',search_ph:'Cari...',
   col_platform:'Platform',col_title:'Judul',col_keyword:'Keyword',col_date:'Tanggal',
@@ -500,7 +504,7 @@ en:{
   keywords_label:'Keywords (comma separated)',keywords_ph:'e.g.: technology, AI, startup',
   location_label:'Location',location_ph:'Jakarta',location_optional:'(optional)',location_hint:'Leave empty for general search · comma-separate for multi-location',start_btn:'Start Scraping',
   platforms_label:'Select Platforms',cat_news:'News',cat_forum:'Forums',cat_social:'Social',cat_ref:'Reference',cat_journal:'Journals',cat_video:'Video',
-  meta_title:'Collection Record',meta_cite:'Copy Citation',meta_keyword:'Keyword',meta_source:'Sources',meta_location:'Location',meta_time:'Collected at',meta_total:'Total results',fulltext_label:'Fetch full article text',fulltext_hint:'(slower, news sources only)',date_from_label:'From date',date_to_label:'To date',date_optional:'(optional)',date_hint:'Applies to GDELT & journals (historical sources). RSS news is always recent.',
+  meta_title:'Collection Record',meta_cite:'Copy Citation',meta_keyword:'Keyword',meta_source:'Sources',meta_location:'Location',meta_time:'Collected at',meta_total:'Total results',fulltext_label:'Fetch full article text',fulltext_hint:'(slower, news sources only)',date_from_label:'From date',date_to_label:'To date',date_optional:'(optional)',date_hint:'Applies to GDELT & journals (historical sources). RSS news is always recent.',analysis_title:'Analysis: Top Terms',
   status_ready:'Ready to scrape.',results_title:'Scraping Results',
   filter_all:'All',search_ph:'Search...',
   col_platform:'Platform',col_title:'Title',col_keyword:'Keyword',col_date:'Date',
@@ -630,7 +634,7 @@ async function loadResults(){
   const r=await fetch('/api/results/'+currentJob),j=await r.json();
   if(!j.ok)return;
   allResults=j.results||[];
-  allMeta=j.metadata||null;renderMeta(allMeta);
+  allMeta=j.metadata||null;renderMeta(allMeta);renderAnalysis(allResults);
   document.getElementById('statResults').textContent=allResults.length;
   filterPlatform='';rebuildFilterChips();filterResults();
 }
@@ -646,6 +650,35 @@ function renderMeta(m){
   rows.push([tr('meta_total'),(m.total_results||0)+(per?' ('+per+')':'')]);
   document.getElementById('collectionMetaBody').innerHTML=
     rows.map(([k,v])=>'<div><strong>'+k+':</strong> '+v+'</div>').join('');
+  box.style.display='';
+}
+
+const STOPWORDS=new Set(('yang di ke dari dan atau untuk pada dengan ini itu ada tidak akan juga sudah saya kami kita mereka dia ia nya para adalah dalam oleh sebagai karena agar bahwa jika maka namun tetapi serta atas bawah antara hingga sampai lebih paling sangat bisa dapat harus telah masih saat ketika setelah sebelum tersebut yaitu yakni bagi hal ini itu satu dua tiga per apa siapa kapan bagaimana mengapa kenapa the a an of to in and or for on with is are was were be been being at by from as it its this that these those you your we our they their he she his her but not no if then than so such about into over under out up down more most very can could will would should has have had do does did been '+
+  'com www https http net org id co').split(/\s+/).filter(Boolean));
+function computeTopTerms(results,n=15){
+  const freq={};
+  results.forEach(r=>{
+    const text=((r.title||'')+' '+(r.content||'')+' '+(r.full_text||'')).toLowerCase();
+    (text.match(/[a-zÀ-ɏ]{3,}/g)||[]).forEach(w=>{
+      if(STOPWORDS.has(w))return;
+      freq[w]=(freq[w]||0)+1;
+    });
+  });
+  return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,n);
+}
+function renderAnalysis(results){
+  const box=document.getElementById('analysisPanel');
+  if(!results||!results.length){box.style.display='none';return}
+  const terms=computeTopTerms(results);
+  if(!terms.length){box.style.display='none';return}
+  const max=terms[0][1];
+  document.getElementById('analysisBody').innerHTML=terms.map(([w,c])=>
+    '<div style="display:flex;align-items:center;gap:8px;margin:3px 0">'+
+      '<div style="width:130px;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(w)+'</div>'+
+      '<div style="flex:1;background:var(--glass-b);border-radius:4px;height:14px;overflow:hidden">'+
+        '<div style="width:'+Math.round(c/max*100)+'%;height:100%;background:var(--accent)"></div></div>'+
+      '<div style="width:34px;text-align:right;color:var(--t2)">'+c+'</div>'+
+    '</div>').join('');
   box.style.display='';
 }
 
