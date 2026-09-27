@@ -284,6 +284,7 @@ tbody tr:hover{background:var(--row-hover)}
         <span class="plat-row-label" data-i18n="cat_news">Berita</span>
         <label class="chip cat-n active"><input type="checkbox" class="pcb" value="Google News" checked><i class="bi bi-newspaper"></i> Google News</label>
         <label class="chip cat-ns active"><input type="checkbox" class="pcb" value="News Sites" checked><i class="bi bi-globe"></i> News Sites</label>
+        <label class="chip cat-n active"><input type="checkbox" class="pcb" value="GDELT" checked><i class="bi bi-globe-americas"></i> GDELT</label>
       </div>
       <div class="plat-row">
         <span class="plat-row-label" data-i18n="cat_forum">Forum</span>
@@ -495,6 +496,7 @@ function esc(s){return s!=null?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
 function platCat(p){
   if(p==='Google News')return 'cat-n';
   if(p==='News Sites')return 'cat-ns';
+  if(p==='GDELT')return 'cat-n';
   if(['Reddit','Kaskus','Quora'].includes(p))return 'cat-f';
   if(['X/Twitter','Threads','Facebook','Instagram'].includes(p))return 'cat-s';
   return 'cat-d';

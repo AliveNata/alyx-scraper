@@ -1671,9 +1671,65 @@ class InstagramScraper(BaseScraper):
 # ─────────────────────────────────────────────────────────────
 # Scraper registry
 # ─────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
+# GDELT — global news index (DOC 2.0 API, free, no key).
+#         Research-grade coverage; rate limit is 1 request / 5s.
+# ─────────────────────────────────────────────────────────────
+_gdelt_last = [0.0]
+
+
+class GDELTScraper(BaseScraper):
+    def scrape(self, keyword, location='', max_results=15):
+        self.update_status(f"[GDELT] Mencari '{keyword}'...")
+        results = []
+        # Respect GDELT's 1-request-per-5s limit
+        gap = time.time() - _gdelt_last[0]
+        if gap < 5.5:
+            time.sleep(5.5 - gap)
+        try:
+            params = {
+                'query': keyword, 'mode': 'ArtList', 'format': 'json',
+                'maxrecords': min(max_results, 75), 'timespan': '3months',
+                'sort': 'DateDesc',
+            }
+            url = 'https://api.gdeltproject.org/api/v2/doc/doc?' + '&'.join(
+                f"{k}={quote_plus(str(v))}" for k, v in params.items())
+            resp = requests.get(url, headers={'User-Agent': BROWSER_UA}, timeout=20)
+            _gdelt_last[0] = time.time()
+            if not resp.text.strip().startswith('{'):
+                self.update_status("[GDELT] Rate limited / tidak ada data")
+                return results
+            for a in resp.json().get('articles', [])[:max_results]:
+                title = self.clean(a.get('title', ''))
+                link = a.get('url', '')
+                if not title or not link:
+                    continue
+                results.append({
+                    'platform': 'GDELT',
+                    'title': title,
+                    'content': f"{a.get('domain', '')} ({a.get('sourcecountry', '')})".strip(),
+                    'url': link,
+                    'date': self._gdelt_date(a.get('seendate', '')),
+                    'source': a.get('domain', 'GDELT'),
+                    'keyword': keyword,
+                    'location': location,
+                })
+            self.update_status(f"[GDELT] {len(results)} artikel ditemukan")
+        except Exception as e:
+            self.update_status(f"[GDELT] Error: {str(e)[:60]}")
+        return results
+
+    def _gdelt_date(self, s):
+        try:
+            return datetime.strptime(s, '%Y%m%dT%H%M%SZ').strftime('%Y-%m-%d %H:%M')
+        except Exception:
+            return datetime.now().strftime('%Y-%m-%d %H:%M')
+
+
 SCRAPERS = {
     'Google News': GoogleNewsScraper,
     'News Sites':  NewsSitesScraper,
+    'GDELT':       GDELTScraper,
     'Reddit':      RedditScraper,
     'Kaskus':      KaskusScraper,
     'X/Twitter':   TwitterScraper,
