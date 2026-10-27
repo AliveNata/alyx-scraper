@@ -320,11 +320,11 @@ def api_forgot_password():
     cfg = load_config()
     email_cfg = cfg.get('email', {})
     sender = email_cfg.get('gmail_user', '').strip()
-    app_pw = os.environ.get('GMAIL_APP_PASSWORD', '').strip()
+    app_pw = email_cfg.get('gmail_app_password', '').strip()
     recipient = email_cfg.get('reset_recipient', 'alivenata@gmail.com').strip()
 
     if not sender or not app_pw:
-        return jsonify({'ok': False, 'error': 'Email belum dikonfigurasi (GMAIL_APP_PASSWORD env var + gmail_user di Settings)'}), 400
+        return jsonify({'ok': False, 'error': 'Email belum dikonfigurasi (gmail_user + gmail_app_password di Settings)'}), 400
 
     # Generate token
     token = str(uuid.uuid4())
@@ -732,10 +732,10 @@ def api_admin_settings_post():
     cfg = load_config()
     if 'email' in data:
         em = data['email']
-        # Credentials (gmail_app_password) must be set via env vars, not stored in config.
         cfg['email'] = {
-            'gmail_user':      em.get('gmail_user', '').strip(),
-            'reset_recipient': em.get('reset_recipient', 'alivenata@gmail.com').strip(),
+            'gmail_user':        em.get('gmail_user', '').strip(),
+            'reset_recipient':   em.get('reset_recipient', 'alivenata@gmail.com').strip(),
+            'gmail_app_password': em.get('gmail_app_password', ''),
         }
     if 'platforms_disabled' in data:
         cfg['platforms_disabled'] = [p for p in (data.get('platforms_disabled') or []) if p in SCRAPERS]
@@ -750,10 +750,10 @@ def api_admin_test_email():
     cfg = load_config()
     em = cfg.get('email', {})
     sender = em.get('gmail_user', '').strip()
-    app_pw = os.environ.get('GMAIL_APP_PASSWORD', '').strip()
+    app_pw = em.get('gmail_app_password', '').strip()
     recipient = em.get('reset_recipient', 'alivenata@gmail.com').strip()
     if not sender or not app_pw:
-        return jsonify({'ok': False, 'error': 'Email config belum diisi (GMAIL_APP_PASSWORD env var)'}), 400
+        return jsonify({'ok': False, 'error': 'Email config belum diisi (gmail_user + gmail_app_password di Settings)'}), 400
     try:
         import yagmail
         yag = yagmail.SMTP(sender, app_pw)
