@@ -11,4 +11,4 @@ gunicorn==23.0.0
 flask-limiter==3.5.0
 
 # Optional
-yagmail==0.15.0        # Email (forgot password / test-email)
+yagmail==0.15.293      # Email (forgot password / test-email)
