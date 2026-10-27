@@ -236,6 +236,13 @@ def docs():
     return render_template('docs.html')
 
 
+@app.route('/alyx-control-panel')
+@app.route('/alyx-control-panel/login')
+@app.route('/alyx-control-panel/dashboard')
+def admin_legacy_redirect():
+    return redirect(url_for('admin_login'), 301)
+
+
 @app.route('/admin')
 def admin_login():
     if session.get('admin_auth'):
