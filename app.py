@@ -715,8 +715,14 @@ def api_admin_logs():
     if not session.get('admin_auth'):
         return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
 
-    limit = min(int(request.args.get('limit', 100)), 500)
-    offset = int(request.args.get('offset', 0))
+    try:
+        limit = min(int(request.args.get('limit', 100)), 500)
+    except (ValueError, TypeError):
+        limit = 100
+    try:
+        offset = int(request.args.get('offset', 0))
+    except (ValueError, TypeError):
+        offset = 0
     action = request.args.get('action')
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
