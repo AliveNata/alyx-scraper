@@ -172,7 +172,8 @@ def create_job_record():
         'keywords': [],
         'locations': [''],
         'location': '',
-        'platforms': []
+        'platforms': [],
+        'cancelled': False,
     }
     with jobs_lock:
         jobs[job_id] = rec
@@ -188,6 +189,8 @@ def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=Fa
     try:
         def cb(msg):
             with jobs_lock:
+                if jobs[job_id].get('cancelled'):
+                    raise RuntimeError('__CANCELLED__')
                 jobs[job_id]['message'] = msg
 
         scraper = UnifiedScraper(gui_callback=cb)
@@ -217,8 +220,12 @@ def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=Fa
             )
     except Exception as e:
         with jobs_lock:
-            jobs[job_id]['status'] = 'error'
-            jobs[job_id]['message'] = f'Error: {str(e)}'
+            if jobs[job_id].get('cancelled'):
+                jobs[job_id]['status'] = 'cancelled'
+                jobs[job_id]['message'] = 'Scraping dihentikan'
+            else:
+                jobs[job_id]['status'] = 'error'
+                jobs[job_id]['message'] = f'Error: {str(e)}'
             jobs[job_id]['finished_at'] = time.time()
     finally:
         # Always release the slot so new jobs can be accepted.
@@ -468,6 +475,15 @@ def api_start():
         raise
 
     return jsonify({'ok': True, 'job_id': job_id})
+
+
+@app.route('/api/cancel/<job_id>', methods=['POST'])
+def api_cancel(job_id):
+    with jobs_lock:
+        if job_id not in jobs:
+            return jsonify({'ok': False, 'error': 'Job not found'}), 404
+        jobs[job_id]['cancelled'] = True
+    return jsonify({'ok': True})
 
 
 @app.route('/api/status/<job_id>')

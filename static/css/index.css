@@ -66,6 +66,13 @@ input.ifield:focus{border-color:rgba(99,102,241,.5);box-shadow:0 0 0 3px rgba(99
 }
 .btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(99,102,241,.4)}
 .btn-p:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-stop{
+  padding:10px 20px;background:linear-gradient(135deg,#ef4444,#dc2626);
+  color:#fff;border:none;border-radius:10px;font-size:.9rem;font-weight:600;
+  cursor:pointer;display:inline-flex;align-items:center;gap:8px;
+  transition:all .2s;white-space:nowrap;box-shadow:0 4px 14px rgba(239,68,68,.3);
+}
+.btn-stop:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(239,68,68,.45)}
 .btn-g{
   padding:10px 13px;background:var(--glass);color:var(--t2);
   border:1px solid var(--glass-b);border-radius:10px;font-size:.9rem;

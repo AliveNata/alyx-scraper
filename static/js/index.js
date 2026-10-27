@@ -17,7 +17,7 @@ window.PAGE_L = {
 id:{
   stat_results:'Total Hasil',stat_platforms:'Platform Aktif',stat_keywords:'Keywords',stat_duration:'Durasi',
   keywords_label:'Keywords (pisah koma)',keywords_ph:'contoh: teknologi, AI, startup',
-  location_label:'Lokasi',location_ph:'Jakarta',location_optional:'(opsional)',location_hint:'Kosongkan = pencarian umum · pisah koma untuk multi-lokasi',start_btn:'Mulai Scraping',
+  location_label:'Lokasi',location_ph:'Jakarta',location_optional:'(opsional)',location_hint:'Kosongkan = pencarian umum · pisah koma untuk multi-lokasi',start_btn:'Mulai Scraping',stop_btn:'Berhenti Scraping',
   platforms_label:'Pilih Platform',cat_news:'Berita',cat_forum:'Forum',cat_social:'Sosial',cat_ref:'Referensi',cat_journal:'Jurnal',cat_video:'Video',
   meta_title:'Catatan Koleksi',meta_cite:'Salin',meta_keyword:'Keyword',meta_source:'Sumber',meta_location:'Lokasi',meta_time:'Waktu koleksi',meta_total:'Total hasil',fulltext_label:'Ambil teks lengkap artikel',fulltext_hint:'(lebih lambat, sumber berita saja)',date_from_label:'Dari tanggal',date_to_label:'Sampai tanggal',date_optional:'(opsional)',date_hint:'Berlaku untuk GDELT & jurnal (sumber historis). Berita RSS selalu terbaru.',analysis_title:'Analisis: Kata Terbanyak',timeline_title:'Distribusi Waktu',
   status_ready:'Siap untuk scraping.',results_title:'Hasil Scraping',
@@ -33,7 +33,7 @@ id:{
 en:{
   stat_results:'Total Results',stat_platforms:'Active Platforms',stat_keywords:'Keywords',stat_duration:'Duration',
   keywords_label:'Keywords (comma separated)',keywords_ph:'e.g.: technology, AI, startup',
-  location_label:'Location',location_ph:'Jakarta',location_optional:'(optional)',location_hint:'Leave empty for general search · comma-separate for multi-location',start_btn:'Start Scraping',
+  location_label:'Location',location_ph:'Jakarta',location_optional:'(optional)',location_hint:'Leave empty for general search · comma-separate for multi-location',start_btn:'Start Scraping',stop_btn:'Stop Scraping',
   platforms_label:'Select Platforms',cat_news:'News',cat_forum:'Forums',cat_social:'Social',cat_ref:'Reference',cat_journal:'Journals',cat_video:'Video',
   meta_title:'Collection Record',meta_cite:'Copy',meta_keyword:'Keyword',meta_source:'Sources',meta_location:'Location',meta_time:'Collected at',meta_total:'Total results',fulltext_label:'Fetch full article text',fulltext_hint:'(slower, news sources only)',date_from_label:'From date',date_to_label:'To date',date_optional:'(optional)',date_hint:'Applies to GDELT & journals (historical sources). RSS news is always recent.',analysis_title:'Analysis: Top Terms',timeline_title:'Timeline',
   status_ready:'Ready to scrape.',results_title:'Scraping Results',
@@ -140,6 +140,37 @@ function shakeDates(){
   document.getElementById('dateFrom').scrollIntoView({block:'center'});
 }
 
+function setScrapingState(active){
+  const btn=document.getElementById('startBtn');
+  if(!btn)return;
+  const icon=btn.querySelector('i');
+  const label=btn.querySelector('span[data-i18n]')||btn.querySelector('span');
+  if(active){
+    btn.className='btn-stop';
+    btn.onclick=stopScraping;
+    if(icon){icon.className='bi bi-stop-fill';}
+    if(label){label.textContent=tr('stop_btn');}
+  } else {
+    btn.className='btn-p';
+    btn.onclick=startScraping;
+    btn.disabled=false;
+    if(icon){icon.className='bi bi-play-fill';}
+    if(label){label.setAttribute('data-i18n','start_btn');label.textContent=tr('start_btn');}
+  }
+}
+
+async function stopScraping(){
+  if(!currentJob)return;
+  if(pollTimer){clearInterval(pollTimer);pollTimer=null;}
+  setStatus(currentLang==='id'?'Menghentikan...':'Stopping...',true);
+  try{await fetch('/api/cancel/'+currentJob,{method:'POST'});}catch(e){}
+  setTimeout(()=>{
+    showProg(false);
+    setScrapingState(false);
+    setStatus(currentLang==='id'?'Scraping dihentikan.':'Scraping stopped.');
+  },800);
+}
+
 async function startScraping(){
   const kw=document.getElementById('keywords').value.trim();
   const loc=document.getElementById('location').value.trim();
@@ -154,16 +185,16 @@ async function startScraping(){
   }
   setStatus(currentLang==='id'?'Memulai...':'Starting...',true);
   showProg(true,true);
-  document.getElementById('startBtn').disabled=true;
   scrapeStart=Date.now();
   try{
     const r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kw,location:loc,platforms:pls,full_text:document.getElementById('fullTextToggle').checked,date_from:document.getElementById('dateFrom').value||'',date_to:document.getElementById('dateTo').value||''})});
     const d=await r.json();
     if(!d.ok){setStatus('Error: '+(d.error||''));showProg(false);document.getElementById('startBtn').disabled=false;toast('Error: '+(d.error||''),'err');return}
     currentJob=d.job_id;
+    setScrapingState(true);
     if(pollTimer)clearInterval(pollTimer);
     pollTimer=setInterval(poll,2000);poll();
-  }catch(e){setStatus('Error: '+e.message);showProg(false);document.getElementById('startBtn').disabled=false;toast('Error: '+e.message,'err')}
+  }catch(e){setStatus('Error: '+e.message);showProg(false);setScrapingState(false);toast('Error: '+e.message,'err')}
 }
 
 async function poll(){
@@ -175,13 +206,17 @@ async function poll(){
     if(j.status==='finished'){
       clearInterval(pollTimer);pollTimer=null;showProg(false);
       await loadResults();
-      document.getElementById('startBtn').disabled=false;
+      setScrapingState(false);
       const dur=scrapeStart?((Date.now()-scrapeStart)/1000).toFixed(1)+'s':'-';
       document.getElementById('statDuration').textContent=dur;
       toast((currentLang==='id'?'Selesai! ':'Done! ')+j.count+' hasil','ok');
+    }else if(j.status==='cancelled'){
+      clearInterval(pollTimer);pollTimer=null;showProg(false);
+      setScrapingState(false);
+      setStatus(currentLang==='id'?'Scraping dihentikan.':'Scraping stopped.');
     }else if(j.status==='error'){
       clearInterval(pollTimer);pollTimer=null;showProg(false);
-      document.getElementById('startBtn').disabled=false;
+      setScrapingState(false);
       toast('Error: '+j.message,'err');
     }
   }catch(e){}
