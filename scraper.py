@@ -8,7 +8,6 @@ import threading
 from datetime import datetime
 from urllib.parse import quote_plus, quote, urljoin
 from concurrent.futures import ThreadPoolExecutor
-import xml.etree.ElementTree as ET
 
 BROWSER_UA = (
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
@@ -22,19 +21,7 @@ def _parse_rss(content):
     if isinstance(content, str):
         content = content.encode('utf-8', errors='replace')
 
-    # Strategy A: stdlib ElementTree (most reliable for well-formed XML)
-    try:
-        root = ET.fromstring(content)
-        # Strip namespace from tag names for comparison
-        def _tag(el): return el.tag.split('}')[-1] if '}' in el.tag else el.tag
-        items_et = [el for el in root.iter() if _tag(el) in ('item', 'entry')]
-        if items_et:
-            # Return via BeautifulSoup for uniform access
-            pass  # fall through to BS4 below with ET validation done
-    except ET.ParseError:
-        pass
-
-    # Strategy B: BeautifulSoup with multiple parsers
+    # BeautifulSoup with multiple parsers (most resilient for real-world feeds)
     for parser in ('xml', 'lxml-xml', 'lxml', 'html.parser'):
         try:
             soup = BeautifulSoup(content, parser)
