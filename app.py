@@ -174,6 +174,8 @@ def create_job_record():
         'location': '',
         'platforms': [],
         'cancelled': False,
+        'notify_email': '',
+        'notify_webhook': '',
     }
     with jobs_lock:
         jobs[job_id] = rec
@@ -209,6 +211,8 @@ def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=Fa
             jobs[job_id]['finished_at'] = time.time()
             # Read inside the same lock so we never touch jobs outside a lock.
             duration = jobs[job_id]['finished_at'] - jobs[job_id]['started_at']
+            _notify_email   = jobs[job_id].get('notify_email', '')
+            _notify_webhook = jobs[job_id].get('notify_webhook', '')
         location_str = ', '.join(loc for loc in locations if loc)
         for kw in keywords:
             log_audit(
@@ -218,6 +222,8 @@ def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=Fa
                 duration_seconds=round(duration, 2),
                 ip_address=ip, user_agent=ua
             )
+        if _notify_email or _notify_webhook:
+            _send_notification(_notify_email, _notify_webhook, len(results), keywords)
     except Exception as e:
         with jobs_lock:
             if jobs[job_id].get('cancelled'):
@@ -230,6 +236,41 @@ def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=Fa
     finally:
         # Always release the slot so new jobs can be accepted.
         _job_semaphore.release()
+
+
+def _send_notification(notify_email, notify_webhook, results_count, keywords):
+    """Fire email and/or webhook after a scraping job finishes. Best-effort only."""
+    kw_str = ', '.join(keywords)
+    if notify_email:
+        cfg = load_config()
+        em = cfg.get('email', {})
+        sender = em.get('gmail_user', '').strip()
+        app_pw = em.get('gmail_app_password', '').strip()
+        if sender and app_pw:
+            try:
+                import yagmail
+                yag = yagmail.SMTP(sender, app_pw)
+                body = (
+                    '<div style="font-family:system-ui,sans-serif;max-width:480px;padding:24px">'
+                    '<h2 style="color:#6366f1;margin:0 0 12px">Scraping Selesai</h2>'
+                    f'<p><strong>{results_count} hasil</strong> dikumpulkan untuk keyword: <em>{kw_str}</em></p>'
+                    '<hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0">'
+                    '<p style="color:#94a3b8;font-size:.8rem">AlyxLabs Scraper - scraper.alyxlabs.tech</p>'
+                    '</div>'
+                )
+                yag.send(to=notify_email, subject='Scraping selesai - AlyxLabs', contents=body)
+            except Exception:
+                pass
+    if notify_webhook and _is_safe_url(notify_webhook):
+        try:
+            import requests as _req_n
+            _req_n.post(notify_webhook, json={
+                'event': 'scraping_finished',
+                'results_count': results_count,
+                'keywords': keywords,
+            }, timeout=5)
+        except Exception:
+            pass
 
 
 # ─── Pages ───────────────────────────────────────────────────────────
@@ -434,6 +475,8 @@ def api_start():
     full_text = bool(payload.get('full_text', False))
     date_from = (payload.get('date_from') or '').strip() or None
     date_to = (payload.get('date_to') or '').strip() or None
+    notify_email = (payload.get('notify_email') or '').strip()[:254]
+    notify_webhook = (payload.get('notify_webhook') or '').strip()
 
     # Only allow platforms the admin has enabled
     _enabled = set(enabled_platforms())
@@ -461,8 +504,10 @@ def api_start():
             jobs[job_id]['locations'] = locations
             jobs[job_id]['location']  = location_raw
             jobs[job_id]['platforms'] = platforms
-            jobs[job_id]['date_from'] = date_from
-            jobs[job_id]['date_to']   = date_to
+            jobs[job_id]['date_from']       = date_from
+            jobs[job_id]['date_to']         = date_to
+            jobs[job_id]['notify_email']    = notify_email
+            jobs[job_id]['notify_webhook']  = notify_webhook
 
         ip = get_client_ip()
         ua = request.headers.get('User-Agent', '')
@@ -561,6 +606,10 @@ def api_download(job_id, fmt):
             return "Job not found", 404
         data = rec.get('results', [])
         meta = build_metadata(rec)
+
+    platform_filter = request.args.get('platform', '').strip()
+    if platform_filter:
+        data = [r for r in data if r.get('platform') == platform_filter]
 
     if not data:
         return "No data", 400

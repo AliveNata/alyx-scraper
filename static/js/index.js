@@ -19,6 +19,8 @@ id:{
   keywords_label:'Keywords (pisah koma)',keywords_ph:'contoh: teknologi, AI, startup',
   location_label:'Lokasi',location_ph:'Jakarta',location_optional:'(opsional)',location_hint:'Kosongkan = pencarian umum · pisah koma untuk multi-lokasi',start_btn:'Mulai Scraping',stop_btn:'Berhenti Scraping',
   save_search:'Simpan Pencarian',saved_searches:'Pencarian Tersimpan',save_name_label:'Nama Preset',save_name_ph:'cth: Bengkel Jakarta',save_btn:'Simpan',cancel_btn:'Batal',no_saved:'Belum ada preset.',load_btn:'Muat',
+  dl_all_platforms:'Semua platform',cite_btn_title:'Salin sitasi',cite_copied:'Sitasi disalin!',
+  notify_title:'Notifikasi saat selesai',notify_email_label:'Email penerima',notify_email_ph:'email@contoh.com',notify_webhook_label:'Webhook URL (opsional)',notify_webhook_ph:'https://hooks.slack.com/...',notify_hint:'Kirim ringkasan hasil via email atau webhook setelah scraping selesai.',
   platforms_label:'Pilih Platform',cat_news:'Berita',cat_forum:'Forum',cat_social:'Sosial',cat_ref:'Referensi',cat_journal:'Jurnal',cat_video:'Video',
   meta_title:'Catatan Koleksi',meta_cite:'Salin',meta_keyword:'Keyword',meta_source:'Sumber',meta_location:'Lokasi',meta_time:'Waktu koleksi',meta_total:'Total hasil',fulltext_label:'Ambil teks lengkap artikel',fulltext_hint:'(lebih lambat, sumber berita saja)',date_from_label:'Dari tanggal',date_to_label:'Sampai tanggal',date_optional:'(opsional)',date_hint:'Berlaku untuk GDELT & jurnal (sumber historis). Berita RSS selalu terbaru.',analysis_title:'Analisis: Kata Terbanyak',timeline_title:'Distribusi Waktu',
   status_ready:'Siap untuk scraping.',results_title:'Hasil Scraping',
@@ -36,6 +38,8 @@ en:{
   keywords_label:'Keywords (comma separated)',keywords_ph:'e.g.: technology, AI, startup',
   location_label:'Location',location_ph:'Jakarta',location_optional:'(optional)',location_hint:'Leave empty for general search · comma-separate for multi-location',start_btn:'Start Scraping',stop_btn:'Stop Scraping',
   save_search:'Save Search',saved_searches:'Saved Searches',save_name_label:'Preset Name',save_name_ph:'e.g.: Bengkel Jakarta',save_btn:'Save',cancel_btn:'Cancel',no_saved:'No saved presets.',load_btn:'Load',
+  dl_all_platforms:'All platforms',cite_btn_title:'Copy citation',cite_copied:'Citation copied!',
+  notify_title:'Notify when done',notify_email_label:'Recipient email',notify_email_ph:'email@example.com',notify_webhook_label:'Webhook URL (optional)',notify_webhook_ph:'https://hooks.slack.com/...',notify_hint:'Send a summary via email or webhook when scraping finishes.',
   platforms_label:'Select Platforms',cat_news:'News',cat_forum:'Forums',cat_social:'Social',cat_ref:'Reference',cat_journal:'Journals',cat_video:'Video',
   meta_title:'Collection Record',meta_cite:'Copy',meta_keyword:'Keyword',meta_source:'Sources',meta_location:'Location',meta_time:'Collected at',meta_total:'Total results',fulltext_label:'Fetch full article text',fulltext_hint:'(slower, news sources only)',date_from_label:'From date',date_to_label:'To date',date_optional:'(optional)',date_hint:'Applies to GDELT & journals (historical sources). RSS news is always recent.',analysis_title:'Analysis: Top Terms',timeline_title:'Timeline',
   status_ready:'Ready to scrape.',results_title:'Scraping Results',
@@ -63,6 +67,9 @@ window.onLangChange = function(){
 
 let currentJob=null, pollTimer=null, allResults=[], allMeta=null, selImgUrl='';
 let filterPlatform='', scrapeStart=null, _viewData=[];
+const PAGE_SIZE=50;
+let currentPage=0;
+let citeFormat='apa7';
 
 function showTab(tab){
   document.getElementById('tab-scraper').style.display=tab==='scraper'?'':'none';
@@ -180,6 +187,8 @@ async function startScraping(){
   const pls=Array.from(document.querySelectorAll('.pcb:checked')).map(e=>e.value);
   if(!kw){toast(currentLang==='id'?'Masukkan keywords!':'Enter keywords!','err');return}
   if(!pls.length){toast(currentLang==='id'?'Pilih minimal 1 platform!':'Select at least 1 platform!','err');return}
+  const notifyEmail=(document.getElementById('notifyEmail')?.value||'').trim();
+  const notifyWebhook=(document.getElementById('notifyWebhook')?.value||'').trim();
   const df=document.getElementById('dateFrom').value, dt=document.getElementById('dateTo').value;
   if(pls.some(p=>['GDELT','OpenAlex','Semantic Scholar'].includes(p)) && (!df||!dt)){
     shakeDates();
@@ -190,7 +199,7 @@ async function startScraping(){
   showProg(true,true);
   scrapeStart=Date.now();
   try{
-    const r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kw,location:loc,platforms:pls,full_text:document.getElementById('fullTextToggle').checked,date_from:document.getElementById('dateFrom').value||'',date_to:document.getElementById('dateTo').value||''})});
+    const r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kw,location:loc,platforms:pls,full_text:document.getElementById('fullTextToggle').checked,date_from:document.getElementById('dateFrom').value||'',date_to:document.getElementById('dateTo').value||'',notify_email:notifyEmail,notify_webhook:notifyWebhook})});
     const d=await r.json();
     if(!d.ok){setStatus('Error: '+(d.error||''));showProg(false);document.getElementById('startBtn').disabled=false;toast('Error: '+(d.error||''),'err');return}
     currentJob=d.job_id;
@@ -323,6 +332,12 @@ function rebuildFilterChips(){
     el.innerHTML='<span class="ptag '+cat+'">'+esc(p)+'</span><span class="fchip-count">'+counts[p]+'</span>';
     ctr.appendChild(el);
   });
+  const dlSel=document.getElementById('dlPlatform');
+  if(dlSel){
+    const cur=dlSel.value;
+    dlSel.innerHTML='<option value="">'+esc(tr('dl_all_platforms'))+'</option>'+
+      ps.map(p=>'<option value="'+esc(p)+'"'+(p===cur?' selected':'')+'>'+esc(p)+'</option>').join('');
+  }
 }
 
 function filterResults(){
@@ -335,17 +350,59 @@ function filterResults(){
 
 function render(data){
   _viewData=data;
-  const tb=document.getElementById('resultsBody'),em=document.getElementById('emptyState');
+  currentPage=0;
   document.getElementById('resultCount').textContent=data.length;
-  if(!data.length){tb.innerHTML='';em.style.display='';return}
-  em.style.display='none';
-  tb.innerHTML=data.map((r,i)=>{
+  if(!data.length){
+    document.getElementById('resultsBody').innerHTML='';
+    document.getElementById('emptyState').style.display='';
+    renderPagination();
+    return;
+  }
+  document.getElementById('emptyState').style.display='none';
+  renderPage();
+  renderPagination();
+}
+
+function renderPage(){
+  const tb=document.getElementById('resultsBody');
+  const start=currentPage*PAGE_SIZE;
+  const slice=_viewData.slice(start,start+PAGE_SIZE);
+  tb.innerHTML=slice.map((r,i)=>{
+    const gi=start+i;
     const cat=platCat(r.platform);
     const title=esc((r.title||'').substring(0,75)+(r.title&&r.title.length>75?'...':''));
     const link=r.url?'<a href="'+esc(r.url)+'" target="_blank" onclick="event.stopPropagation()" style="color:var(--accent)"><i class="bi bi-box-arrow-up-right"></i></a>':'';
-    return '<tr data-i="'+i+'"><td style="color:var(--t3);font-size:.77rem">'+(i+1)+'</td><td><span class="ptag '+cat+'">'+esc(r.platform)+'</span></td><td title="'+esc(r.content||r.title)+'">'+title+'</td><td><span style="font-size:.78rem;color:var(--t3)">'+esc(r.keyword)+'</span></td><td><span style="font-size:.78rem;color:var(--t3)">'+esc(r.date)+'</span></td><td>'+link+'</td></tr>';
+    const cite='<button class="btn-cite" onclick="copyCiteRow('+gi+');event.stopPropagation()" title="'+esc(tr('cite_btn_title'))+'"><i class="bi bi-quote"></i></button>';
+    return '<tr data-i="'+gi+'"><td style="color:var(--t3);font-size:.77rem">'+(gi+1)+'</td><td><span class="ptag '+cat+'">'+esc(r.platform)+'</span></td><td title="'+esc(r.content||r.title)+'">'+title+'</td><td><span style="font-size:.78rem;color:var(--t3)">'+esc(r.keyword)+'</span></td><td><span style="font-size:.78rem;color:var(--t3)">'+esc(r.date)+'</span></td><td style="white-space:nowrap">'+link+cite+'</td></tr>';
   }).join('');
   tb.querySelectorAll('tr').forEach(row=>row.addEventListener('click',()=>openDetail(parseInt(row.dataset.i))));
+}
+
+function renderPagination(){
+  const pg=document.getElementById('paginationBar');
+  if(!pg)return;
+  const total=_viewData.length;
+  if(total<=PAGE_SIZE){pg.style.display='none';return}
+  pg.style.display='';
+  const totalPages=Math.ceil(total/PAGE_SIZE);
+  const start=currentPage*PAGE_SIZE+1;
+  const end=Math.min((currentPage+1)*PAGE_SIZE,total);
+  pg.innerHTML=
+    '<button class="btn-pg" onclick="goToPage('+(currentPage-1)+')"'+(currentPage===0?' disabled':'')+'>'+
+      '<i class="bi bi-chevron-left"></i></button>'+
+    '<span class="pg-info">'+start+'-'+end+' / '+total+'</span>'+
+    '<button class="btn-pg" onclick="goToPage('+(currentPage+1)+')"'+(currentPage>=totalPages-1?' disabled':'')+'>'+
+      '<i class="bi bi-chevron-right"></i></button>';
+}
+
+function goToPage(p){
+  const totalPages=Math.ceil(_viewData.length/PAGE_SIZE);
+  if(p<0||p>=totalPages)return;
+  currentPage=p;
+  renderPage();
+  renderPagination();
+  const tw=document.querySelector('.table-wrap');
+  if(tw)tw.scrollTop=0;
 }
 
 function openDetail(i){
@@ -373,7 +430,8 @@ function clearResults(){
 
 function dl(f){
   if(!currentJob||!allResults.length){toast(currentLang==='id'?'Belum ada data!':'No data!','err');return}
-  window.location='/api/download/'+currentJob+'/'+f;
+  const plat=(document.getElementById('dlPlatform')?.value||'').trim();
+  window.location='/api/download/'+currentJob+'/'+f+(plat?'?platform='+encodeURIComponent(plat):'');
 }
 
 function imgStatus(m,show=true){
@@ -425,6 +483,62 @@ uz.addEventListener('drop',e=>{
   e.preventDefault();uz.classList.remove('drag-over');
   if(e.dataTransfer.files.length){const dt=new DataTransfer();dt.items.add(e.dataTransfer.files[0]);document.getElementById('fileInput').files=dt.files;uploadImg(document.getElementById('fileInput'))}
 });
+
+// ── Citation ────────────────────────────────────────────────
+function toggleCiteFormat(){
+  citeFormat=citeFormat==='apa7'?'mendikbud':'apa7';
+  const btn=document.getElementById('citeFmtBtn');
+  if(btn)btn.textContent=citeFormat==='apa7'?'APA 7':'Mendikbud';
+}
+
+function _parseCiteDate(d){
+  d=(d||'').trim();
+  const year=d.length>=4&&/^\d{4}/.test(d)?d.slice(0,4):'';
+  let full=d;
+  if(d.length>=10){
+    try{
+      const dt=new Date(d);
+      if(!isNaN(dt.getTime())){
+        const mAbbr=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const mAbbrID=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+        const mID=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        const mEN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+        if(citeFormat==='apa7'){
+          full=currentLang==='id'
+            ?(year+', '+mAbbrID[dt.getMonth()]+' '+dt.getDate())
+            :(year+', '+mAbbr[dt.getMonth()]+' '+dt.getDate());
+        }else{
+          full=currentLang==='id'
+            ?(dt.getDate()+' '+mID[dt.getMonth()]+' '+year)
+            :(dt.getDate()+' '+mEN[dt.getMonth()]+' '+year);
+        }
+      }
+    }catch(e){}
+  }
+  return{year,full};
+}
+
+function formatCite(r){
+  const{year,full}=_parseCiteDate(r.date);
+  const title=r.title||'';
+  const platform=r.platform||'';
+  const url=r.url||'';
+  const dateStr=full||year||'n.d.';
+  if(citeFormat==='apa7'){
+    return title+'. ('+dateStr+'). '+platform+'. '+url;
+  }else{
+    const acc=currentLang==='id'?'Diakses '+dateStr+', ':'Retrieved '+dateStr+', from ';
+    return '"'+title+'." '+platform+'. '+acc+url;
+  }
+}
+
+function copyCiteRow(i){
+  const r=_viewData[i];if(!r)return;
+  navigator.clipboard.writeText(formatCite(r)).then(
+    ()=>toast(tr('cite_copied'),'ok',2500),
+    ()=>toast(currentLang==='id'?'Gagal menyalin':'Copy failed','err')
+  );
+}
 
 // ── Saved Searches ──────────────────────────────────────────
 const SS_KEY = 'alyx_saved_searches';

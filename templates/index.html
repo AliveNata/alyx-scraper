@@ -137,13 +137,32 @@
   </div>
 </div>
 
-<div style="margin:-4px 0 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.85rem;color:var(--t2)">
+<div style="margin:-4px 0 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.85rem;color:var(--t2)">
   <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
     <input type="checkbox" id="fullTextToggle">
     <span data-i18n="fulltext_label">Ambil teks lengkap artikel</span>
   </label>
   <span style="color:var(--t3);font-size:.78rem" data-i18n="fulltext_hint">(lebih lambat, sumber berita saja)</span>
 </div>
+
+<details style="margin:-4px 0 14px">
+  <summary style="cursor:pointer;font-size:.82rem;color:var(--t2);user-select:none;list-style:none;display:flex;align-items:center;gap:6px">
+    <i class="bi bi-bell"></i> <span data-i18n="notify_title">Notifikasi saat selesai</span>
+  </summary>
+  <div style="margin-top:8px;padding:14px;background:var(--glass);border:1px solid var(--glass-b);border-radius:12px;display:flex;flex-direction:column;gap:10px">
+    <div class="notify-grid">
+      <div>
+        <label class="form-label" style="margin-bottom:4px" data-i18n="notify_email_label">Email penerima</label>
+        <input id="notifyEmail" class="ifield" type="email" placeholder="email@contoh.com" data-i18n-ph="notify_email_ph">
+      </div>
+      <div>
+        <label class="form-label" style="margin-bottom:4px" data-i18n="notify_webhook_label">Webhook URL (opsional)</label>
+        <input id="notifyWebhook" class="ifield" placeholder="https://hooks.slack.com/..." data-i18n-ph="notify_webhook_ph">
+      </div>
+    </div>
+    <span style="font-size:.75rem;color:var(--t3)" data-i18n="notify_hint">Kirim ringkasan hasil via email atau webhook setelah scraping selesai.</span>
+  </div>
+</details>
 
 <div class="status-bar" id="statusBar">
   <i class="bi bi-info-circle"></i>
@@ -159,7 +178,11 @@
     </div>
     <div class="res-ctrls">
       <input class="input-sm" id="filterSearch" style="width:140px" oninput="filterResults()" placeholder="Cari..." data-i18n-ph="search_ph">
+      <button class="btn-dl" id="citeFmtBtn" onclick="toggleCiteFormat()" title="Format sitasi" style="font-size:.78rem;padding:6px 9px">APA 7</button>
       <div class="dl-grp" style="align-items:center">
+        <select id="dlPlatform" class="input-sm" style="width:auto;padding:6px 8px">
+          <option value="">Semua platform</option>
+        </select>
         <select id="dlFormat" class="input-sm" style="width:auto;padding:6px 8px">
           <option value="csv">CSV</option>
           <option value="json">JSON</option>
@@ -203,6 +226,7 @@
       <tbody id="resultsBody"></tbody>
     </table>
   </div>
+  <div id="paginationBar" style="display:none;padding:10px 16px;border-top:1px solid var(--glass-b);display:flex;align-items:center;justify-content:center;gap:10px"></div>
   <div class="empty" id="emptyState">
     <i class="bi bi-inbox"></i>
     <p data-i18n="empty_state">Belum ada hasil.</p>

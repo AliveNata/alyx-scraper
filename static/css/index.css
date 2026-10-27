@@ -221,6 +221,20 @@ tbody tr:hover{background:var(--row-hover)}
 [data-theme="dark"] .spin{border-color:rgba(255,255,255,.15);border-top-color:rgba(255,255,255,.8)}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* Notification grid */
+.notify-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:640px){.notify-grid{grid-template-columns:1fr}}
+
+/* Pagination */
+.btn-pg{background:var(--glass);border:1px solid var(--glass-b);border-radius:8px;padding:5px 10px;color:var(--t1);cursor:pointer;font-size:.82rem;line-height:1;display:inline-flex;align-items:center;transition:all .15s}
+.btn-pg:disabled{opacity:.35;cursor:default}
+.btn-pg:not(:disabled):hover{border-color:rgba(99,102,241,.4);color:var(--accent)}
+.pg-info{font-size:.81rem;color:var(--t2)}
+
+/* Citation button (per row) */
+.btn-cite{background:none;border:none;padding:2px 6px;color:var(--t3);cursor:pointer;border-radius:5px;font-size:.88rem;line-height:1;transition:color .15s;vertical-align:middle}
+.btn-cite:hover{color:var(--accent)}
+
 /* Responsive */
 @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}}
-@media(max-width:640px){.form-row{grid-template-columns:1fr}.img-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}.res-header{flex-direction:column;align-items:flex-start}}
+@media(max-width:640px){.form-row{grid-template-columns:1fr}.img-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}.res-header{flex-direction:column;align-items:flex-start}details .form-col-2{grid-template-columns:1fr}}
