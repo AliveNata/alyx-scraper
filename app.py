@@ -606,6 +606,78 @@ def api_download(job_id, fmt):
         return send_file(io.BytesIO(content.encode('utf-8')),
                          mimetype='text/markdown', as_attachment=True,
                          download_name=f'alyx_{stamp}.md')
+    elif fmt == 'ris':
+        # Academic platforms use JOUR type; news/other use NEWS
+        academic = {'OpenAlex', 'Semantic Scholar'}
+        lines = []
+        for r in data:
+            ty = 'JOUR' if r.get('platform', '') in academic else 'NEWS'
+            lines.append(f'TY  - {ty}')
+            if r.get('title'):
+                lines.append(f"TI  - {r['title']}")
+            if r.get('source'):
+                lines.append(f"AU  - {r['source']}")
+            # Year from the first 4 chars of date when available
+            date_val = r.get('date', '')
+            if date_val and len(date_val) >= 4 and date_val[:4].isdigit():
+                lines.append(f'PY  - {date_val[:4]}')
+            if date_val:
+                lines.append(f'DA  - {date_val}')
+            if r.get('url'):
+                lines.append(f"UR  - {r['url']}")
+            snippet = r.get('content') or r.get('full_text') or ''
+            if snippet:
+                # RIS abstract is single-line; collapse whitespace
+                lines.append(f"AB  - {' '.join(snippet.split())[:500]}")
+            lines.append('DP  - AlyxLabs Scraper')
+            lines.append('ER  - ')
+            lines.append('')
+        content = '\n'.join(lines)
+        return send_file(
+            io.BytesIO(content.encode('utf-8')),
+            mimetype='application/x-research-info-systems', as_attachment=True,
+            download_name=f'alyx_{stamp}.ris'
+        )
+    elif fmt == 'bibtex':
+        _BIB_ESCAPE = str.maketrans({
+            '\\': '\\\\', '{': '\\{', '}': '\\}',
+            '&': '\\&', '%': '\\%', '#': '\\#',
+            '_': '\\_', '^': '\\^', '~': '\\~',
+        })
+        def bib_safe(s: str) -> str:
+            return (s or '').translate(_BIB_ESCAPE)
+
+        entries = []
+        for i, r in enumerate(data, 1):
+            # Build a clean key: alphanum only, lowercase
+            raw_src = (r.get('source') or r.get('platform') or 'item').split()[0]
+            key_base = ''.join(c for c in raw_src if c.isalnum()).lower() or 'item'
+            key = f'{key_base}_{i}'
+
+            date_val = r.get('date', '')
+            year = date_val[:4] if date_val and len(date_val) >= 4 and date_val[:4].isdigit() else ''
+
+            fields = [f'  title = {{{bib_safe(r.get("title", ""))}}}']
+            if r.get('source'):
+                fields.append(f'  author = {{{bib_safe(r["source"])}}}')
+            if year:
+                fields.append(f'  year = {{{year}}}')
+            if r.get('url'):
+                fields.append(f'  url = {{{bib_safe(r["url"])}}}')
+            snippet = r.get('content') or r.get('full_text') or ''
+            if snippet:
+                short = ' '.join(snippet.split())[:400]
+                fields.append(f'  abstract = {{{bib_safe(short)}}}')
+            fields.append('  note = {Scraped via AlyxLabs Scraper}')
+
+            entries.append('@article{' + key + ',\n' + ',\n'.join(fields) + '\n}')
+
+        content = '\n\n'.join(entries) + '\n'
+        return send_file(
+            io.BytesIO(content.encode('utf-8')),
+            mimetype='application/x-bibtex', as_attachment=True,
+            download_name=f'alyx_{stamp}.bib'
+        )
     return "Unsupported format", 400
 
 
