@@ -72,6 +72,7 @@
         <button class="btn-p" id="startBtn" onclick="startScraping()">
           <i class="bi bi-play-fill"></i><span data-i18n="start_btn">Mulai Scraping</span>
         </button>
+        <button class="btn-g" onclick="openSaveModal()" title="Simpan pencarian" id="bookmarkBtn"><i class="bi bi-bookmark-plus"></i></button>
         <button class="btn-g" onclick="clearResults()" title="Clear"><i class="bi bi-trash3"></i></button>
       </div>
     </div>
@@ -122,6 +123,17 @@
         <label class="chip cat-f"><input type="checkbox" class="pcb" value="Kaskus"><img src="/static/logos/kaskus.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain" class="plat-logo"> Kaskus</label>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Saved searches panel -->
+<div id="savedSearchPanel" style="display:none;margin:-4px 0 10px">
+  <div class="ss-panel">
+    <div class="ss-head">
+      <span><i class="bi bi-bookmark-star"></i> <span data-i18n="saved_searches">Pencarian Tersimpan</span></span>
+      <button class="btn-cls" onclick="document.getElementById('savedSearchPanel').style.display='none'"><i class="bi bi-x"></i></button>
+    </div>
+    <div id="savedSearchList" class="ss-list"></div>
   </div>
 </div>
 
@@ -248,6 +260,24 @@
 {% endblock %}
 
 {% block modals %}
+<!-- Save Search Modal -->
+<div class="modal-bd" id="saveSearchModal" onclick="closeModal('saveSearchModal')">
+<div class="modal-box" onclick="event.stopPropagation()" style="max-width:420px">
+  <div class="modal-head">
+    <span class="modal-title"><i class="bi bi-bookmark-plus"></i> <span data-i18n="save_search">Simpan Pencarian</span></span>
+    <button class="btn-cls" onclick="closeModal('saveSearchModal')"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="modal-body">
+    <label class="form-label" style="margin-bottom:8px" data-i18n="save_name_label">Nama Preset</label>
+    <input id="saveSearchName" class="ifield" placeholder="cth: Bengkel Jakarta" data-i18n-ph="save_name_ph" style="margin-bottom:14px" onkeydown="if(event.key==='Enter')confirmSaveSearch()">
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-g" onclick="closeModal('saveSearchModal')" data-i18n="cancel_btn">Batal</button>
+      <button class="btn-p" onclick="confirmSaveSearch()" style="padding:9px 20px"><i class="bi bi-bookmark-check"></i> <span data-i18n="save_btn">Simpan</span></button>
+    </div>
+  </div>
+</div>
+</div>
+
 <!-- Detail Modal -->
 <div class="modal-bd" id="detailModal" onclick="closeModal('detailModal')">
 <div class="modal-box" onclick="event.stopPropagation()">

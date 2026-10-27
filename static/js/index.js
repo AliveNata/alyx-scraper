@@ -18,6 +18,7 @@ id:{
   stat_results:'Total Hasil',stat_platforms:'Platform Aktif',stat_keywords:'Keywords',stat_duration:'Durasi',
   keywords_label:'Keywords (pisah koma)',keywords_ph:'contoh: teknologi, AI, startup',
   location_label:'Lokasi',location_ph:'Jakarta',location_optional:'(opsional)',location_hint:'Kosongkan = pencarian umum · pisah koma untuk multi-lokasi',start_btn:'Mulai Scraping',stop_btn:'Berhenti Scraping',
+  save_search:'Simpan Pencarian',saved_searches:'Pencarian Tersimpan',save_name_label:'Nama Preset',save_name_ph:'cth: Bengkel Jakarta',save_btn:'Simpan',cancel_btn:'Batal',no_saved:'Belum ada preset.',load_btn:'Muat',
   platforms_label:'Pilih Platform',cat_news:'Berita',cat_forum:'Forum',cat_social:'Sosial',cat_ref:'Referensi',cat_journal:'Jurnal',cat_video:'Video',
   meta_title:'Catatan Koleksi',meta_cite:'Salin',meta_keyword:'Keyword',meta_source:'Sumber',meta_location:'Lokasi',meta_time:'Waktu koleksi',meta_total:'Total hasil',fulltext_label:'Ambil teks lengkap artikel',fulltext_hint:'(lebih lambat, sumber berita saja)',date_from_label:'Dari tanggal',date_to_label:'Sampai tanggal',date_optional:'(opsional)',date_hint:'Berlaku untuk GDELT & jurnal (sumber historis). Berita RSS selalu terbaru.',analysis_title:'Analisis: Kata Terbanyak',timeline_title:'Distribusi Waktu',
   status_ready:'Siap untuk scraping.',results_title:'Hasil Scraping',
@@ -34,6 +35,7 @@ en:{
   stat_results:'Total Results',stat_platforms:'Active Platforms',stat_keywords:'Keywords',stat_duration:'Duration',
   keywords_label:'Keywords (comma separated)',keywords_ph:'e.g.: technology, AI, startup',
   location_label:'Location',location_ph:'Jakarta',location_optional:'(optional)',location_hint:'Leave empty for general search · comma-separate for multi-location',start_btn:'Start Scraping',stop_btn:'Stop Scraping',
+  save_search:'Save Search',saved_searches:'Saved Searches',save_name_label:'Preset Name',save_name_ph:'e.g.: Bengkel Jakarta',save_btn:'Save',cancel_btn:'Cancel',no_saved:'No saved presets.',load_btn:'Load',
   platforms_label:'Select Platforms',cat_news:'News',cat_forum:'Forums',cat_social:'Social',cat_ref:'Reference',cat_journal:'Journals',cat_video:'Video',
   meta_title:'Collection Record',meta_cite:'Copy',meta_keyword:'Keyword',meta_source:'Sources',meta_location:'Location',meta_time:'Collected at',meta_total:'Total results',fulltext_label:'Fetch full article text',fulltext_hint:'(slower, news sources only)',date_from_label:'From date',date_to_label:'To date',date_optional:'(optional)',date_hint:'Applies to GDELT & journals (historical sources). RSS news is always recent.',analysis_title:'Analysis: Top Terms',timeline_title:'Timeline',
   status_ready:'Ready to scrape.',results_title:'Scraping Results',
@@ -51,6 +53,7 @@ en:{
 window.onLangChange = function(){
   rebuildFilterChips();
   if(allMeta) renderMeta(allMeta);
+  renderSavedSearches();
   // Update donate nudge text
   const pre = document.getElementById('donateNudgeText');
   const cta = document.getElementById('donateNudgeLink');
@@ -422,5 +425,100 @@ uz.addEventListener('drop',e=>{
   e.preventDefault();uz.classList.remove('drag-over');
   if(e.dataTransfer.files.length){const dt=new DataTransfer();dt.items.add(e.dataTransfer.files[0]);document.getElementById('fileInput').files=dt.files;uploadImg(document.getElementById('fileInput'))}
 });
+
+// ── Saved Searches ──────────────────────────────────────────
+const SS_KEY = 'alyx_saved_searches';
+const SS_MAX = 10;
+
+function getSavedSearches(){
+  try{ return JSON.parse(localStorage.getItem(SS_KEY)||'[]'); }catch(e){ return []; }
+}
+
+function renderSavedSearches(){
+  const list = getSavedSearches();
+  const el = document.getElementById('savedSearchList');
+  if(!el) return;
+  if(!list.length){
+    el.innerHTML = '<div class="ss-empty">'+esc(tr('no_saved'))+'</div>';
+    return;
+  }
+  el.innerHTML = list.map((s,i)=>
+    '<div class="ss-item">'+
+      '<div class="ss-name" title="'+esc(s.keyword)+(s.location?' | '+esc(s.location):'')+'">'+
+        '<span class="ss-title">'+esc(s.name)+'</span>'+
+        '<span class="ss-meta">'+esc(s.keyword)+(s.location?' · '+esc(s.location):'')+'</span>'+
+      '</div>'+
+      '<div class="ss-actions">'+
+        '<button class="btn-g" style="padding:5px 10px;font-size:.8rem" onclick="loadSearch('+i+')">'+esc(tr('load_btn'))+'</button>'+
+        '<button class="btn-g" style="padding:5px 8px;color:#ef4444" onclick="deleteSearch('+i+')" title="Hapus"><i class="bi bi-trash3"></i></button>'+
+      '</div>'+
+    '</div>'
+  ).join('');
+}
+
+function openSaveModal(){
+  const kw = document.getElementById('keywords').value.trim();
+  if(!kw){ toast(currentLang==='id'?'Isi keyword dulu!':'Enter keywords first!','err'); return; }
+  document.getElementById('saveSearchName').value = '';
+  openModal('saveSearchModal');
+  setTimeout(()=>document.getElementById('saveSearchName').focus(), 100);
+}
+
+function confirmSaveSearch(){
+  const name = document.getElementById('saveSearchName').value.trim();
+  if(!name){ toast(currentLang==='id'?'Isi nama preset!':'Enter a preset name!','err'); return; }
+  const kw = document.getElementById('keywords').value.trim();
+  const loc = document.getElementById('location').value.trim();
+  const platforms = Array.from(document.querySelectorAll('.pcb:checked')).map(e=>e.value);
+  const list = getSavedSearches();
+  const existing = list.findIndex(s=>s.name===name);
+  const preset = {name, keyword:kw, location:loc, platforms};
+  if(existing>=0) list[existing]=preset;
+  else list.unshift(preset);
+  if(list.length>SS_MAX) list.length=SS_MAX;
+  try{ localStorage.setItem(SS_KEY, JSON.stringify(list)); }catch(e){}
+  closeModal('saveSearchModal');
+  renderSavedSearches();
+  const panel = document.getElementById('savedSearchPanel');
+  if(panel) panel.style.display='';
+  toast(currentLang==='id'?'Preset "'+name+'" disimpan!':'Preset "'+name+'" saved!','ok');
+}
+
+function loadSearch(i){
+  const list = getSavedSearches();
+  const s = list[i]; if(!s) return;
+  document.getElementById('keywords').value = s.keyword;
+  document.getElementById('location').value = s.location||'';
+  updateKeywordsStat();
+  document.querySelectorAll('.pcb').forEach(cb=>{
+    const chip = cb.closest('.chip');
+    const active = s.platforms.includes(cb.value) && chip && chip.style.display!=='none';
+    cb.checked = active;
+    if(chip) chip.classList.toggle('active', active);
+  });
+  updatePlatformsStat();
+  document.getElementById('savedSearchPanel').style.display='none';
+  toast(currentLang==='id'?'Preset "'+s.name+'" dimuat!':'Preset "'+s.name+'" loaded!','ok');
+}
+
+function deleteSearch(i){
+  const list = getSavedSearches();
+  const name = list[i]&&list[i].name;
+  list.splice(i,1);
+  try{ localStorage.setItem(SS_KEY, JSON.stringify(list)); }catch(e){}
+  renderSavedSearches();
+  if(!list.length) document.getElementById('savedSearchPanel').style.display='none';
+  toast(currentLang==='id'?'"'+name+'" dihapus.':'"'+name+'" deleted.');
+}
+
+// show saved searches panel on load if presets exist
+(function(){
+  const list = getSavedSearches();
+  if(list.length){
+    const panel = document.getElementById('savedSearchPanel');
+    if(panel) panel.style.display='';
+    renderSavedSearches();
+  }
+})();
 
 updatePlatformsStat();
