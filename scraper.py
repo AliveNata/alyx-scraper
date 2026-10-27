@@ -399,6 +399,213 @@ class KaskusScraper(BaseScraper):
 
 
 # ─────────────────────────────────────────────────────────────
+# Kompas - RSS tier 1, HTML search tier 2, DDG tier 3
+# ─────────────────────────────────────────────────────────────
+class KompasScraper(BaseScraper):
+    RSS_FEEDS = [
+        'https://rss.kompas.com/',
+        'https://nasional.kompas.com/rss/',
+    ]
+
+    def scrape(self, keyword, location='', max_results=15):
+        self.update_status(f"[Kompas] Mencari '{keyword}'...")
+        query = f"{keyword} {location}".strip()
+        results = []
+        seen_urls = set()
+
+        # Tier 1: RSS feeds
+        try:
+            for feed_url in self.RSS_FEEDS:
+                if len(results) >= max_results:
+                    break
+                try:
+                    resp = self.session.get(feed_url, timeout=10)
+                    if resp.status_code != 200:
+                        continue
+                    _, items = _parse_rss(resp.content)
+                    for item in items[:80]:
+                        title_el = item.find('title')
+                        if not title_el:
+                            continue
+                        title = self.clean(title_el.text)
+                        desc_el = item.find('description')
+                        desc = self.clean(desc_el.text if desc_el else '')
+                        if not self._kw_matches(keyword, title, desc):
+                            continue
+                        link = _rss_link(item)
+                        if not link or link in seen_urls:
+                            continue
+                        seen_urls.add(link)
+                        results.append({
+                            'platform': 'Kompas',
+                            'title': title,
+                            'content': desc[:300],
+                            'url': link,
+                            'date': self._parse_date(item.find('pubDate')),
+                            'source': 'Kompas',
+                            'keyword': keyword,
+                            'location': location,
+                        })
+                        if len(results) >= max_results:
+                            break
+                except Exception:
+                    continue
+        except Exception:
+            pass
+
+        # Tier 2: HTML search page
+        if len(results) < max_results:
+            try:
+                url = f"https://search.kompas.com/search/?q={quote_plus(query)}&sort=latest"
+                resp = self.session.get(url, timeout=12)
+                if resp.status_code == 200:
+                    soup = BeautifulSoup(resp.content, 'html.parser')
+                    candidates = soup.select('article') or soup.select('[class*="article"]')
+                    for el in candidates:
+                        if len(results) >= max_results:
+                            break
+                        a = el.find('a', href=True)
+                        if not a:
+                            continue
+                        link = a.get('href', '')
+                        if not link.startswith('http') or 'kompas.com' not in link:
+                            continue
+                        if link in seen_urls:
+                            continue
+                        title_el = el.find(['h1', 'h2', 'h3', 'h4'])
+                        title = self.clean(title_el.get_text() if title_el else a.get_text())
+                        if not title or not self._kw_matches(keyword, title):
+                            continue
+                        snip_el = el.find('p')
+                        content = self.clean(snip_el.get_text() if snip_el else '')
+                        date_el = el.find(attrs={'class': lambda c: c and any(
+                            x in str(c).lower() for x in ('date', 'time', 'ago'))})
+                        seen_urls.add(link)
+                        results.append({
+                            'platform': 'Kompas',
+                            'title': title,
+                            'content': content[:300],
+                            'url': link,
+                            'date': self._parse_date(date_el) if date_el else datetime.now().strftime('%Y-%m-%d %H:%M'),
+                            'source': 'Kompas',
+                            'keyword': keyword,
+                            'location': location,
+                        })
+            except Exception:
+                pass
+
+        # Tier 3: DDG fallback
+        if not results:
+            results = self._ddg_fallback(query, 'Kompas', 'kompas.com', max_results, keyword=keyword)
+
+        self.update_status(f"[Kompas] {len(results)} artikel ditemukan")
+        return results[:max_results]
+
+
+# ─────────────────────────────────────────────────────────────
+# Liputan6 - RSS tier 1, HTML search tier 2, DDG tier 3
+# ─────────────────────────────────────────────────────────────
+class Liputan6Scraper(BaseScraper):
+    RSS_FEEDS = [
+        'https://www.liputan6.com/rss/',
+    ]
+
+    def scrape(self, keyword, location='', max_results=15):
+        self.update_status(f"[Liputan6] Mencari '{keyword}'...")
+        query = f"{keyword} {location}".strip()
+        results = []
+        seen_urls = set()
+
+        # Tier 1: RSS feeds
+        try:
+            for feed_url in self.RSS_FEEDS:
+                if len(results) >= max_results:
+                    break
+                try:
+                    resp = self.session.get(feed_url, timeout=10)
+                    if resp.status_code != 200:
+                        continue
+                    _, items = _parse_rss(resp.content)
+                    for item in items[:80]:
+                        title_el = item.find('title')
+                        if not title_el:
+                            continue
+                        title = self.clean(title_el.text)
+                        desc_el = item.find('description')
+                        desc = self.clean(desc_el.text if desc_el else '')
+                        if not self._kw_matches(keyword, title, desc):
+                            continue
+                        link = _rss_link(item)
+                        if not link or link in seen_urls:
+                            continue
+                        seen_urls.add(link)
+                        results.append({
+                            'platform': 'Liputan6',
+                            'title': title,
+                            'content': desc[:300],
+                            'url': link,
+                            'date': self._parse_date(item.find('pubDate')),
+                            'source': 'Liputan6',
+                            'keyword': keyword,
+                            'location': location,
+                        })
+                        if len(results) >= max_results:
+                            break
+                except Exception:
+                    continue
+        except Exception:
+            pass
+
+        # Tier 2: HTML search page
+        if len(results) < max_results:
+            try:
+                url = f"https://www.liputan6.com/search?q={quote_plus(query)}"
+                resp = self.session.get(url, timeout=12)
+                if resp.status_code == 200:
+                    soup = BeautifulSoup(resp.content, 'html.parser')
+                    candidates = soup.select('article') or soup.select('[class*="articles-list"] li')
+                    for el in candidates:
+                        if len(results) >= max_results:
+                            break
+                        a = el.find('a', href=True)
+                        if not a:
+                            continue
+                        link = a.get('href', '')
+                        if not link.startswith('http') or 'liputan6.com' not in link:
+                            continue
+                        if link in seen_urls:
+                            continue
+                        title_el = el.find(['h1', 'h2', 'h3', 'h4'])
+                        title = self.clean(title_el.get_text() if title_el else a.get_text())
+                        if not title or not self._kw_matches(keyword, title):
+                            continue
+                        snip_el = el.find('p')
+                        content = self.clean(snip_el.get_text() if snip_el else '')
+                        date_el = el.find(attrs={'class': lambda c: c and any(
+                            x in str(c).lower() for x in ('date', 'time', 'ago'))})
+                        seen_urls.add(link)
+                        results.append({
+                            'platform': 'Liputan6',
+                            'title': title,
+                            'content': content[:300],
+                            'url': link,
+                            'date': self._parse_date(date_el) if date_el else datetime.now().strftime('%Y-%m-%d %H:%M'),
+                            'source': 'Liputan6',
+                            'keyword': keyword,
+                            'location': location,
+                        })
+            except Exception:
+                pass
+
+        # Tier 3: DDG fallback
+        if not results:
+            results = self._ddg_fallback(query, 'Liputan6', 'liputan6.com', max_results, keyword=keyword)
+
+        self.update_status(f"[Liputan6] {len(results)} artikel ditemukan")
+        return results[:max_results]
+
+
+# ─────────────────────────────────────────────────────────────
 # GDELT - global news index (DOC 2.0 API, free, no key).
 #         Research-grade coverage; rate limit is 1 request / 5s.
 # ─────────────────────────────────────────────────────────────
@@ -682,6 +889,8 @@ SCRAPERS = {
     'OpenAlex':    OpenAlexScraper,
     'Semantic Scholar': SemanticScholarScraper,
     'Kaskus':      KaskusScraper,
+    'Kompas':      KompasScraper,
+    'Liputan6':    Liputan6Scraper,
 }
 
 
