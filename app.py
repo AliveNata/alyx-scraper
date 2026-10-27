@@ -428,26 +428,29 @@ def api_start():
     # Empty location → [''] (general, no location filter)
     locations = [l.strip() for l in location_raw.split(',') if l.strip()] if location_raw else ['']
 
-    # Reject early if all job slots are taken; the thread will release the slot.
     if not _job_semaphore.acquire(blocking=False):
         return jsonify({'ok': False,
                         'error': 'Server sibuk. Maksimum 5 job berjalan bersamaan. Coba lagi nanti.'}), 429
 
-    job_id = create_job_record()
-    with jobs_lock:
-        jobs[job_id]['keywords']  = keywords
-        jobs[job_id]['locations'] = locations
-        jobs[job_id]['location']  = location_raw
-        jobs[job_id]['platforms'] = platforms
-        jobs[job_id]['date_from'] = date_from
-        jobs[job_id]['date_to']   = date_to
+    try:
+        job_id = create_job_record()
+        with jobs_lock:
+            jobs[job_id]['keywords']  = keywords
+            jobs[job_id]['locations'] = locations
+            jobs[job_id]['location']  = location_raw
+            jobs[job_id]['platforms'] = platforms
+            jobs[job_id]['date_from'] = date_from
+            jobs[job_id]['date_to']   = date_to
 
-    ip = get_client_ip()
-    ua = request.headers.get('User-Agent', '')
+        ip = get_client_ip()
+        ua = request.headers.get('User-Agent', '')
 
-    t = Thread(target=run_scraper_job, args=(job_id, keywords, locations, platforms, ip, ua, full_text, date_from, date_to))
-    t.daemon = True
-    t.start()
+        t = Thread(target=run_scraper_job, args=(job_id, keywords, locations, platforms, ip, ua, full_text, date_from, date_to))
+        t.daemon = True
+        t.start()
+    except Exception:
+        _job_semaphore.release()
+        raise
 
     return jsonify({'ok': True, 'job_id': job_id})
 
