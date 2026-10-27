@@ -615,6 +615,32 @@ code.i { background: var(--glass); border: 1px solid var(--glass-b); padding: 1p
         </div>
       </div>
 
+      <!-- RSS Feed Health -->
+      <div class="g-card">
+        <div class="g-card-head">
+          <div class="g-card-title"><i class="bi bi-rss-fill"></i> RSS Feed Health</div>
+          <span id="rssHealthSummary" style="font-size:.77rem;color:var(--t3)">Cek koneksi ke semua ID RSS feed</span>
+        </div>
+        <div class="g-card-body">
+          <button class="g-btn g-btn-primary" onclick="runRssHealth()" id="rssHealthBtn" style="margin-bottom:14px">
+            <i class="bi bi-play-fill"></i> Run Health Check
+          </button>
+          <div id="rssHealthResult" style="display:none">
+            <div class="g-table-wrap" style="max-height:360px">
+              <table class="g-table">
+                <thead><tr>
+                  <th>Feed</th>
+                  <th>Status</th>
+                  <th style="text-align:right">Latency</th>
+                  <th>Keterangan</th>
+                </tr></thead>
+                <tbody id="rssHealthBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Scraper Diagnostics -->
       <div class="g-card">
         <div class="g-card-head">
@@ -682,6 +708,35 @@ async function savePlatforms(){
 }
 
 function esc(s){ return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '' }
+
+// ── RSS Health Check ──
+async function runRssHealth(){
+  const btn=document.getElementById('rssHealthBtn');
+  const summary=document.getElementById('rssHealthSummary');
+  const result=document.getElementById('rssHealthResult');
+  const tbody=document.getElementById('rssHealthBody');
+  btn.disabled=true; btn.innerHTML='<i class="bi bi-hourglass-split"></i> Checking...';
+  summary.textContent='Mengecek semua feed...';
+  try{
+    const r=await fetch('/api/admin/rss-health',{method:'POST'});
+    const j=await r.json();
+    if(!j.ok){summary.textContent='Error: '+(j.error||'unknown'); return;}
+    const {feeds,summary:s}=j;
+    summary.innerHTML=`<span style="color:${s.healthy===s.total?'#22c55e':'#f59e0b'}">${s.healthy}/${s.total} healthy</span>`;
+    tbody.innerHTML=feeds.map(f=>`
+      <tr>
+        <td style="font-weight:600">${esc(f.name)}</td>
+        <td>${f.ok
+          ?'<span style="color:#22c55e;font-weight:600"><i class="bi bi-check-circle-fill"></i> '+f.status_code+'</span>'
+          :'<span style="color:#ef4444;font-weight:600"><i class="bi bi-x-circle-fill"></i> '+(f.status_code||'timeout')+'</span>'
+        }</td>
+        <td style="text-align:right;font-variant-numeric:tabular-nums;color:var(--t2)">${f.latency_ms}ms</td>
+        <td style="color:var(--t3);font-size:.78rem">${esc(f.error)||''}</td>
+      </tr>`).join('');
+    result.style.display='';
+  }catch(e){summary.textContent='Request failed';}
+  btn.disabled=false; btn.innerHTML='<i class="bi bi-arrow-repeat"></i> Re-check';
+}
 
 // ── Tab switching ──
 function showTab(name){

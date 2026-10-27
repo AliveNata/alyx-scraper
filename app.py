@@ -805,6 +805,47 @@ def api_admin_test_email():
         return jsonify({'ok': False, 'error': str(e)[:200]}), 500
 
 
+@app.route('/api/admin/rss-health', methods=['POST'])
+def api_admin_rss_health():
+    """Check reachability of all ID RSS feeds. Returns status + latency per feed."""
+    if not session.get('admin_auth'):
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
+
+    from scraper import NewsSitesScraper
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    import requests as _req
+
+    def check_feed(name, url):
+        t0 = time.time()
+        try:
+            resp = _req.head(url, timeout=8, allow_redirects=True,
+                             headers={'User-Agent': 'Mozilla/5.0 (feed-health-check)'})
+            if resp.status_code >= 400:
+                resp = _req.get(url, timeout=8, stream=True,
+                                headers={'User-Agent': 'Mozilla/5.0 (feed-health-check)'})
+                resp.close()
+            latency = round((time.time() - t0) * 1000)
+            ok = resp.status_code < 400
+            return {'name': name, 'url': url, 'ok': ok,
+                    'status_code': resp.status_code, 'latency_ms': latency, 'error': ''}
+        except Exception as e:
+            latency = round((time.time() - t0) * 1000)
+            return {'name': name, 'url': url, 'ok': False,
+                    'status_code': None, 'latency_ms': latency, 'error': str(e)[:120]}
+
+    feeds = NewsSitesScraper.ID_RSS
+    results = [None] * len(feeds)
+    with ThreadPoolExecutor(max_workers=10) as pool:
+        futures = {pool.submit(check_feed, name, url): i
+                   for i, (name, url) in enumerate(feeds)}
+        for fut in as_completed(futures):
+            results[futures[fut]] = fut.result()
+
+    ok_count = sum(1 for r in results if r and r['ok'])
+    return jsonify({'ok': True, 'feeds': results,
+                    'summary': {'total': len(results), 'healthy': ok_count}})
+
+
 @app.route('/api/admin/test-scraper', methods=['POST'])
 def api_admin_test_scraper():
     """Quick-test a single platform with a keyword. Returns count + sample."""
