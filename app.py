@@ -236,7 +236,7 @@ def docs():
     return render_template('docs.html')
 
 
-@app.route('/alyx-control-panel')
+@app.route('/admin')
 def admin_login():
     if session.get('admin_auth'):
         return redirect(url_for('admin_dashboard'))
@@ -261,7 +261,7 @@ def _password_ok(pw, cfg):
     return bool(env_pw) and pw == env_pw
 
 
-@app.route('/alyx-control-panel/login', methods=['POST'])
+@app.route('/admin/login', methods=['POST'])
 @limiter.limit("5 per 15 minutes")
 def admin_login_post():
     ip = get_client_ip()
@@ -279,14 +279,14 @@ def admin_login_post():
     return render_template('admin_login.html', error='Password salah. Coba lagi.')
 
 
-@app.route('/alyx-control-panel/dashboard')
+@app.route('/admin/dashboard')
 def admin_dashboard():
     if not session.get('admin_auth'):
         return redirect(url_for('admin_login'))
     return render_template('admin.html', all_platforms=list(SCRAPERS.keys()))
 
 
-@app.route('/alyx-control-panel/reset-password')
+@app.route('/admin/reset-password')
 def admin_reset_password():
     token = request.args.get('token', '')
     # Validate token exists and not expired
@@ -299,7 +299,7 @@ def admin_reset_password():
     return render_template('reset_password.html', token=token, valid=valid)
 
 
-@app.route('/alyx-control-panel/reset-password', methods=['POST'])
+@app.route('/admin/reset-password', methods=['POST'])
 def admin_reset_password_post():
     token = request.form.get('token', '')
     new_pw = request.form.get('password', '')
@@ -403,7 +403,7 @@ def api_forgot_password():
         return jsonify({'ok': False, 'error': str(e)[:200]}), 500
 
 
-@app.route('/alyx-control-panel/logout')
+@app.route('/admin/logout')
 def admin_logout():
     session.pop('admin_auth', None)
     return redirect(url_for('admin_login'))
