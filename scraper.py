@@ -256,25 +256,21 @@ class GoogleNewsScraper(BaseScraper):
 
 
 # ─────────────────────────────────────────────────────────────
-# News Sites - Bing RSS + 16 ID RSS feeds
+# News Sites - Bing RSS + 12 ID RSS feeds
 # ─────────────────────────────────────────────────────────────
 class NewsSitesScraper(BaseScraper):
     ID_RSS = [
-        ('Detik',         'https://news.detik.com/rss'),
         ('Detik Hot',     'https://hot.detik.com/rss'),
         ('Antara',        'https://www.antaranews.com/rss/terkini.xml'),
         ('Antara Metro',  'https://www.antaranews.com/rss/metro.xml'),
-        ('Liputan6',      'https://www.liputan6.com/rss'),
-        ('Liputan6 Regional','https://www.liputan6.com/regional/rss'),
         ('Tribunnews',    'https://www.tribunnews.com/rss'),
         ('Tribun Jabar',  'https://jabar.tribunnews.com/rss'),
-        ('CNN Indonesia', 'https://www.cnnindonesia.com/api/feed/rss'),
+        ('CNN Indonesia', 'https://www.cnnindonesia.com/rss'),
         ('Tempo',         'https://rss.tempo.co/'),
         ('SINDOnews',     'https://sindonews.com/rss'),
         ('Republika',     'https://www.republika.co.id/rss/'),
         ('JPNN',          'https://www.jpnn.com/rss'),
-        ('Viva',          'https://www.viva.co.id/rss'),
-        ('iNews',         'https://www.inews.id/rss'),
+        ('iNews',         'https://www.inews.id/feed'),
         ('Okezone',       'https://economy.okezone.com/rss'),
     ]
 
