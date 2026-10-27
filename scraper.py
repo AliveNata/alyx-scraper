@@ -4,6 +4,7 @@ import time
 import random
 import re
 import os
+import threading
 from datetime import datetime
 from urllib.parse import quote_plus, quote, urljoin
 from concurrent.futures import ThreadPoolExecutor
@@ -420,17 +421,24 @@ class KaskusScraper(BaseScraper):
 # GDELT - global news index (DOC 2.0 API, free, no key).
 #         Research-grade coverage; rate limit is 1 request / 5s.
 # ─────────────────────────────────────────────────────────────
+# Protects _gdelt_last so two concurrent threads cannot both pass the
+# rate-limit check simultaneously and hammer the GDELT API.
 _gdelt_last = [0.0]
+_gdelt_lock = threading.Lock()
 
 
 class GDELTScraper(BaseScraper):
     def scrape(self, keyword, location='', max_results=15):
         self.update_status(f"[GDELT] Mencari '{keyword}'...")
         results = []
-        # Respect GDELT's 1-request-per-5s limit
-        gap = time.time() - _gdelt_last[0]
-        if gap < 5.5:
-            time.sleep(5.5 - gap)
+        # Serialise GDELT callers: only one thread may sleep+reserve the slot.
+        with _gdelt_lock:
+            gap = time.time() - _gdelt_last[0]
+            if gap < 5.5:
+                time.sleep(5.5 - gap)
+            # Mark the slot as taken before releasing the lock so the next
+            # waiter measures from this moment, not from request completion.
+            _gdelt_last[0] = time.time()
         try:
             params = {
                 'query': keyword, 'mode': 'ArtList', 'format': 'json',
@@ -444,7 +452,6 @@ class GDELTScraper(BaseScraper):
             url = 'https://api.gdeltproject.org/api/v2/doc/doc?' + '&'.join(
                 f"{k}={quote_plus(str(v))}" for k, v in params.items())
             resp = requests.get(url, headers={'User-Agent': BROWSER_UA}, timeout=20)
-            _gdelt_last[0] = time.time()
             if not resp.text.strip().startswith('{'):
                 self.update_status("[GDELT] Rate limited / tidak ada data")
                 return results
