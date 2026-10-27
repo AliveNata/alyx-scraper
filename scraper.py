@@ -537,7 +537,7 @@ class OpenAlexScraper(BaseScraper):
         results = []
         try:
             url = ('https://api.openalex.org/works?search=' + quote_plus(keyword)
-                   + f'&per-page={min(max_results, 25)}&mailto=alivenata@gmail.com')
+                   + f'&per-page={min(max_results, 25)}')
             if self.date_from or self.date_to:
                 parts = []
                 if self.date_from:
@@ -546,7 +546,7 @@ class OpenAlexScraper(BaseScraper):
                     parts.append('to_publication_date:' + self.date_to)
                 url += '&filter=' + quote_plus(','.join(parts))
             resp = requests.get(url, headers={
-                'User-Agent': 'alyx-scraper/1.0 (mailto:alivenata@gmail.com)'}, timeout=15)
+                'User-Agent': 'AlyxScraper/2.0 (research tool)'}, timeout=15)
             for w in resp.json().get('results', []):
                 title = self.clean(w.get('title') or w.get('display_name') or '')
                 if not title:
