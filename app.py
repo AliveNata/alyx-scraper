@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
-from threading import Thread, Lock
+from threading import Thread, Lock, Semaphore
 from functools import wraps
 from datetime import datetime, timezone, timedelta
 from collections import Counter
@@ -77,6 +77,9 @@ def enabled_platforms():
 
 jobs = {}
 jobs_lock = Lock()
+
+# Hard cap on concurrent scraping jobs; the 6th request gets a 429.
+_job_semaphore = Semaphore(5)
 
 # Rate-limit state for /api/forgot-password (per-IP, in-memory)
 _forgot_hits = {}
@@ -211,6 +214,9 @@ def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=Fa
             jobs[job_id]['status'] = 'error'
             jobs[job_id]['message'] = f'Error: {str(e)}'
             jobs[job_id]['finished_at'] = time.time()
+    finally:
+        # Always release the slot so new jobs can be accepted.
+        _job_semaphore.release()
 
 
 # ─── Pages ───────────────────────────────────────────────────────────
@@ -421,6 +427,11 @@ def api_start():
     # Multi-location: "Jakarta, Depok" → ['Jakarta', 'Depok']
     # Empty location → [''] (general, no location filter)
     locations = [l.strip() for l in location_raw.split(',') if l.strip()] if location_raw else ['']
+
+    # Reject early if all job slots are taken; the thread will release the slot.
+    if not _job_semaphore.acquire(blocking=False):
+        return jsonify({'ok': False,
+                        'error': 'Server sibuk. Maksimum 5 job berjalan bersamaan. Coba lagi nanti.'}), 429
 
     job_id = create_job_record()
     with jobs_lock:
