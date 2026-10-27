@@ -50,16 +50,24 @@ _DEFAULT_CONFIG = {
     }
 }
 
+# Single lock for all config.json reads and writes so concurrent requests
+# cannot interleave a partial write with a read.
+_config_lock = Lock()
+
+
 def load_config():
-    try:
-        with open(CONFIG_PATH) as f:
-            return json.load(f)
-    except Exception:
-        return _DEFAULT_CONFIG.copy()
+    with _config_lock:
+        try:
+            with open(CONFIG_PATH) as f:
+                return json.load(f)
+        except Exception:
+            return _DEFAULT_CONFIG.copy()
+
 
 def save_config(cfg):
-    with open(CONFIG_PATH, 'w') as f:
-        json.dump(cfg, f, indent=2, ensure_ascii=False)
+    with _config_lock:
+        with open(CONFIG_PATH, 'w') as f:
+            json.dump(cfg, f, indent=2, ensure_ascii=False)
 
 
 def enabled_platforms():
