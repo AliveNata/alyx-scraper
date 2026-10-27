@@ -260,12 +260,10 @@ class GoogleNewsScraper(BaseScraper):
 # ─────────────────────────────────────────────────────────────
 class NewsSitesScraper(BaseScraper):
     ID_RSS = [
-        ('Detik',         'https://rss.detik.com/index.php/detikcom'),
-        ('Detik News',    'https://rss.detik.com/index.php/detiknews'),
-        ('Kompas',        'https://rss.kompas.com/rss/breakingnews'),
-        ('Kompas Regional','https://rss.kompas.com/rss/regional'),
+        ('Detik',         'https://news.detik.com/rss'),
+        ('Detik Hot',     'https://hot.detik.com/rss'),
         ('Antara',        'https://www.antaranews.com/rss/terkini.xml'),
-        ('Antara Regional','https://www.antaranews.com/rss/regional.xml'),
+        ('Antara Metro',  'https://www.antaranews.com/rss/metro.xml'),
         ('Liputan6',      'https://www.liputan6.com/rss'),
         ('Liputan6 Regional','https://www.liputan6.com/regional/rss'),
         ('Tribunnews',    'https://www.tribunnews.com/rss'),
