@@ -13,6 +13,8 @@ import os
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import generate_password_hash, check_password_hash
 import pandas as pd
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 # Load .env in dev; production uses systemd Environment= directives instead.
 try:
@@ -28,6 +30,10 @@ from database import log_audit, get_audit_logs, get_usage_stats, get_top_keyword
 app = Flask(__name__, static_folder='static', template_folder='templates')
 # ProxyFix lets request.remote_addr reflect the real client IP when behind nginx.
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
+# Per-IP rate limiter. ProxyFix resolves X-Forwarded-For into remote_addr before
+# flask-limiter reads it, so get_remote_address sees the real client IP.
+limiter = Limiter(app=app, key_func=get_remote_address, default_limits=[])
 # KeyError is intentional: app must not start without a secret key set.
 app.secret_key = os.environ['SECRET_KEY']
 app.permanent_session_lifetime = timedelta(hours=8)
@@ -256,6 +262,7 @@ def _password_ok(pw, cfg):
 
 
 @app.route('/alyx-control-panel/login', methods=['POST'])
+@limiter.limit("5 per 15 minutes")
 def admin_login_post():
     ip = get_client_ip()
     if _login_blocked(ip):
@@ -404,6 +411,7 @@ def admin_logout():
 
 # ─── Scraper API ─────────────────────────────────────────────────────
 @app.route('/api/start', methods=['POST'])
+@limiter.limit("10 per minute")
 def api_start():
     payload = request.json or {}
     keywords_text = payload.get('keywords', '').strip()
@@ -596,6 +604,7 @@ def api_download(job_id, fmt):
 
 # ─── Image Scraper API ───────────────────────────────────────────────
 @app.route('/api/images/scrape-url', methods=['POST'])
+@limiter.limit("20 per minute")
 def api_images_scrape_url():
     payload = request.json or {}
     url = payload.get('url', '').strip()
@@ -619,6 +628,7 @@ def api_images_scrape_url():
 
 
 @app.route('/api/images/search', methods=['POST'])
+@limiter.limit("20 per minute")
 def api_images_search():
     payload = request.json or {}
     query = payload.get('query', '').strip()

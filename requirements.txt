@@ -8,6 +8,7 @@ lxml>=4.9
 openpyxl>=3.1
 trafilatura>=1.6
 gunicorn>=21.0
+flask-limiter>=3.5
 
 # Optional
 yagmail>=0.15          # Email (forgot password / test-email)
