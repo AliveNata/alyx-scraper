@@ -597,13 +597,21 @@ class SemanticScholarScraper(BaseScraper):
             fields = 'title,abstract,year,venue,authors,externalIds,openAccessPdf,url'
             url = ('https://api.semanticscholar.org/graph/v1/paper/search?query='
                    + quote_plus(keyword) + f'&limit={min(max_results, 20)}&fields={fields}')
-            headers = {'User-Agent': 'alyx-scraper/1.0 (mailto:alivenata@gmail.com)'}
+            headers = {'User-Agent': 'AlyxScraper/2.0 (research tool)'}
             key = os.environ.get('SEMANTIC_SCHOLAR_KEY', '')
             if key:
                 headers['x-api-key'] = key
-            resp = requests.get(url, headers=headers, timeout=15)
-            if resp.status_code != 200:
-                self.update_status(f"[Semantic Scholar] HTTP {resp.status_code} (rate limit?)")
+            # Retry up to 3 times on 429 with exponential backoff (2s, 4s).
+            resp = None
+            for attempt in range(3):
+                resp = requests.get(url, headers=headers, timeout=15)
+                if resp.status_code == 429:
+                    if attempt < 2:
+                        time.sleep(2 ** (attempt + 1))  # 2s, 4s
+                        continue
+                break
+            if resp is None or resp.status_code != 200:
+                self.update_status(f"[Semantic Scholar] HTTP {resp.status_code if resp else '?'} (rate limit?)")
                 return results
             for p in resp.json().get('data', []):
                 title = self.clean(p.get('title') or '')
