@@ -10,4 +10,4 @@ trafilatura>=1.6
 gunicorn>=21.0
 
 # Optional
-# yagmail   # Email (forgot password)
+yagmail>=0.15          # Email (forgot password / test-email)
