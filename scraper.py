@@ -1,6 +1,5 @@
 import requests
 from bs4 import BeautifulSoup
-import json
 import time
 import random
 import re
@@ -9,8 +8,6 @@ from datetime import datetime
 from urllib.parse import quote_plus, quote, urljoin
 from concurrent.futures import ThreadPoolExecutor
 import xml.etree.ElementTree as ET
-
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.json')
 
 BROWSER_UA = (
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
@@ -594,13 +591,7 @@ class SemanticScholarScraper(BaseScraper):
             url = ('https://api.semanticscholar.org/graph/v1/paper/search?query='
                    + quote_plus(keyword) + f'&limit={min(max_results, 20)}&fields={fields}')
             headers = {'User-Agent': 'alyx-scraper/1.0 (mailto:alivenata@gmail.com)'}
-            key = ''
-            try:
-                with open(CONFIG_PATH) as f:
-                    key = (json.load(f).get('semantic_scholar_key') or '').strip()
-            except Exception:
-                pass
-            key = key or os.environ.get('SEMANTIC_SCHOLAR_KEY', '')
+            key = os.environ.get('SEMANTIC_SCHOLAR_KEY', '')
             if key:
                 headers['x-api-key'] = key
             resp = requests.get(url, headers=headers, timeout=15)
@@ -644,13 +635,7 @@ class YouTubeScraper(BaseScraper):
     def scrape(self, keyword, location='', max_results=15):
         self.update_status(f"[YouTube] Mencari '{keyword}'...")
         results = []
-        key = ''
-        try:
-            with open(CONFIG_PATH) as f:
-                key = (json.load(f).get('youtube_key') or '').strip()
-        except Exception:
-            pass
-        key = key or os.environ.get('YOUTUBE_API_KEY', '')
+        key = os.environ.get('YOUTUBE_API_KEY', '')
         if not key:
             self.update_status("[YouTube] API key belum di-set (Admin -> Settings)")
             return results

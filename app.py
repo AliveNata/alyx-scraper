@@ -3,26 +3,39 @@ from threading import Thread, Lock
 from functools import wraps
 from datetime import datetime, timezone, timedelta
 from collections import Counter
+import ipaddress
 import uuid
 import io
 import time
 import json
 import os
 
+from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import generate_password_hash, check_password_hash
 import pandas as pd
+
+# Load .env in dev; production uses systemd Environment= directives instead.
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 from scraper import UnifiedScraper, SCRAPERS
 from image_scraper_module import ImageScraper
 from database import log_audit, get_audit_logs, get_usage_stats, get_top_keywords, get_top_platforms, get_summary_stats
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
-app.secret_key = os.environ.get('SECRET_KEY', 'alivyx-secret-key-change-in-prod')
+# ProxyFix lets request.remote_addr reflect the real client IP when behind nginx.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+# KeyError is intentional: app must not start without a secret key set.
+app.secret_key = os.environ['SECRET_KEY']
 app.permanent_session_lifetime = timedelta(hours=8)
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
     SESSION_COOKIE_SECURE=True,   # served over HTTPS in prod; disabled for local dev in __main__
+    MAX_CONTENT_LENGTH=5 * 1024 * 1024,  # 5 MB upload cap
 )
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.json')
@@ -87,7 +100,37 @@ def _clear_login_fails(ip):
 
 
 def get_client_ip():
-    return request.headers.get('X-Forwarded-For', request.remote_addr or '127.0.0.1').split(',')[0].strip()
+    # ProxyFix already resolved X-Forwarded-For into remote_addr.
+    return request.remote_addr or '127.0.0.1'
+
+
+def _is_safe_url(url: str) -> bool:
+    """Block URLs that could reach internal infrastructure (SSRF guard)."""
+    from urllib.parse import urlparse
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ('http', 'https'):
+            return False
+        host = parsed.hostname or ''
+        if not host:
+            return False
+        if host.lower() in ('localhost', '0.0.0.0'):
+            return False
+        try:
+            addr = ipaddress.ip_address(host)
+            if (addr.is_loopback or addr.is_private or
+                    addr.is_link_local or addr.is_reserved):
+                return False
+        except ValueError:
+            pass  # hostname, not an IP literal
+        return True
+    except Exception:
+        return False
+
+
+@app.errorhandler(413)
+def too_large(e):
+    return jsonify({'error': 'File terlalu besar, maksimum 5MB'}), 413
 
 
 def _prune_jobs(max_age=3600):
@@ -181,20 +224,21 @@ def admin_login():
 
 
 def _password_ok(pw, cfg):
-    """Verify pw against stored admin_password.
-    Supports werkzeug hashes; auto-upgrades a legacy plaintext value to a hash
-    on first successful login."""
+    """Verify pw against the stored hash in config (set after a password reset),
+    or against ADMIN_PASSWORD env var for fresh installs before any reset."""
     stored = cfg.get('admin_password', '')
-    if not stored:
+    if stored:
+        if stored.startswith(('pbkdf2:', 'scrypt:')):
+            return check_password_hash(stored, pw)
+        # Legacy plaintext in config - upgrade to hash on success.
+        if pw == stored:
+            cfg['admin_password'] = generate_password_hash(pw)
+            save_config(cfg)
+            return True
         return False
-    if stored.startswith(('pbkdf2:', 'scrypt:')):
-        return check_password_hash(stored, pw)
-    # Legacy plaintext -> verify, then upgrade to a hash
-    if pw == stored:
-        cfg['admin_password'] = generate_password_hash(pw)
-        save_config(cfg)
-        return True
-    return False
+    # No hash in config yet - check the env var (initial deployment).
+    env_pw = os.environ.get('ADMIN_PASSWORD', '')
+    return bool(env_pw) and pw == env_pw
 
 
 @app.route('/alyx-control-panel/login', methods=['POST'])
@@ -276,11 +320,11 @@ def api_forgot_password():
     cfg = load_config()
     email_cfg = cfg.get('email', {})
     sender = email_cfg.get('gmail_user', '').strip()
-    app_pw = email_cfg.get('gmail_app_password', '').strip()
+    app_pw = os.environ.get('GMAIL_APP_PASSWORD', '').strip()
     recipient = email_cfg.get('reset_recipient', 'alivenata@gmail.com').strip()
 
     if not sender or not app_pw:
-        return jsonify({'ok': False, 'error': 'Email belum dikonfigurasi di Admin → Settings → Email Config'}), 400
+        return jsonify({'ok': False, 'error': 'Email belum dikonfigurasi (GMAIL_APP_PASSWORD env var + gmail_user di Settings)'}), 400
 
     # Generate token
     token = str(uuid.uuid4())
@@ -535,6 +579,8 @@ def api_images_scrape_url():
     url = payload.get('url', '').strip()
     if not url:
         return jsonify({'ok': False, 'error': 'URL required'}), 400
+    if not _is_safe_url(url):
+        return jsonify({'ok': False, 'error': 'URL tidak diizinkan'}), 400
 
     ip = get_client_ip()
     ua = request.headers.get('User-Agent', '')
@@ -577,6 +623,8 @@ def api_images_related():
     image_url = payload.get('image_url', '').strip()
     if not image_url:
         return jsonify({'ok': False, 'error': 'Image URL required'}), 400
+    if not _is_safe_url(image_url):
+        return jsonify({'ok': False, 'error': 'URL tidak diizinkan'}), 400
 
     scraper = ImageScraper()
     images = scraper.find_related_images(image_url=image_url)
@@ -585,6 +633,8 @@ def api_images_related():
 
 @app.route('/api/images/upload', methods=['POST'])
 def api_images_upload():
+    if not session.get('admin_auth'):
+        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
     if 'file' not in request.files:
         return jsonify({'ok': False, 'error': 'No file uploaded'}), 400
 
@@ -602,8 +652,7 @@ def api_images_upload():
     content_type = file.content_type or 'image/jpeg'
 
     scraper = ImageScraper()
-    cfg = load_config()
-    vision_key = (cfg.get('google_vision_key') or os.environ.get('GOOGLE_VISION_API_KEY', '')).strip()
+    vision_key = os.environ.get('GOOGLE_VISION_KEY', '').strip()
 
     images = []
     method = 'filename'
@@ -683,17 +732,11 @@ def api_admin_settings_post():
     cfg = load_config()
     if 'email' in data:
         em = data['email']
+        # Credentials (gmail_app_password) must be set via env vars, not stored in config.
         cfg['email'] = {
-            'gmail_user':        em.get('gmail_user', '').strip(),
-            'gmail_app_password': em.get('gmail_app_password', '').strip(),
-            'reset_recipient':   em.get('reset_recipient', 'alivenata@gmail.com').strip(),
+            'gmail_user':      em.get('gmail_user', '').strip(),
+            'reset_recipient': em.get('reset_recipient', 'alivenata@gmail.com').strip(),
         }
-    if 'google_vision_key' in data:
-        cfg['google_vision_key'] = (data.get('google_vision_key') or '').strip()
-    if 'semantic_scholar_key' in data:
-        cfg['semantic_scholar_key'] = (data.get('semantic_scholar_key') or '').strip()
-    if 'youtube_key' in data:
-        cfg['youtube_key'] = (data.get('youtube_key') or '').strip()
     if 'platforms_disabled' in data:
         cfg['platforms_disabled'] = [p for p in (data.get('platforms_disabled') or []) if p in SCRAPERS]
     save_config(cfg)
@@ -707,10 +750,10 @@ def api_admin_test_email():
     cfg = load_config()
     em = cfg.get('email', {})
     sender = em.get('gmail_user', '').strip()
-    app_pw = em.get('gmail_app_password', '').strip()
+    app_pw = os.environ.get('GMAIL_APP_PASSWORD', '').strip()
     recipient = em.get('reset_recipient', 'alivenata@gmail.com').strip()
     if not sender or not app_pw:
-        return jsonify({'ok': False, 'error': 'Email config belum diisi'}), 400
+        return jsonify({'ok': False, 'error': 'Email config belum diisi (GMAIL_APP_PASSWORD env var)'}), 400
     try:
         import yagmail
         yag = yagmail.SMTP(sender, app_pw)
@@ -758,7 +801,8 @@ def api_admin_test_scraper():
 
 
 if __name__ == "__main__":
-    # Local dev runs over http, so the Secure cookie flag would drop the session
+    # Local dev runs over http, so the Secure cookie flag would drop the session.
     app.config['SESSION_COOKIE_SECURE'] = False
+    debug = os.environ.get('FLASK_DEBUG', '0') == '1'
     print("\n  AlyxLabs Scraper running at http://localhost:5000\n")
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=debug)
