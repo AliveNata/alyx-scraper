@@ -163,6 +163,10 @@ hr.g-hr { border: none; border-top: 1px solid var(--glass-b); margin: 14px 0; }
   border-color: rgba(99,102,241,.45) !important;
   box-shadow: 0 0 0 3px rgba(99,102,241,.1);
 }
+.g-input:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
 .g-select option { background: #1e293b; color: #f1f5f9; }
 .filters-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
@@ -559,20 +563,10 @@ code.i { background: var(--glass); border: 1px solid var(--glass-b); padding: 1p
           <div style="display:flex;flex-direction:column;gap:12px;max-width:440px">
             <div>
               <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">Google Vision API Key</label>
-              <div style="position:relative">
-                <input class="g-input" type="password" id="visionKey" placeholder="AIza..." style="width:100%;padding-right:38px">
-                <button type="button" onclick="toggleVisionKey()"
-                  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t3);cursor:pointer;font-size:.95rem">
-                  <i class="bi bi-eye" id="visionEye"></i>
-                </button>
-              </div>
+              <input class="g-input" type="password" id="visionKey" placeholder="Set via environment variable on server" disabled style="width:100%">
+              <div class="settings-hint" style="margin-top:4px"><i class="bi bi-lock-fill"></i> Set via environment variable on server</div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-              <button class="g-btn g-btn-primary" onclick="saveVisionKey()" id="visionSaveBtn">
-                <i class="bi bi-floppy-fill"></i> Simpan
-              </button>
-              <span id="visionSaveMsg" style="font-size:.8rem"></span>
-            </div>
+            <span id="visionSaveMsg" style="font-size:.8rem"></span>
           </div>
         </div>
       </div>
@@ -591,20 +585,10 @@ code.i { background: var(--glass); border: 1px solid var(--glass-b); padding: 1p
           <div style="display:flex;flex-direction:column;gap:12px;max-width:440px">
             <div>
               <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">Semantic Scholar API Key</label>
-              <div style="position:relative">
-                <input class="g-input" type="password" id="s2Key" placeholder="key" style="width:100%;padding-right:38px">
-                <button type="button" onclick="toggleS2Key()"
-                  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t3);cursor:pointer;font-size:.95rem">
-                  <i class="bi bi-eye" id="s2Eye"></i>
-                </button>
-              </div>
+              <input class="g-input" type="password" id="s2Key" placeholder="Set via environment variable on server" disabled style="width:100%">
+              <div class="settings-hint" style="margin-top:4px"><i class="bi bi-lock-fill"></i> Set via environment variable on server</div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-              <button class="g-btn g-btn-primary" onclick="saveS2Key()" id="s2SaveBtn">
-                <i class="bi bi-floppy-fill"></i> Simpan
-              </button>
-              <span id="s2SaveMsg" style="font-size:.8rem"></span>
-            </div>
+            <span id="s2SaveMsg" style="font-size:.8rem"></span>
           </div>
         </div>
       </div>
@@ -623,20 +607,10 @@ code.i { background: var(--glass); border: 1px solid var(--glass-b); padding: 1p
           <div style="display:flex;flex-direction:column;gap:12px;max-width:440px">
             <div>
               <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">YouTube API Key</label>
-              <div style="position:relative">
-                <input class="g-input" type="password" id="ytKey" placeholder="AIza..." style="width:100%;padding-right:38px">
-                <button type="button" onclick="toggleYtKey()"
-                  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t3);cursor:pointer;font-size:.95rem">
-                  <i class="bi bi-eye" id="ytEye"></i>
-                </button>
-              </div>
+              <input class="g-input" type="password" id="ytKey" placeholder="Set via environment variable on server" disabled style="width:100%">
+              <div class="settings-hint" style="margin-top:4px"><i class="bi bi-lock-fill"></i> Set via environment variable on server</div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-              <button class="g-btn g-btn-primary" onclick="saveYtKey()" id="ytSaveBtn">
-                <i class="bi bi-floppy-fill"></i> Simpan
-              </button>
-              <span id="ytSaveMsg" style="font-size:.8rem"></span>
-            </div>
+            <span id="ytSaveMsg" style="font-size:.8rem"></span>
           </div>
         </div>
       </div>
@@ -975,7 +949,7 @@ async function loadYtKey(){
   try{
     const r=await fetch(`/api/admin/settings`); const j=await r.json(); if(!j.ok)return;
     const key=j.config?.youtube_key||'';
-    document.getElementById('ytKey').value=key;
+    document.getElementById('ytKey').value=key?'••••••••':'';
     document.getElementById('ytStatusBadge').innerHTML=key
       ?'<span class="nitter-badge nitter-ok"><i class="bi bi-check-circle-fill"></i> Aktif</span>'
       :'<span class="nitter-badge nitter-fail"><i class="bi bi-x-circle-fill"></i> Belum di-set</span>';
@@ -1004,7 +978,7 @@ async function loadS2Key(){
   try{
     const r=await fetch(`/api/admin/settings`); const j=await r.json(); if(!j.ok)return;
     const key=j.config?.semantic_scholar_key||'';
-    document.getElementById('s2Key').value=key;
+    document.getElementById('s2Key').value=key?'••••••••':'';
     document.getElementById('s2StatusBadge').innerHTML=key
       ?'<span class="nitter-badge nitter-ok"><i class="bi bi-check-circle-fill"></i> Aktif</span>'
       :'<span class="nitter-badge nitter-fail"><i class="bi bi-x-circle-fill"></i> Belum di-set</span>';
@@ -1036,7 +1010,7 @@ async function loadVisionKey(){
     const r = await fetch(`/api/admin/settings`);
     const j = await r.json(); if(!j.ok) return;
     const key = j.config?.google_vision_key || '';
-    document.getElementById('visionKey').value = key;
+    document.getElementById('visionKey').value = key ? '••••••••' : '';
     document.getElementById('visionStatusBadge').innerHTML = key
       ? '<span class="nitter-badge nitter-ok"><i class="bi bi-check-circle-fill"></i> Aktif</span>'
       : '<span class="nitter-badge nitter-fail"><i class="bi bi-x-circle-fill"></i> Belum di-set</span>';
