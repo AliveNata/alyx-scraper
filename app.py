@@ -928,10 +928,10 @@ def api_admin_rss_health():
             return {'name': name, 'url': url, 'ok': False,
                     'status_code': None, 'latency_ms': latency, 'error': str(e)[:120]}
 
+    from urllib.parse import quote_plus as _qp
     feeds = list(NewsSitesScraper.ID_RSS) + [
-        ('Kompas', KompasScraper.RSS_FEEDS[0]),
-        ('Kompas Nasional', KompasScraper.RSS_FEEDS[1]),
-        ('Liputan6', Liputan6Scraper.RSS_FEEDS[0]),
+        ('Kompas', KompasScraper.GNEWS_BASE + _qp('berita site:kompas.com')),
+        ('Liputan6', Liputan6Scraper.GNEWS_BASE + _qp('berita site:liputan6.com')),
     ]
     results = [None] * len(feeds)
     with ThreadPoolExecutor(max_workers=10) as pool:
