@@ -426,7 +426,7 @@ class KompasScraper(BaseScraper):
                         continue
                     title = self.clean(title_el.text)
                     link = _rss_link(item)
-                    if not link or 'kompas.com' not in link:
+                    if not link:
                         continue
                     if link in seen_urls:
                         continue
@@ -520,7 +520,7 @@ class Liputan6Scraper(BaseScraper):
                         continue
                     title = self.clean(title_el.text)
                     link = _rss_link(item)
-                    if not link or 'liputan6.com' not in link:
+                    if not link:
                         continue
                     if link in seen_urls:
                         continue
