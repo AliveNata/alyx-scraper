@@ -95,7 +95,7 @@ body{display:flex;flex-direction:column;min-height:100vh}
     </div>
     {% endif %}
 
-    <form method="POST" action="/alyx-control-panel/login">
+    <form method="POST" action="/admin/login">
       <div class="login-group">
         <label class="login-label" for="password" data-i18n="login_pw_label">Password</label>
         <div class="login-input-wrap">
@@ -193,8 +193,8 @@ async function sendForgotPassword(){
       const notConfigured = j.error && j.error.includes('belum dikonfigurasi');
       msgEl.innerHTML = notConfigured
         ? (lang === 'id'
-            ? 'Email belum dikonfigurasi. <a href="/alyx-control-panel/dashboard" style="color:#6366f1">Buka Admin → Settings → Email Config</a>'
-            : 'Email not configured. <a href="/alyx-control-panel/dashboard" style="color:#6366f1">Open Admin → Settings → Email Config</a>')
+            ? 'Email belum dikonfigurasi. <a href="/admin/dashboard" style="color:#6366f1">Buka Admin → Settings → Email Config</a>'
+            : 'Email not configured. <a href="/admin/dashboard" style="color:#6366f1">Open Admin → Settings → Email Config</a>')
         : (j.error || 'Terjadi kesalahan');
       toast.style.borderColor = 'rgba(239,68,68,.4)';
     }
