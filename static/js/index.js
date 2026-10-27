@@ -149,7 +149,7 @@ function setScrapingState(active){
     btn.className='btn-stop';
     btn.onclick=stopScraping;
     if(icon){icon.className='bi bi-stop-fill';}
-    if(label){label.textContent=tr('stop_btn');}
+    if(label){label.setAttribute('data-i18n','stop_btn');label.textContent=tr('stop_btn');}
   } else {
     btn.className='btn-p';
     btn.onclick=startScraping;
