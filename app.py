@@ -187,8 +187,8 @@ def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=Fa
             jobs[job_id]['status'] = 'finished'
             jobs[job_id]['message'] = f'Finished: {len(results)} results'
             jobs[job_id]['finished_at'] = time.time()
-
-        duration = jobs[job_id]['finished_at'] - jobs[job_id]['started_at']
+            # Read inside the same lock so we never touch jobs outside a lock.
+            duration = jobs[job_id]['finished_at'] - jobs[job_id]['started_at']
         location_str = ', '.join(loc for loc in locations if loc)
         for kw in keywords:
             log_audit(
