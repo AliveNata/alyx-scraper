@@ -425,6 +425,9 @@ class KompasScraper(BaseScraper):
                     if not title_el:
                         continue
                     title = self.clean(title_el.text)
+                    # skip Google News placeholder items (title == query or too short)
+                    if not title or len(title) < 15 or title.lower().strip() == query.lower().strip():
+                        continue
                     link = _rss_link(item)
                     if not link:
                         continue
@@ -519,6 +522,9 @@ class Liputan6Scraper(BaseScraper):
                     if not title_el:
                         continue
                     title = self.clean(title_el.text)
+                    # skip Google News placeholder items (title == query or too short)
+                    if not title or len(title) < 15 or title.lower().strip() == query.lower().strip():
+                        continue
                     link = _rss_link(item)
                     if not link:
                         continue
