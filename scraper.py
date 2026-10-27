@@ -494,9 +494,11 @@ class KompasScraper(BaseScraper):
             except Exception:
                 pass
 
-        # Tier 3: DDG fallback
-        if not results:
-            results = self._ddg_fallback(query, 'Kompas', 'kompas.com', max_results, keyword=keyword)
+        # Tier 3: DDG fallback - no keyword filter since DDG already searched by keyword
+        if len(results) < max_results:
+            ddg = self._ddg_fallback(query, 'Kompas', 'kompas.com', max_results - len(results))
+            seen_urls.update(r['url'] for r in results)
+            results += [r for r in ddg if r['url'] not in seen_urls]
 
         self.update_status(f"[Kompas] {len(results)} artikel ditemukan")
         return results[:max_results]
@@ -597,9 +599,11 @@ class Liputan6Scraper(BaseScraper):
             except Exception:
                 pass
 
-        # Tier 3: DDG fallback
-        if not results:
-            results = self._ddg_fallback(query, 'Liputan6', 'liputan6.com', max_results, keyword=keyword)
+        # Tier 3: DDG fallback - no keyword filter since DDG already searched by keyword
+        if len(results) < max_results:
+            ddg = self._ddg_fallback(query, 'Liputan6', 'liputan6.com', max_results - len(results))
+            seen_urls.update(r['url'] for r in results)
+            results += [r for r in ddg if r['url'] not in seen_urls]
 
         self.update_status(f"[Liputan6] {len(results)} artikel ditemukan")
         return results[:max_results]
