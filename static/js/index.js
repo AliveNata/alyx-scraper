@@ -27,7 +27,8 @@ id:{
   img_search:'Cari Gambar',img_query_ph:'Kata kunci gambar...',img_url:'Scrape dari URL',
   img_upload:'Upload & Cari',img_drop:'Klik atau drag & drop gambar',
   img_results:'Hasil Gambar',img_empty:'Cari atau upload gambar.',img_open:'Buka',img_related:'Cari Mirip',
-  detail_title:'Detail Hasil'
+  detail_title:'Detail Hasil',
+  donate_nudge_pre:'Gratis selamanya - kalau berguna, ',donate_nudge_cta:'dukung AlyxLabs'
 },
 en:{
   stat_results:'Total Results',stat_platforms:'Active Platforms',stat_keywords:'Keywords',stat_duration:'Duration',
@@ -42,11 +43,20 @@ en:{
   img_search:'Search Images',img_query_ph:'Image keywords...',img_url:'Scrape from URL',
   img_upload:'Upload & Search',img_drop:'Click or drag & drop image',
   img_results:'Image Results',img_empty:'Search or upload images.',img_open:'Open',img_related:'Find Similar',
-  detail_title:'Result Details'
+  detail_title:'Result Details',
+  donate_nudge_pre:'Always free - if useful, ',donate_nudge_cta:'support AlyxLabs'
 }
 };
 
-window.onLangChange = function(){ rebuildFilterChips(); if(allMeta) renderMeta(allMeta); };
+window.onLangChange = function(){
+  rebuildFilterChips();
+  if(allMeta) renderMeta(allMeta);
+  // Update donate nudge text
+  const pre = document.getElementById('donateNudgeText');
+  const cta = document.getElementById('donateNudgeLink');
+  if(pre) pre.textContent = tr('donate_nudge_pre');
+  if(cta) cta.textContent = tr('donate_nudge_cta');
+};
 
 let currentJob=null, pollTimer=null, allResults=[], allMeta=null, selImgUrl='';
 let filterPlatform='', scrapeStart=null, _viewData=[];

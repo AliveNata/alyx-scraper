@@ -14,8 +14,8 @@
 let currentLang = localStorage.getItem('ax_lang') || 'id';
 
 const BASE_L = {
-  id: { footer_desc:'Multi-platform scraper untuk riset dan analisis data.', footer_docs:'Docs', footer_sociabuzz:'Dukungan SociaBuzz', footer_disc:'Gunakan dengan etika.' },
-  en: { footer_desc:'Multi-platform scraper for research and data analysis.', footer_docs:'Docs', footer_sociabuzz:'Support via SociaBuzz', footer_disc:'Use ethically.' }
+  id: { footer_desc:'Multi-platform scraper untuk riset dan analisis data.', footer_docs:'Docs', footer_sociabuzz:'Dukungan SociaBuzz', footer_donate:'Dukung AlyxLabs', footer_disc:'Gunakan dengan etika.' },
+  en: { footer_desc:'Multi-platform scraper for research and data analysis.', footer_docs:'Docs', footer_sociabuzz:'Support via SociaBuzz', footer_donate:'Support AlyxLabs', footer_disc:'Use ethically.' }
 };
 
 function getL(){

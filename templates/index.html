@@ -47,6 +47,12 @@
   </div>
 </div>
 
+<!-- Donate nudge: sits between stats and the form, unobtrusive -->
+<div id="donateNudge" style="text-align:center;margin:-6px 0 10px;font-size:.78rem;color:var(--t3)">
+  <i class="bi bi-heart-fill" style="color:#e11d48;font-size:.7em"></i>
+  <span id="donateNudgeText">Gratis selamanya - kalau berguna, </span><a href="https://sociabuzz.com/alyxlabs/support" target="_blank" id="donateNudgeLink" style="color:var(--accent);text-decoration:none;font-weight:500">dukung AlyxLabs</a><span>.</span>
+</div>
+
 <!-- ==================== SCRAPER TAB ==================== -->
 <div id="tab-scraper">
 
@@ -145,6 +151,8 @@
           <option value="json">JSON</option>
           <option value="xlsx">XLSX</option>
           <option value="md">Markdown</option>
+          <option value="ris">RIS (.ris)</option>
+          <option value="bibtex">BibTeX (.bib)</option>
         </select>
         <button class="btn-dl" onclick="dl(document.getElementById('dlFormat').value)" title="Download"><i class="bi bi-download"></i></button>
       </div>
