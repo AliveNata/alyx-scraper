@@ -28,6 +28,8 @@
       <div class="sidebar-title" data-i18n="doc_fitur">Fitur</div>
       <a href="#image-scraper">Image Scraper</a>
       <a href="#export">Export</a>
+      <a href="#citation" data-i18n="doc_citation">Sitasi</a>
+      <a href="#notifications" data-i18n="doc_notif">Notifikasi</a>
 
       <div class="sidebar-title">Changelog</div>
       <a href="#changelog">Changelog</a>
@@ -58,33 +60,41 @@
       <h3 class="lang-id">Fitur Utama</h3>
       <h3 class="lang-en">Main Features</h3>
       <ul class="lang-id">
-        <li><strong>8 Sumber Terkurasi</strong> - Google News, News Sites, GDELT, YouTube, Wikipedia, OpenAlex, Semantic Scholar, Kaskus</li>
+        <li><strong>10 Platform Terkurasi</strong> - Google News, News Sites, GDELT, Kompas, Liputan6, YouTube, Wikipedia, OpenAlex, Semantic Scholar, Kaskus</li>
         <li><strong>Teks Lengkap Artikel</strong> - Ambil isi artikel penuh (bukan cuma cuplikan) untuk analisis konten</li>
         <li><strong>Filter Tanggal &amp; Dedup</strong> - Rentang tanggal untuk sumber historis, hasil duplikat dibuang otomatis</li>
-        <li><strong>Catatan Koleksi &amp; Sitasi</strong> - Metadata pengumpulan (keyword, sumber, waktu WIB) siap untuk bab Metodologi</li>
+        <li><strong>Sitasi Otomatis</strong> - Generate sitasi APA7 dan Mendikbud langsung dari hasil scraping</li>
+        <li><strong>Paginasi</strong> - Tampilan 50 hasil per halaman, navigasi cepat ke halaman manapun</li>
+        <li><strong>Export per Platform</strong> - Download hasil satu platform tanpa campur dengan yang lain</li>
+        <li><strong>Notifikasi</strong> - Kirim ringkasan hasil via email atau webhook (Slack, dll.) setelah selesai</li>
         <li><strong>Analisis</strong> - Frekuensi kata terbanyak dan distribusi waktu</li>
         <li><strong>Export</strong> - CSV, JSON, XLSX, atau Markdown (dengan metadata)</li>
         <li><strong>Bilingual &amp; Light/Dark</strong> - Indonesia/English, tema terang sebagai default</li>
-        <li><strong>Admin Dashboard</strong> - Toggle platform, kunci API, audit log (tersembunyi)</li>
+        <li><strong>Admin Dashboard</strong> - Toggle platform, audit log (tersembunyi)</li>
       </ul>
       <ul class="lang-en">
-        <li><strong>8 Curated Sources</strong> - Google News, News Sites, GDELT, YouTube, Wikipedia, OpenAlex, Semantic Scholar, Kaskus</li>
+        <li><strong>10 Curated Platforms</strong> - Google News, News Sites, GDELT, Kompas, Liputan6, YouTube, Wikipedia, OpenAlex, Semantic Scholar, Kaskus</li>
         <li><strong>Full Article Text</strong> - Fetch full article bodies (not just snippets) for content analysis</li>
         <li><strong>Date Filter &amp; Dedup</strong> - Date range for historical sources, duplicates removed automatically</li>
-        <li><strong>Collection Record &amp; Citation</strong> - Provenance metadata (keyword, sources, time) ready for a methodology section</li>
+        <li><strong>Auto Citation</strong> - Generate APA7 and Mendikbud citations directly from scraping results</li>
+        <li><strong>Pagination</strong> - 50 results per page, jump to any page quickly</li>
+        <li><strong>Per-Platform Export</strong> - Download results from one platform without mixing with others</li>
+        <li><strong>Notifications</strong> - Send a result summary via email or webhook (Slack, etc.) when done</li>
         <li><strong>Analysis</strong> - Top-term frequency and timeline distribution</li>
         <li><strong>Export</strong> - CSV, JSON, XLSX, or Markdown (with metadata)</li>
         <li><strong>Bilingual &amp; Light/Dark</strong> - Indonesian/English, light theme by default</li>
-        <li><strong>Admin Dashboard</strong> - Platform toggle, API keys, audit log (hidden)</li>
+        <li><strong>Admin Dashboard</strong> - Platform toggle, audit log (hidden)</li>
       </ul>
 
       <h3>Tech Stack</h3>
       <ul>
         <li><code>Flask</code> - Python web framework</li>
-        <li><code>BeautifulSoup4</code> - HTML/XML parsing</li>
+        <li><code>BeautifulSoup4</code> + <code>lxml</code> - HTML/XML parsing</li>
+        <li><code>trafilatura</code> - Full article text extraction</li>
         <li><code>Requests</code> - HTTP library</li>
-        <li><code>Pandas</code> - Data manipulation &amp; export</li>
+        <li><code>Pandas</code> + <code>openpyxl</code> - Data manipulation &amp; XLSX export</li>
         <li><code>SQLite</code> - Audit logging database</li>
+        <li><code>smtplib</code> - Email notifications</li>
         <li><code>Chart.js</code> - Admin dashboard charts</li>
         <li><code>Bootstrap 5</code> - UI framework</li>
       </ul>
@@ -93,46 +103,56 @@
     <!-- Platforms -->
     <div class="doc-section" id="platforms">
       <h2><i class="bi bi-grid"></i> Platform</h2>
-      <p class="lang-id">AlyxLabs mengumpulkan data dari 8 sumber terkurasi berikut. Yang butuh API key gratis bisa dinyalakan/dimatikan admin.</p>
-      <p class="lang-en">AlyxLabs collects from these 8 curated sources. Those needing a free API key can be toggled by the admin.</p>
+      <p class="lang-id">AlyxLabs mengumpulkan data dari 10 platform terkurasi berikut. Platform bisa dinyalakan/dimatikan via Admin.</p>
+      <p class="lang-en">AlyxLabs collects from these 10 curated platforms. Each can be toggled via the Admin dashboard.</p>
       <div class="platform-grid">
         <div class="platform-item">
-          <h5><i class="bi bi-newspaper text-primary"></i> Google News</h5>
-          <p class="lang-id">Berita terbaru via Google News RSS. Reliable, tanpa API key.</p>
-          <p class="lang-en">Latest news via Google News RSS. Reliable, no API key.</p>
+          <h5><img src="/static/logos/google-news.png" alt="" style="height:1.1em;width:1.1em;vertical-align:-0.2em;object-fit:contain"> Google News</h5>
+          <p class="lang-id">Berita terbaru via Google News RSS. Reliable, tanpa registrasi.</p>
+          <p class="lang-en">Latest news via Google News RSS. Reliable, no registration needed.</p>
         </div>
         <div class="platform-item">
-          <h5><i class="bi bi-globe text-success"></i> News Sites</h5>
-          <p class="lang-id">Portal berita Indonesia + dunia (Detik, Kompas, Liputan6, CNN, BBC) via RSS. Reliable.</p>
-          <p class="lang-en">Indonesian + global news portals (Detik, Kompas, Liputan6, CNN, BBC) via RSS. Reliable.</p>
+          <h5><img src="/static/logos/news-sites.png" alt="" style="height:1.1em;width:1.1em;vertical-align:-0.2em;object-fit:contain"> News Sites</h5>
+          <p class="lang-id">Portal berita Indonesia + dunia (Detik, CNN, BBC, Reuters, dll.) via RSS. Reliable.</p>
+          <p class="lang-en">Indonesian + global news portals (Detik, CNN, BBC, Reuters, etc.) via RSS. Reliable.</p>
         </div>
         <div class="platform-item">
           <h5><i class="bi bi-globe-americas text-info"></i> GDELT</h5>
-          <p class="lang-id">Indeks berita global (DOC 2.0 API) dengan cakupan historis. Rate-limit 1 request/5 detik.</p>
-          <p class="lang-en">Global news index (DOC 2.0 API) with historical coverage. Rate limit 1 request/5s.</p>
+          <p class="lang-id">Indeks berita global (DOC 2.0 API) dengan cakupan historis luas. Rate-limit 1 req/5 dtk.</p>
+          <p class="lang-en">Global news index (DOC 2.0 API) with broad historical coverage. Rate limit 1 req/5s.</p>
+        </div>
+        <div class="platform-item">
+          <h5><img src="/static/logos/kompas.svg" alt="" style="height:1.1em;width:auto;vertical-align:-0.2em;object-fit:contain"> Kompas</h5>
+          <p class="lang-id">Berita dari Kompas.com via RSS feed langsung. Cakupan berita nasional Indonesia.</p>
+          <p class="lang-en">News from Kompas.com via direct RSS feed. Covers Indonesian national news.</p>
+        </div>
+        <div class="platform-item">
+          <h5><img src="/static/logos/liputan6.png" alt="" style="height:1.1em;width:1.1em;vertical-align:-0.2em;object-fit:contain"> Liputan6</h5>
+          <p class="lang-id">Berita dari Liputan6.com via RSS feed. Berita nasional dan regional Indonesia.</p>
+          <p class="lang-en">News from Liputan6.com via RSS feed. Indonesian national and regional news.</p>
         </div>
         <div class="platform-item">
           <h5><i class="bi bi-youtube text-danger"></i> YouTube</h5>
-          <p class="lang-id">Cari video via YouTube Data API v3. Butuh API key gratis (set di Admin).</p>
-          <p class="lang-en">Video search via YouTube Data API v3. Needs a free API key (set in Admin).</p>
+          <p class="lang-id">Cari video via YouTube Data API v3. Cocok untuk riset konten video dan tren topik.</p>
+          <p class="lang-en">Video search via YouTube Data API v3. Good for video content research and topic trends.</p>
         </div>
         <div class="platform-item">
-          <h5><i class="bi bi-book-half text-secondary"></i> Wikipedia</h5>
-          <p class="lang-id">Cari artikel referensi via MediaWiki API (id.wikipedia). Reliable, tanpa key.</p>
-          <p class="lang-en">Reference articles via the MediaWiki API (id.wikipedia). Reliable, no key.</p>
+          <h5><img src="/static/logos/wikipedia.png" alt="" style="height:1.1em;width:1.1em;vertical-align:-0.2em;object-fit:contain"> Wikipedia</h5>
+          <p class="lang-id">Artikel referensi via MediaWiki API (id.wikipedia). Reliable untuk konteks &amp; latar belakang topik.</p>
+          <p class="lang-en">Reference articles via the MediaWiki API (id.wikipedia). Reliable for context and topic background.</p>
         </div>
         <div class="platform-item">
-          <h5><i class="bi bi-mortarboard text-primary"></i> OpenAlex</h5>
-          <p class="lang-id">Jurnal &amp; paper akademik (judul, penulis, tahun, abstrak, DOI). Cakupan jurnal Indonesia bagus, tanpa key.</p>
-          <p class="lang-en">Academic journals &amp; papers (title, authors, year, abstract, DOI). Good Indonesian journal coverage, no key.</p>
+          <h5><img src="/static/logos/openalex.png" alt="" style="height:1.1em;width:1.1em;vertical-align:-0.2em;object-fit:contain"> OpenAlex</h5>
+          <p class="lang-id">Jurnal &amp; paper akademik (judul, penulis, tahun, abstrak, DOI). Cakupan jurnal Indonesia bagus.</p>
+          <p class="lang-en">Academic journals &amp; papers (title, authors, year, abstract, DOI). Good Indonesian journal coverage.</p>
         </div>
         <div class="platform-item">
-          <h5><i class="bi bi-journal-richtext text-info"></i> Semantic Scholar</h5>
-          <p class="lang-id">Paper akademik via Semantic Scholar API. Butuh API key gratis agar stabil (set di Admin).</p>
-          <p class="lang-en">Academic papers via the Semantic Scholar API. Needs a free API key to be stable (set in Admin).</p>
+          <h5><img src="/static/logos/semantic-scholar.png" alt="" style="height:1.1em;width:1.1em;vertical-align:-0.2em;object-fit:contain"> Semantic Scholar</h5>
+          <p class="lang-id">Paper akademik via Semantic Scholar API. Cocok untuk pencarian literatur ilmiah multidisiplin.</p>
+          <p class="lang-en">Academic papers via the Semantic Scholar API. Good for multidisciplinary literature search.</p>
         </div>
         <div class="platform-item">
-          <h5><i class="bi bi-chat-dots text-warning"></i> Kaskus</h5>
+          <h5><img src="/static/logos/kaskus.png" alt="" style="height:1.1em;width:1.1em;vertical-align:-0.2em;object-fit:contain"> Kaskus</h5>
           <p class="lang-id">Thread &amp; diskusi dari Kaskus.co.id via indeks pencarian. Kadang flaky.</p>
           <p class="lang-en">Threads &amp; discussions from Kaskus.co.id via search indexing. Occasionally flaky.</p>
         </div>
@@ -193,11 +213,83 @@
       </ul>
       <p class="lang-id">Kolom data: Platform, Judul, Konten, Teks Lengkap, URL, Tanggal, Sumber, Keyword, Lokasi. Setiap export juga membawa <strong>Catatan Koleksi</strong> (keyword, sumber, waktu WIB, total) untuk keperluan metodologi.</p>
       <p class="lang-en">Data columns: Platform, Title, Content, Full Text, URL, Date, Source, Keyword, Location. Every export also carries the <strong>Collection Record</strong> (keyword, sources, WIB time, total) for methodology use.</p>
+
+      <h3 class="lang-id">Export per Platform</h3>
+      <h3 class="lang-en">Per-Platform Export</h3>
+      <p class="lang-id">Tiap platform punya tombol download sendiri di header grup hasilnya. Klik untuk download hanya hasil dari platform itu dalam format yang dipilih. Berguna saat ingin memisahkan data berita dari data akademik, misalnya.</p>
+      <p class="lang-en">Each platform has its own download button in its result group header. Click it to download only that platform's results in the selected format. Useful when you need to keep news data separate from academic data, for example.</p>
+    </div>
+
+    <!-- Citation -->
+    <div class="doc-section" id="citation">
+      <h2><i class="bi bi-quote"></i> <span class="lang-id">Sitasi Otomatis</span><span class="lang-en">Auto Citation</span></h2>
+      <p class="lang-id">AlyxLabs menghasilkan sitasi siap pakai untuk setiap hasil scraping. Dua format didukung:</p>
+      <p class="lang-en">AlyxLabs generates ready-to-use citations for every scraped result. Two formats are supported:</p>
+
+      <h3>APA 7</h3>
+      <p class="lang-id">Format standar internasional (American Psychological Association edisi ke-7). Contoh:</p>
+      <p class="lang-en">International standard format (American Psychological Association 7th edition). Example:</p>
+      <div class="p-3 rounded" style="background:var(--glass);border:1px solid var(--glass-b);font-size:.85rem;font-family:monospace">
+        Penulis, A. A. (Tahun, Bulan Tanggal). <em>Judul artikel</em>. Nama Sumber. URL
+      </div>
+
+      <h3 class="mt-3">Mendikbud (Indonesia)</h3>
+      <p class="lang-id">Format sitasi sesuai pedoman Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi RI. Digunakan untuk karya tulis ilmiah, skripsi, dan tesis.</p>
+      <p class="lang-en">Citation format per the Indonesian Ministry of Education, Culture, Research, and Technology guidelines. Used for academic papers, theses, and dissertations.</p>
+      <div class="p-3 rounded" style="background:var(--glass);border:1px solid var(--glass-b);font-size:.85rem;font-family:monospace">
+        Penulis. (Tahun). Judul Artikel. <em>Nama Sumber</em>. Diakses dari URL
+      </div>
+
+      <p class="lang-id mt-3">Klik ikon sitasi di samping tiap hasil untuk menyalin format yang diinginkan. Sitasi juga otomatis masuk ke export Markdown.</p>
+      <p class="lang-en mt-3">Click the citation icon next to any result to copy the format you want. Citations are also included automatically in Markdown exports.</p>
+    </div>
+
+    <!-- Notifications -->
+    <div class="doc-section" id="notifications">
+      <h2><i class="bi bi-bell"></i> <span class="lang-id">Notifikasi</span><span class="lang-en">Notifications</span></h2>
+      <p class="lang-id">Terima ringkasan hasil scraping setelah proses selesai. Berguna untuk query yang berjalan lama atau supaya tidak perlu menunggu di depan browser.</p>
+      <p class="lang-en">Receive a result summary once scraping finishes. Useful for long-running queries or when you don't want to wait at the browser.</p>
+
+      <h3 class="lang-id">Email</h3>
+      <h3 class="lang-en">Email</h3>
+      <p class="lang-id">Masukkan alamat email di kolom "Notifikasi saat selesai" sebelum scraping. Ringkasan (keyword, total hasil per platform, waktu selesai) dikirim ke email tersebut setelah scraping selesai.</p>
+      <p class="lang-en">Enter an email address in the "Notify when done" field before scraping. A summary (keyword, total results per platform, finish time) is sent to that address once scraping is complete.</p>
+
+      <h3>Webhook</h3>
+      <p class="lang-id">Masukkan URL webhook (Slack Incoming Webhook, Discord, atau endpoint custom) di kolom yang tersedia. Payload dikirim dalam format JSON yang mudah diparse.</p>
+      <p class="lang-en">Enter a webhook URL (Slack Incoming Webhook, Discord, or a custom endpoint) in the provided field. The payload is sent as JSON and easy to parse.</p>
+      <p class="lang-id">Kedua kolom bersifat opsional dan independent - bisa diisi salah satu atau keduanya.</p>
+      <p class="lang-en">Both fields are optional and independent - you can fill in either or both.</p>
     </div>
 
     <!-- Changelog -->
     <div class="doc-section" id="changelog">
       <h2><i class="bi bi-clock-history"></i> Changelog</h2>
+
+      <div class="changelog-item">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="cl-version">v2.2.0</span>
+          <span class="cl-date">Oktober 2026</span>
+        </div>
+        <ul class="lang-id">
+          <li><span class="badge-new">NEW</span> Sitasi otomatis APA7 &amp; Mendikbud untuk setiap hasil</li>
+          <li><span class="badge-new">NEW</span> Paginasi - 50 hasil per halaman, navigasi cepat</li>
+          <li><span class="badge-new">NEW</span> Export per platform - download hasil tiap sumber secara terpisah</li>
+          <li><span class="badge-new">NEW</span> Notifikasi email &amp; webhook setelah scraping selesai</li>
+          <li><span class="badge-new">NEW</span> Platform Kompas &amp; Liputan6 sebagai sumber terpisah</li>
+          <li><span class="badge-improve">IMPROVE</span> Brand identity AlyxLabs - logo AL monogram + favicon</li>
+          <li><span class="badge-fix">FIX</span> Logo Kompas diperbarui ke wordmark Kompas.com yang benar</li>
+        </ul>
+        <ul class="lang-en">
+          <li><span class="badge-new">NEW</span> Auto citation in APA7 &amp; Mendikbud format for every result</li>
+          <li><span class="badge-new">NEW</span> Pagination - 50 results per page, fast navigation</li>
+          <li><span class="badge-new">NEW</span> Per-platform export - download each source's results separately</li>
+          <li><span class="badge-new">NEW</span> Email &amp; webhook notification when scraping finishes</li>
+          <li><span class="badge-new">NEW</span> Kompas &amp; Liputan6 as standalone platforms</li>
+          <li><span class="badge-improve">IMPROVE</span> AlyxLabs brand identity - AL monogram logo + favicon</li>
+          <li><span class="badge-fix">FIX</span> Kompas logo updated to the correct Kompas.com wordmark</li>
+        </ul>
+      </div>
 
       <div class="changelog-item">
         <div class="d-flex align-items-center gap-2 mb-2">
@@ -295,6 +387,34 @@
       <div class="row g-3">
         <div class="col-md-6">
           <div class="platform-item">
+            <h5><i class="bi bi-quote text-primary"></i> <span class="lang-id">Sitasi Otomatis</span><span class="lang-en">Auto Citation</span></h5>
+            <p class="lang-id">Generate sitasi APA7 dan Mendikbud langsung dari hasil scraping. Klik ikon sitasi di tiap hasil untuk salin ke clipboard. Sudah include di export Markdown.</p>
+            <p class="lang-en">Generate APA7 and Mendikbud citations from any scraped result. Click the citation icon to copy to clipboard. Already included in Markdown exports.</p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="platform-item">
+            <h5><i class="bi bi-file-earmark-arrow-down text-success"></i> <span class="lang-id">Export per Platform</span><span class="lang-en">Per-Platform Export</span></h5>
+            <p class="lang-id">Setiap grup hasil platform punya tombol download sendiri. Download hanya Kompas, hanya OpenAlex, dll. - tanpa harus campur semua sumber.</p>
+            <p class="lang-en">Each platform result group has its own download button. Download only Kompas, only OpenAlex, etc. - without mixing all sources together.</p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="platform-item">
+            <h5><i class="bi bi-bell text-warning"></i> <span class="lang-id">Notifikasi</span><span class="lang-en">Notifications</span></h5>
+            <p class="lang-id">Masukkan email atau webhook URL sebelum scraping. Ringkasan hasil dikirim otomatis saat selesai - bisa via email atau Slack/Discord/webhook custom.</p>
+            <p class="lang-en">Enter an email or webhook URL before scraping. A result summary is sent automatically when done - via email or Slack/Discord/custom webhook.</p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="platform-item">
+            <h5><i class="bi bi-123 text-info"></i> <span class="lang-id">Paginasi</span><span class="lang-en">Pagination</span></h5>
+            <p class="lang-id">Hasil ditampilkan 50 item per halaman. Navigasi antar halaman cepat, tidak perlu scroll jauh untuk query besar.</p>
+            <p class="lang-en">Results shown 50 items per page. Fast page navigation - no long scrolling for large queries.</p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="platform-item">
             <h5><i class="bi bi-palette text-primary"></i> Theme Toggle</h5>
             <p class="lang-id">Switch antara Light dan Dark theme. Light theme menjadi default. Preferensi disimpan di browser.</p>
             <p class="lang-en">Switch between Light and Dark theme. Light is the default. The choice is saved in the browser.</p>
@@ -316,6 +436,13 @@
         </div>
         <div class="col-md-6">
           <div class="platform-item">
+            <h5><i class="bi bi-mortarboard text-primary"></i> <span class="lang-id">Sumber Akademik</span><span class="lang-en">Academic Sources</span></h5>
+            <p class="lang-id">OpenAlex dan Semantic Scholar untuk jurnal &amp; paper akademik. Cocok untuk mahasiswa yang butuh referensi ilmiah.</p>
+            <p class="lang-en">OpenAlex and Semantic Scholar for academic journals &amp; papers. Ideal for students who need scholarly references.</p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="platform-item">
             <h5><i class="bi bi-shield-lock text-danger"></i> Admin Dashboard</h5>
             <p class="lang-id">Halaman admin tersembunyi untuk monitoring audit log, usage chart, dan perbandingan WoW/MoM/QoQ/YoY.</p>
             <p class="lang-en">A hidden admin page for the audit log, usage chart, and WoW/MoM/QoQ/YoY comparison.</p>
@@ -323,37 +450,9 @@
         </div>
         <div class="col-md-6">
           <div class="platform-item">
-            <h5><i class="bi bi-arrow-repeat text-warning"></i> Direct Scraping</h5>
-            <p class="lang-id">Teks lengkap artikel, filter tanggal, dedup lintas-sumber, analisis kata &amp; timeline, catatan koleksi + sitasi, export Markdown.</p>
-            <p class="lang-en">Full article text, date filter, cross-source dedup, term &amp; timeline analysis, collection record + citation, Markdown export.</p>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="platform-item">
-            <h5><i class="bi bi-globe2 text-primary"></i> Worldwide News</h5>
-            <p class="lang-id">Scraping berita dari seluruh dunia termasuk Indonesia (Detik, Kompas, CNN, BBC, Reuters).</p>
-            <p class="lang-en">News scraping from around the world including Indonesia (Detik, Kompas, CNN, BBC, Reuters).</p>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="platform-item">
-            <h5><i class="bi bi-mortarboard text-primary"></i> Sumber Akademik</h5>
-            <p class="lang-id">OpenAlex dan Semantic Scholar untuk jurnal &amp; paper akademik. Cocok untuk mahasiswa yang butuh referensi ilmiah dan sitasi.</p>
-            <p class="lang-en">OpenAlex and Semantic Scholar for academic journals &amp; papers. Ideal for students who need scholarly references and citations.</p>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="platform-item">
-            <h5><i class="bi bi-youtube text-danger"></i> YouTube</h5>
-            <p class="lang-id">Cari video via YouTube Data API v3. Cocok untuk riset konten video, tren topik, dan analisis media sosial berbasis video.</p>
-            <p class="lang-en">Video search via YouTube Data API v3. Good for video content research, topic trends, and video-based media analysis.</p>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="platform-item">
-            <h5><i class="bi bi-book-half text-secondary"></i> Wikipedia</h5>
-            <p class="lang-id">Artikel referensi dari id.wikipedia via MediaWiki API. Tanpa API key, reliable untuk konteks &amp; latar belakang topik.</p>
-            <p class="lang-en">Reference articles from id.wikipedia via the MediaWiki API. No API key, reliable for context and topic background.</p>
+            <h5><i class="bi bi-globe2 text-primary"></i> <span class="lang-id">Berita Indonesia &amp; Dunia</span><span class="lang-en">Indonesian &amp; World News</span></h5>
+            <p class="lang-id">Scraping berita dari seluruh dunia termasuk Indonesia (Detik, Kompas, Liputan6, CNN, BBC, Reuters).</p>
+            <p class="lang-en">News scraping from around the world including Indonesia (Detik, Kompas, Liputan6, CNN, BBC, Reuters).</p>
           </div>
         </div>
       </div>
