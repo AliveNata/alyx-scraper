@@ -26,6 +26,9 @@
   <button class="adm-tab" onclick="showTab('settings')" id="tab-btn-settings">
     <i class="bi bi-sliders2"></i> Settings
   </button>
+  <button class="adm-tab" onclick="showTab('feedback')" id="tab-btn-feedback">
+    <i class="bi bi-chat-square-text"></i> Feedback
+  </button>
 </div>
 
 <div class="adm-content">
@@ -379,6 +382,36 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ============== FEEDBACK ============== -->
+  <div id="tab-feedback" style="display:none">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <h3 style="margin:0;font-size:1rem;font-weight:700">Saran &amp; Kritik</h3>
+      <select id="fbStatusFilter" onchange="loadFeedback()" style="font-size:.82rem;padding:4px 8px;border:1px solid var(--glass-b);border-radius:6px;background:var(--glass);color:var(--t1)">
+        <option value="">Semua</option>
+        <option value="baru">Baru</option>
+        <option value="dibaca">Dibaca</option>
+        <option value="ditindaklanjuti">Ditindaklanjuti</option>
+      </select>
+      <button onclick="loadFeedback()" style="font-size:.82rem;padding:4px 10px;border:1px solid var(--glass-b);border-radius:6px;background:var(--glass);color:var(--t1);cursor:pointer">Refresh</button>
+      <span id="fbCount" style="font-size:.8rem;color:var(--t3)"></span>
+    </div>
+    <div class="g-table-wrap">
+      <table class="g-table" id="fbTable">
+        <thead><tr>
+          <th style="width:40px">#</th>
+          <th>Nama</th>
+          <th>Email</th>
+          <th>Tipe</th>
+          <th>Pesan</th>
+          <th>IP</th>
+          <th>Waktu</th>
+          <th>Status</th>
+        </tr></thead>
+        <tbody id="fbTableBody"><tr><td colspan="8" style="text-align:center;color:var(--t3)">Loading...</td></tr></tbody>
+      </table>
     </div>
   </div>
 

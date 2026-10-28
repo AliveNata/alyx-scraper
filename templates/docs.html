@@ -34,6 +34,7 @@
       <div class="sidebar-title">Changelog</div>
       <a href="#changelog">Changelog</a>
       <a href="#new-features" data-i18n="doc_newfeat">Fitur Baru</a>
+      <a href="#feedback" data-i18n="doc_feedback">Saran &amp; Kritik</a>
 
       <div class="sidebar-title">Sumber &amp; API</div>
       <a href="https://docs.openalex.org" target="_blank">OpenAlex API</a>
@@ -464,6 +465,46 @@
       </div>
     </div>
 
+    <!-- Feedback -->
+    <div class="doc-section" id="feedback">
+      <h2 data-i18n="doc_feedback">Saran &amp; Kritik</h2>
+      <p class="lang-id">Ada saran, kritik, atau bug yang ditemukan? Kirim di sini - kami baca semua.</p>
+      <p class="lang-en">Got suggestions, feedback, or a bug? Send it here - we read everything.</p>
+
+      <form id="feedbackForm" style="max-width:520px;margin-top:16px" onsubmit="submitFeedback(event)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div>
+            <label style="font-size:.8rem;color:var(--t2);display:block;margin-bottom:4px">Nama (opsional)</label>
+            <input type="text" id="fbName" placeholder="Nama kamu" maxlength="80"
+              style="width:100%;padding:8px 10px;border:1px solid var(--glass-b);border-radius:8px;background:var(--glass);color:var(--t1);font-size:.88rem">
+          </div>
+          <div>
+            <label style="font-size:.8rem;color:var(--t2);display:block;margin-bottom:4px">Email (opsional)</label>
+            <input type="email" id="fbEmail" placeholder="untuk balasan" maxlength="120"
+              style="width:100%;padding:8px 10px;border:1px solid var(--glass-b);border-radius:8px;background:var(--glass);color:var(--t1);font-size:.88rem">
+          </div>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:.8rem;color:var(--t2);display:block;margin-bottom:4px">Tipe</label>
+          <select id="fbType" style="width:100%;padding:8px 10px;border:1px solid var(--glass-b);border-radius:8px;background:var(--glass);color:var(--t1);font-size:.88rem">
+            <option value="saran">Saran</option>
+            <option value="kritik">Kritik</option>
+            <option value="bug">Bug / Error</option>
+            <option value="lainnya">Lainnya</option>
+          </select>
+        </div>
+        <div style="margin-bottom:16px">
+          <label style="font-size:.8rem;color:var(--t2);display:block;margin-bottom:4px">Pesan <span style="color:#ef4444">*</span></label>
+          <textarea id="fbMessage" rows="4" placeholder="Tuliskan saran atau kritik kamu..." maxlength="2000"
+            style="width:100%;padding:8px 10px;border:1px solid var(--glass-b);border-radius:8px;background:var(--glass);color:var(--t1);font-size:.88rem;resize:vertical"></textarea>
+        </div>
+        <button type="submit" id="fbSubmit" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:.88rem;font-weight:600;cursor:pointer">
+          Kirim
+        </button>
+        <span id="fbMsg" style="margin-left:12px;font-size:.84rem"></span>
+      </form>
+    </div>
+
   </div>
 </div>
 </div>
@@ -472,4 +513,37 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/docs.js') }}"></script>
+<script>
+async function submitFeedback(e) {
+  e.preventDefault();
+  var btn = document.getElementById('fbSubmit');
+  var msg = document.getElementById('fbMsg');
+  var message = document.getElementById('fbMessage').value.trim();
+  if (!message) { msg.style.color='#ef4444'; msg.textContent='Pesan tidak boleh kosong.'; return; }
+  btn.disabled = true; btn.textContent = 'Mengirim...';
+  msg.textContent = '';
+  try {
+    var res = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        name: document.getElementById('fbName').value,
+        email: document.getElementById('fbEmail').value,
+        type: document.getElementById('fbType').value,
+        message: message
+      })
+    });
+    var data = await res.json();
+    if (data.ok) {
+      msg.style.color = '#22c55e'; msg.textContent = 'Terkirim! Terima kasih.';
+      document.getElementById('feedbackForm').reset();
+    } else {
+      msg.style.color = '#ef4444'; msg.textContent = data.error || 'Gagal mengirim.';
+    }
+  } catch(err) {
+    msg.style.color = '#ef4444'; msg.textContent = 'Koneksi gagal.';
+  }
+  btn.disabled = false; btn.textContent = 'Kirim';
+}
+</script>
 {% endblock %}

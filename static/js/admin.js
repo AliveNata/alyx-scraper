@@ -59,12 +59,13 @@ async function runRssHealth(){
 
 // ── Tab switching ──
 function showTab(name){
-  ['overview','logs','settings'].forEach(t => {
+  ['overview','logs','settings','feedback'].forEach(t => {
     document.getElementById('tab-' + t).style.display = t === name ? '' : 'none';
     document.getElementById('tab-btn-' + t).classList.toggle('active', t === name);
   });
   if(name === 'logs') loadLogs();
   if(name === 'settings') loadSettings();
+  if(name === 'feedback') loadFeedback();
 }
 
 window.onThemeChange = function(){ loadStats(); };
@@ -787,3 +788,46 @@ async function runDiag(){
 }
 
 loadStats();
+
+// ── Feedback ──
+function loadFeedback() {
+  var status = document.getElementById('fbStatusFilter').value;
+  var url = '/api/admin/feedback' + (status ? '?status=' + status : '');
+  fetch(url).then(function(r){ return r.json(); }).then(function(rows) {
+    var body = document.getElementById('fbTableBody');
+    var count = document.getElementById('fbCount');
+    count.textContent = rows.length + ' entri';
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--t3)">Belum ada feedback.</td></tr>';
+      return;
+    }
+    var typeLabel = {saran:'Saran',kritik:'Kritik',bug:'Bug',lainnya:'Lainnya'};
+    var statusOpts = ['baru','dibaca','ditindaklanjuti'];
+    body.innerHTML = rows.map(function(r) {
+      var typeCls = r.type === 'bug' ? 'badge-remove' : r.type === 'kritik' ? 'badge-fix' : 'badge-new';
+      var opts = statusOpts.map(function(s){
+        return '<option value="' + s + '"' + (s === r.status ? ' selected' : '') + '>' + s + '</option>';
+      }).join('');
+      return '<tr>' +
+        '<td>' + r.id + '</td>' +
+        '<td>' + esc(r.name || '-') + '</td>' +
+        '<td style="font-size:.8rem">' + esc(r.email || '-') + '</td>' +
+        '<td><span class="' + typeCls + '" style="font-size:.72rem">' + esc(typeLabel[r.type] || r.type) + '</span></td>' +
+        '<td style="max-width:280px;white-space:normal;font-size:.84rem">' + esc(r.message) + '</td>' +
+        '<td style="font-size:.78rem;color:var(--t3)">' + esc(r.ip_address || '-') + '</td>' +
+        '<td style="font-size:.78rem;color:var(--t3)">' + (r.created_at ? r.created_at.slice(0,16) : '-') + '</td>' +
+        '<td><select onchange="updateFbStatus(' + r.id + ', this.value)" style="font-size:.78rem;padding:2px 6px;border:1px solid var(--glass-b);border-radius:4px;background:var(--glass);color:var(--t1)">' + opts + '</select></td>' +
+        '</tr>';
+    }).join('');
+  }).catch(function() {
+    document.getElementById('fbTableBody').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#ef4444">Gagal memuat data.</td></tr>';
+  });
+}
+
+function updateFbStatus(id, status) {
+  fetch('/api/admin/feedback/' + id + '/status', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({status: status})
+  });
+}

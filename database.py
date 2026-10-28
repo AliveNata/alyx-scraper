@@ -38,6 +38,18 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at);
         CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_logs(action);
         CREATE INDEX IF NOT EXISTS idx_audit_ip ON audit_logs(ip_address);
+
+        CREATE TABLE IF NOT EXISTS feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT DEFAULT 'Anonim',
+            email TEXT DEFAULT '',
+            type TEXT NOT NULL CHECK(type IN ('saran','kritik','bug','lainnya')),
+            message TEXT NOT NULL,
+            ip_address TEXT,
+            status TEXT DEFAULT 'baru' CHECK(status IN ('baru','dibaca','ditindaklanjuti')),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_feedback_created ON feedback(created_at);
         """)
         conn.commit()
     finally:
@@ -176,6 +188,45 @@ def get_summary_stats():
         return dict(row) if row else {}
     finally:
         conn.close()
+
+
+def submit_feedback(name, email, type_, message, ip_address=None):
+    with db_lock:
+        conn = get_db()
+        try:
+            conn.execute(
+                "INSERT INTO feedback (name, email, type, message, ip_address) VALUES (?,?,?,?,?)",
+                (name or 'Anonim', email or '', type_, message, ip_address)
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+
+def get_feedback(limit=200, status_filter=None):
+    conn = get_db()
+    try:
+        q = "SELECT * FROM feedback"
+        params = []
+        if status_filter:
+            q += " WHERE status = ?"
+            params.append(status_filter)
+        q += " ORDER BY created_at DESC LIMIT ?"
+        params.append(limit)
+        rows = conn.execute(q, params).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def update_feedback_status(feedback_id, status):
+    with db_lock:
+        conn = get_db()
+        try:
+            conn.execute("UPDATE feedback SET status=? WHERE id=?", (status, feedback_id))
+            conn.commit()
+        finally:
+            conn.close()
 
 
 init_db()

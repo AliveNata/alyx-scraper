@@ -25,7 +25,9 @@ except ImportError:
 
 from scraper import UnifiedScraper, SCRAPERS
 from image_scraper_module import ImageScraper
-from database import log_audit, get_audit_logs, get_usage_stats, get_top_keywords, get_top_platforms, get_summary_stats
+from database import (log_audit, get_audit_logs, get_usage_stats, get_top_keywords,
+                       get_top_platforms, get_summary_stats,
+                       submit_feedback, get_feedback, update_feedback_status)
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 # ProxyFix lets request.remote_addr reflect the real client IP when behind nginx.
@@ -851,6 +853,45 @@ def api_images_upload():
         'uploaded': {'data': b64, 'content_type': content_type, 'filename': file.filename},
         'related_images': images
     })
+
+
+# ─── Feedback API ─────────────────────────────────────────────────────
+@app.route('/api/feedback', methods=['POST'])
+@limiter.limit("5 per hour")
+def api_submit_feedback():
+    data = request.get_json(silent=True) or {}
+    name = (data.get('name') or '').strip()[:80]
+    email = (data.get('email') or '').strip()[:120]
+    type_ = data.get('type', 'saran')
+    message = (data.get('message') or '').strip()[:2000]
+    if type_ not in ('saran', 'kritik', 'bug', 'lainnya'):
+        type_ = 'saran'
+    if not message:
+        return jsonify({'ok': False, 'error': 'Pesan tidak boleh kosong'}), 400
+    ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
+    submit_feedback(name, email, type_, message, ip)
+    return jsonify({'ok': True})
+
+
+@app.route('/api/admin/feedback')
+def api_admin_feedback():
+    if not session.get('admin_auth'):
+        return jsonify({'error': 'unauthorized'}), 401
+    status_filter = request.args.get('status')
+    rows = get_feedback(limit=500, status_filter=status_filter or None)
+    return jsonify(rows)
+
+
+@app.route('/api/admin/feedback/<int:fid>/status', methods=['POST'])
+def api_admin_feedback_status(fid):
+    if not session.get('admin_auth'):
+        return jsonify({'error': 'unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    status = data.get('status', 'dibaca')
+    if status not in ('baru', 'dibaca', 'ditindaklanjuti'):
+        return jsonify({'error': 'invalid status'}), 400
+    update_feedback_status(fid, status)
+    return jsonify({'ok': True})
 
 
 # ─── Admin API ────────────────────────────────────────────────────────
