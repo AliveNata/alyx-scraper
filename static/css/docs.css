@@ -7,7 +7,7 @@ body{background:transparent!important;color:var(--t1)!important;font-family:'Int
 .sidebar .sidebar-title{font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);padding:6px 12px;margin-top:16px}
 
 .doc-section{padding-top:24px;margin-bottom:32px}
-.doc-section h2{font-size:1.4rem;font-weight:700;color:var(--t1);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--glass-b)}
+.doc-section h2{font-size:1.4rem;font-weight:700;color:var(--accent);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--glass-b)}
 .doc-section h3{font-size:1.1rem;font-weight:600;color:var(--t1);margin-top:20px;margin-bottom:8px}
 .doc-section p,.doc-section li{font-size:.92rem;line-height:1.7;color:var(--t1)}
 .doc-section code{background:var(--glass);border:1px solid var(--glass-b);padding:2px 6px;border-radius:4px;font-size:.84rem;color:var(--accent)}

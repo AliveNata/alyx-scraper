@@ -43,7 +43,7 @@
       <a href="https://trafilatura.readthedocs.io" target="_blank">trafilatura</a>
 
       <div class="mt-4">
-        <a href="https://sociabuzz.com/alyxlabs/support" target="_blank" class="btn btn-sm w-100"><img src="/static/sociabuzz.png" alt="SociaBuzz" style="height:1.1em;width:1.1em;vertical-align:-0.2em;border-radius:3px"> <span data-i18n="footer_sociabuzz">Dukungan SociaBuzz</span></a>
+        <a href="https://sociabuzz.com/alyxlabs/support" target="_blank" class="btn btn-sm w-100"><img src="/static/sociabuzz.png" alt="SociaBuzz" style="height:1.1em;width:1.1em;vertical-align:-0.2em;border-radius:3px"> Dukung AlyxLabs di Sociabuzz</a>
       </div>
     </div>
   </div>
@@ -68,9 +68,8 @@
         <li><strong>Export per Platform</strong> - Download hasil satu platform tanpa campur dengan yang lain</li>
         <li><strong>Notifikasi</strong> - Kirim ringkasan hasil via email atau webhook (Slack, dll.) setelah selesai</li>
         <li><strong>Analisis</strong> - Frekuensi kata terbanyak dan distribusi waktu</li>
-        <li><strong>Export</strong> - CSV, JSON, XLSX, atau Markdown (dengan metadata)</li>
+        <li><strong>Export</strong> - CSV, JSON, XLSX, Markdown, RIS, BibTeX</li>
         <li><strong>Bilingual &amp; Light/Dark</strong> - Indonesia/English, tema terang sebagai default</li>
-        <li><strong>Admin Dashboard</strong> - Toggle platform, audit log (tersembunyi)</li>
       </ul>
       <ul class="lang-en">
         <li><strong>10 Curated Platforms</strong> - Google News, News Sites, GDELT, Kompas, Liputan6, YouTube, Wikipedia, OpenAlex, Semantic Scholar, Kaskus</li>
@@ -81,9 +80,8 @@
         <li><strong>Per-Platform Export</strong> - Download results from one platform without mixing with others</li>
         <li><strong>Notifications</strong> - Send a result summary via email or webhook (Slack, etc.) when done</li>
         <li><strong>Analysis</strong> - Top-term frequency and timeline distribution</li>
-        <li><strong>Export</strong> - CSV, JSON, XLSX, or Markdown (with metadata)</li>
+        <li><strong>Export</strong> - CSV, JSON, XLSX, Markdown, RIS, BibTeX</li>
         <li><strong>Bilingual &amp; Light/Dark</strong> - Indonesian/English, light theme by default</li>
-        <li><strong>Admin Dashboard</strong> - Platform toggle, audit log (hidden)</li>
       </ul>
 
       <h3>Tech Stack</h3>
@@ -122,7 +120,7 @@
           <p class="lang-en">Global news index (DOC 2.0 API) with broad historical coverage. Rate limit 1 req/5s.</p>
         </div>
         <div class="platform-item">
-          <h5><img src="/static/logos/kompas.svg" alt="" style="height:1.1em;width:auto;vertical-align:-0.2em;object-fit:contain"> Kompas</h5>
+          <h5><span style="background:#c62b1e;border-radius:2px;padding:0 3px;display:inline-flex;align-items:center"><img src="/static/logos/kompas.svg" alt="" style="height:1em;width:auto;vertical-align:middle;object-fit:contain"></span> Kompas</h5>
           <p class="lang-id">Berita dari Kompas.com via RSS feed langsung. Cakupan berita nasional Indonesia.</p>
           <p class="lang-en">News from Kompas.com via direct RSS feed. Covers Indonesian national news.</p>
         </div>
@@ -197,19 +195,23 @@
     <!-- Export -->
     <div class="doc-section" id="export">
       <h2><i class="bi bi-download"></i> Export</h2>
-      <p class="lang-id">Pilih format lewat dropdown lalu klik tombol download. Tersedia 4 format:</p>
-      <p class="lang-en">Pick a format from the dropdown then click the download button. Four formats:</p>
+      <p class="lang-id">Pilih format lewat dropdown lalu klik tombol download. Tersedia 6 format:</p>
+      <p class="lang-en">Pick a format from the dropdown then click the download button. Six formats:</p>
       <ul class="lang-id">
         <li><strong>CSV</strong> - Comma-separated values (metadata koleksi ada di baris komentar <code>#</code>), cocok untuk spreadsheet dan analisis</li>
         <li><strong>JSON</strong> - Struktur <code>{ metadata, data }</code>, cocok untuk integrasi/pemrograman</li>
         <li><strong>XLSX</strong> - Excel dengan sheet <strong>Metadata</strong> + sheet <strong>Hasil</strong> terpisah</li>
         <li><strong>Markdown</strong> - Dokumen rapi berisi metadata + tiap hasil (termasuk teks lengkap), enak dibaca</li>
+        <li><strong>RIS</strong> - Format referensi standar (.ris), langsung import ke Mendeley, Zotero, EndNote</li>
+        <li><strong>BibTeX</strong> - Format LaTeX (.bib), cocok untuk karya tulis ilmiah dan Overleaf</li>
       </ul>
       <ul class="lang-en">
         <li><strong>CSV</strong> - Comma-separated values (collection metadata in leading <code>#</code> comment lines), good for spreadsheets and analysis</li>
         <li><strong>JSON</strong> - A <code>{ metadata, data }</code> structure, good for integration/programming</li>
         <li><strong>XLSX</strong> - Excel with a separate <strong>Metadata</strong> sheet + <strong>Hasil</strong> sheet</li>
         <li><strong>Markdown</strong> - A readable document with metadata + each result (including full text)</li>
+        <li><strong>RIS</strong> - Standard reference format (.ris), import directly into Mendeley, Zotero, or EndNote</li>
+        <li><strong>BibTeX</strong> - LaTeX format (.bib), good for academic writing and Overleaf</li>
       </ul>
       <p class="lang-id">Kolom data: Platform, Judul, Konten, Teks Lengkap, URL, Tanggal, Sumber, Keyword, Lokasi. Setiap export juga membawa <strong>Catatan Koleksi</strong> (keyword, sumber, waktu WIB, total) untuk keperluan metodologi.</p>
       <p class="lang-en">Data columns: Platform, Title, Content, Full Text, URL, Date, Source, Keyword, Location. Every export also carries the <strong>Collection Record</strong> (keyword, sources, WIB time, total) for methodology use.</p>
@@ -277,8 +279,6 @@
           <li><span class="badge-new">NEW</span> Export per platform - download hasil tiap sumber secara terpisah</li>
           <li><span class="badge-new">NEW</span> Notifikasi email &amp; webhook setelah scraping selesai</li>
           <li><span class="badge-new">NEW</span> Platform Kompas &amp; Liputan6 sebagai sumber terpisah</li>
-          <li><span class="badge-improve">IMPROVE</span> Brand identity AlyxLabs - logo AL monogram + favicon</li>
-          <li><span class="badge-fix">FIX</span> Logo Kompas diperbarui ke wordmark Kompas.com yang benar</li>
         </ul>
         <ul class="lang-en">
           <li><span class="badge-new">NEW</span> Auto citation in APA7 &amp; Mendikbud format for every result</li>
@@ -286,8 +286,6 @@
           <li><span class="badge-new">NEW</span> Per-platform export - download each source's results separately</li>
           <li><span class="badge-new">NEW</span> Email &amp; webhook notification when scraping finishes</li>
           <li><span class="badge-new">NEW</span> Kompas &amp; Liputan6 as standalone platforms</li>
-          <li><span class="badge-improve">IMPROVE</span> AlyxLabs brand identity - AL monogram logo + favicon</li>
-          <li><span class="badge-fix">FIX</span> Kompas logo updated to the correct Kompas.com wordmark</li>
         </ul>
       </div>
 
