@@ -38,6 +38,9 @@ body{background:transparent!important;color:var(--t1)!important;font-family:'Int
 
 hr{border-color:var(--glass-b)!important}
 
+.kompas-logo{filter:brightness(0)}
+[data-theme="dark"] .kompas-logo{filter:none}
+
 /* Bilingual: same layout, text swaps with the navbar language toggle */
 .lang-en{display:none}
 [data-lang="en"] .lang-id{display:none}
