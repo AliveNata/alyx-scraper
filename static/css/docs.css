@@ -41,6 +41,9 @@ hr{border-color:var(--glass-b)!important}
 .kompas-logo{filter:brightness(0)}
 [data-theme="dark"] .kompas-logo{filter:none}
 
+.dark-invert{filter:none}
+[data-theme="dark"] .dark-invert{filter:invert(1)}
+
 /* Bilingual: same layout, text swaps with the navbar language toggle */
 .lang-en{display:none}
 [data-lang="en"] .lang-id{display:none}
