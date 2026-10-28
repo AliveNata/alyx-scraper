@@ -125,8 +125,12 @@ html[data-theme="dark"]::before{
   display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;gap:20px;
 }
 .alyx-foot-brand-name{
-  font-weight:700;font-size:.95rem;color:var(--t1);
+  font-weight:800;font-size:.95rem;color:var(--t1);
   margin-bottom:4px;display:flex;align-items:center;gap:6px;
+}
+[data-theme="dark"] .alyx-foot-brand-name{
+  background:linear-gradient(135deg,#fff 0%,#a78bfa 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
 .alyx-foot-brand-name i{color:var(--accent)}
 .alyx-foot-tagline{font-size:.79rem;color:var(--t3)}

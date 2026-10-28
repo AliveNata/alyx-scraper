@@ -10,5 +10,9 @@ trafilatura==2.0.0
 gunicorn==23.0.0
 flask-limiter==3.5.0
 
+Pillow>=10.0.0
+icrawler>=0.6.6
+playwright>=1.44.0
+
 # Optional
 yagmail==0.15.293      # Email (forgot password / test-email)

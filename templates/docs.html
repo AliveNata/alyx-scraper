@@ -165,28 +165,36 @@
 
       <h3 class="lang-id">1. Pencarian Gambar</h3>
       <h3 class="lang-en">1. Image Search</h3>
-      <p class="lang-id">Masukkan kata kunci untuk mencari gambar dari web. Hasil ditampilkan dalam grid yang bisa diklik untuk melihat detail dan mencari gambar yang mirip.</p>
-      <p class="lang-en">Enter a keyword to search for images from the web. Results show in a grid you can click to see details and find similar images.</p>
+      <p class="lang-id">Masukkan kata kunci untuk mencari gambar dari web menggunakan <strong>Bing</strong> (default) atau <strong>Google Images</strong> (tanpa API key). Mendukung <strong>pagination</strong> via parameter <code>offset</code> untuk menjelajahi lebih banyak hasil. Hasil ditampilkan dalam grid yang bisa diklik untuk melihat detail dan mencari gambar yang mirip.</p>
+      <p class="lang-en">Enter a keyword to search for images via <strong>Bing</strong> (default) or <strong>Google Images</strong> (no API key needed). Supports <strong>pagination</strong> via the <code>offset</code> parameter to browse further results. Results show in a grid you can click to see details and find similar images.</p>
 
       <h3 class="lang-id">2. Scrape dari URL</h3>
       <h3 class="lang-en">2. Scrape from a URL</h3>
-      <p class="lang-id">Masukkan URL halaman web untuk mengekstrak semua gambar di halaman tersebut. Mendukung tag <code>&lt;img&gt;</code>, <code>og:image</code>, dan <code>data-src</code> (lazy loading).</p>
-      <p class="lang-en">Enter a web page URL to extract every image on that page. Supports <code>&lt;img&gt;</code> tags, <code>og:image</code>, and <code>data-src</code> (lazy loading).</p>
+      <p class="lang-id">Masukkan URL halaman web untuk mengekstrak semua gambar di halaman tersebut. Mendukung tag <code>&lt;img&gt;</code>, <code>og:image</code>, dan <code>data-src</code> (lazy loading). Untuk halaman yang mengandalkan JavaScript (SPA, infinite scroll), gunakan mode <strong>JS rendering</strong> yang menjalankan Chromium headless secara otomatis.</p>
+      <p class="lang-en">Enter a web page URL to extract every image on that page. Supports <code>&lt;img&gt;</code> tags, <code>og:image</code>, and <code>data-src</code> (lazy loading). For JavaScript-heavy pages (SPAs, infinite scroll), use <strong>JS rendering</strong> mode which runs a headless Chromium browser automatically.</p>
 
       <h3 class="lang-id">3. Upload &amp; Cari</h3>
       <h3 class="lang-en">3. Upload &amp; Search</h3>
-      <p class="lang-id">Upload gambar dari komputer Anda (JPG, PNG, GIF, WebP). Dengan Google Vision API aktif, sistem mencari gambar yang mirip; tanpa itu, sistem mencari berdasarkan nama file. Mendukung drag &amp; drop.</p>
-      <p class="lang-en">Upload an image from your computer (JPG, PNG, GIF, WebP). With the Google Vision API enabled it finds visually similar images; without it, it searches by the file name. Supports drag and drop.</p>
+      <p class="lang-id">Upload gambar dari komputer Anda (JPG, PNG, GIF, WebP). Sistem selalu mencoba <strong>TinEye</strong> terlebih dahulu (tanpa API key) untuk mendeteksi kecocokan. Jika Google Vision API dikonfigurasi, hasil akan diperkaya dengan gambar visual yang serupa. Mendukung drag &amp; drop.</p>
+      <p class="lang-en">Upload an image from your computer (JPG, PNG, GIF, WebP). The system always tries <strong>TinEye</strong> first (no API key required) to detect matches. If a Google Vision API key is configured, results are enriched with visually similar images. Supports drag and drop.</p>
 
       <h3 class="lang-id">Fitur Tambahan</h3>
       <h3 class="lang-en">Extra Features</h3>
       <ul class="lang-id">
         <li><strong>Related Image Search</strong> - Klik gambar hasil, lalu klik "Cari Mirip" untuk mencari gambar serupa</li>
+        <li><strong>Filter Resolusi &amp; Format</strong> - Saring hasil berdasarkan lebar/tinggi minimum dan format file (jpg, png, webp, dll) menggunakan dimensi gambar sebenarnya</li>
+        <li><strong>Google Images</strong> - Pencarian alternatif lewat Google Images tanpa API key</li>
+        <li><strong>JS Rendering</strong> - Scrape halaman berbasis JavaScript dengan Chromium headless; fallback otomatis ke mode requests jika Playwright belum terinstal</li>
+        <li><strong>Pagination</strong> - Navigasi ke halaman hasil berikutnya lewat parameter offset</li>
         <li><strong>Grid View</strong> - Tampilan grid responsif dengan preview</li>
         <li><strong>Modal Preview</strong> - Klik gambar untuk melihat ukuran penuh</li>
       </ul>
       <ul class="lang-en">
         <li><strong>Related Image Search</strong> - Click a result, then "Cari Mirip" to find similar images</li>
+        <li><strong>Resolution and Format Filter</strong> - Filter results by minimum width/height and file format (jpg, png, webp, etc.) using the actual decoded image dimensions</li>
+        <li><strong>Google Images</strong> - Alternative search through Google Images with no API key</li>
+        <li><strong>JS Rendering</strong> - Scrape JavaScript-driven pages with headless Chromium; falls back automatically to requests mode if Playwright is not installed</li>
+        <li><strong>Pagination</strong> - Browse further result pages via the offset parameter</li>
         <li><strong>Grid View</strong> - Responsive grid with previews</li>
         <li><strong>Modal Preview</strong> - Click an image to see it full size</li>
       </ul>
