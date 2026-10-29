@@ -230,7 +230,7 @@ def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=Fa
             )
         if _notify_email or _notify_webhook:
             _send_notification(_notify_email, _notify_webhook, len(results), keywords,
-                               results=results, notify_format=_notify_format)
+                               results=results, notify_format=_notify_format, job_id=job_id)
     except Exception as e:
         with jobs_lock:
             if jobs[job_id].get('cancelled'):
@@ -499,8 +499,9 @@ def _build_scrape_email(keywords, results, fmt='csv'):
 
 
 def _send_notification(notify_email, notify_webhook, results_count, keywords,
-                       results=None, notify_format='csv'):
+                       results=None, notify_format='csv', job_id=None):
     """Fire email and/or webhook after a scraping job finishes. Best-effort only."""
+    email_ok = None
     if notify_email:
         cfg = load_config()
         em = cfg.get('email', {})
@@ -514,8 +515,9 @@ def _send_notification(notify_email, notify_webhook, results_count, keywords,
                                  f'Scraping selesai: {results_count} hasil - AlyxLabs',
                                  html_body,
                                  attachments=[(filename, file_bytes, mimetype)])
+                email_ok = True
             except Exception:
-                pass
+                email_ok = False
     if notify_webhook and _is_safe_url(notify_webhook):
         try:
             import requests as _req_n
@@ -528,6 +530,11 @@ def _send_notification(notify_email, notify_webhook, results_count, keywords,
             }, timeout=10)
         except Exception:
             pass
+    if job_id is not None and email_ok is not None:
+        with jobs_lock:
+            if job_id in jobs:
+                jobs[job_id]['notify_result'] = 'sent' if email_ok else 'failed'
+                jobs[job_id]['notify_email_addr'] = notify_email
 
 
 # ─── Pages ───────────────────────────────────────────────────────────
@@ -800,7 +807,9 @@ def api_status(job_id):
             'ok': True,
             'status': rec['status'],
             'message': rec['message'],
-            'count': len(rec.get('results', []))
+            'count': len(rec.get('results', [])),
+            'notify_result': rec.get('notify_result'),
+            'notify_email_addr': rec.get('notify_email_addr', ''),
         })
 
 

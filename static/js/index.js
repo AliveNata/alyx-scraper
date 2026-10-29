@@ -210,6 +210,14 @@ async function startScraping(){
   }catch(e){setStatus('Error: '+e.message);showProg(false);setScrapingState(false);toast('Error: '+e.message,'err')}
 }
 
+function _showNotifyToast(result, addr){
+  if(result==='sent'){
+    toast((currentLang==='id'?'Email terkirim ke ':'Email sent to ')+(addr||''),'ok');
+  }else if(result==='failed'){
+    toast(currentLang==='id'?'Gagal kirim email - cek pengaturan SMTP':'Email failed - check SMTP settings','err');
+  }
+}
+
 async function poll(){
   if(!currentJob)return;
   try{
@@ -223,6 +231,20 @@ async function poll(){
       const dur=scrapeStart?((Date.now()-scrapeStart)/1000).toFixed(1)+'s':'-';
       document.getElementById('statDuration').textContent=dur;
       toast((currentLang==='id'?'Selesai! ':'Done! ')+j.count+' hasil','ok');
+      if(j.notify_result){
+        _showNotifyToast(j.notify_result, j.notify_email_addr);
+      }else if(document.getElementById('notifyEmail')?.value.trim()){
+        // email still sending - poll a few more times
+        let tries=0;
+        const waitEmail=setInterval(async()=>{
+          tries++;
+          try{
+            const rs=await fetch('/api/status/'+currentJob), jj=await rs.json();
+            if(jj.notify_result){clearInterval(waitEmail);_showNotifyToast(jj.notify_result,jj.notify_email_addr);}
+          }catch(e){}
+          if(tries>=10)clearInterval(waitEmail);
+        },2000);
+      }
     }else if(j.status==='cancelled'){
       clearInterval(pollTimer);pollTimer=null;showProg(false);
       setScrapingState(false);
