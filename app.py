@@ -438,7 +438,12 @@ def _build_scrape_email(keywords, results, fmt='csv'):
   <tr><td style="background:#0f172a;border-radius:12px 12px 0 0;padding:24px 28px">
     <table cellpadding="0" cellspacing="0" width="100%"><tr>
       <td style="width:56px;vertical-align:middle;padding-right:14px">
-        <table cellpadding="0" cellspacing="0" border="0" width="56" height="56" style="border-radius:50%;background:#4f46e5;border:2px solid #6366f1"><tr><td align="center" valign="middle" style="font-family:Arial,sans-serif;font-size:18px;font-weight:bold;color:#ffffff;letter-spacing:1px">AL</td></tr></table>
+        <svg width="48" height="48" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" style="display:block">
+          <rect x="2" y="2" width="7" height="36" fill="#ffffff"/>
+          <rect x="2" y="31" width="27" height="7" fill="#ffffff"/>
+          <rect x="22" y="2" width="7" height="16" fill="#ffffff"/>
+          <rect x="9" y="16" width="13" height="7" fill="#ffffff"/>
+        </svg>
       </td>
       <td style="vertical-align:middle">
         <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#6366f1;text-transform:uppercase;margin-bottom:4px">AlyxLabs Scraper</div>
