@@ -38,9 +38,13 @@
       function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
       for(var rep=0;rep<2;rep++){
         items.forEach(function(it){
-          html += '<span class="ticker-item"><i class="bi bi-newspaper"></i> ' + esc(it.title) +
-            (it.source ? '<span class="ticker-src"> / ' + esc(it.source) + '</span>' : '') +
-            '</span><span class="ticker-sep">|</span>';
+          var inner = '<i class="bi bi-newspaper"></i> ' + esc(it.title) +
+            (it.source ? '<span class="ticker-src"> / ' + esc(it.source) + '</span>' : '');
+          if(it.url){
+            html += '<a class="ticker-item ticker-link" href="' + esc(it.url) + '" target="_blank" rel="noopener noreferrer">' + inner + '</a><span class="ticker-sep">|</span>';
+          } else {
+            html += '<span class="ticker-item">' + inner + '</span><span class="ticker-sep">|</span>';
+          }
         });
       }
       track.innerHTML = html;

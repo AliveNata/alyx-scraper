@@ -899,6 +899,7 @@ def _fetch_ticker_news():
         for item in root.findall('./channel/item')[:20]:
             title_el = item.find('title')
             source_el = item.find('source')
+            link_el = item.find('link')
             if title_el is None:
                 continue
             raw = title_el.text or ''
@@ -907,7 +908,12 @@ def _fetch_ticker_news():
             else:
                 title = raw
                 source = source_el.text if source_el is not None else ''
-            items.append({'title': title.strip(), 'source': source.strip()})
+            url = ''
+            if link_el is not None and link_el.text:
+                url = link_el.text.strip()
+            elif source_el is not None:
+                url = source_el.get('url', '')
+            items.append({'title': title.strip(), 'source': source.strip(), 'url': url})
         return items
     except Exception:
         return []

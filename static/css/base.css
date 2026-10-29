@@ -164,7 +164,7 @@ html[data-theme="dark"]::before{
 .ticker-track{
   display:flex;align-items:center;gap:0;
   width:max-content;
-  animation:ticker-scroll 48s linear infinite;
+  animation:ticker-scroll 120s linear infinite;
 }
 .ticker-wrap:hover .ticker-track{animation-play-state:paused}
 .ticker-item{
@@ -176,6 +176,9 @@ html[data-theme="dark"]::before{
 .ticker-feat{color:var(--accent);font-weight:600}
 .ticker-src{color:var(--t3);font-weight:400;font-size:.7rem}
 .ticker-sep{padding:0 6px;font-size:.9rem;color:var(--t3)}
+a.ticker-link{text-decoration:none!important;color:inherit;cursor:pointer}
+a.ticker-link:hover{color:var(--accent)}
+a.ticker-link:hover .ticker-src{color:var(--accent);opacity:.7}
 [data-theme="dark"] .ticker-wrap{background:var(--nav-bg)}
 [data-theme="dark"] .ticker-item{color:var(--t2)}
 
