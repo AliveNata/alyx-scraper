@@ -177,6 +177,8 @@ html[data-theme="dark"]::before{
   text-shadow:0 1px 0 rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.06);
 }
 .ticker-item i{font-size:.8rem;color:var(--accent);opacity:.7}
+[data-theme="dark"] .ticker-item i{color:#a5b4fc;opacity:.9}
+[data-theme="dark"] .ticker-src{color:var(--t2)}
 .ticker-feat{color:var(--accent);font-weight:600}
 .ticker-src{color:var(--t3);font-weight:400;font-size:.7rem}
 .ticker-sep{padding:0 6px;font-size:.9rem;color:var(--t3)}
