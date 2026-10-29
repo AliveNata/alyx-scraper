@@ -182,7 +182,8 @@ def get_summary_stats():
                 COUNT(DISTINCT ip_address) as unique_users,
                 SUM(results_count) as total_results,
                 AVG(duration_seconds) as avg_duration,
-                COUNT(DISTINCT keyword) as unique_keywords
+                COUNT(DISTINCT keyword) as unique_keywords,
+                COUNT(CASE WHEN date(created_at) = date('now') THEN 1 END) as today_scrapes
             FROM audit_logs WHERE action = 'scrape'
         """).fetchone()
         return dict(row) if row else {}

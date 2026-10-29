@@ -1046,6 +1046,20 @@ def api_admin_settings_post():
                 cfg['api_keys'][k] = ak[k].strip()
     if 'platforms_disabled' in data:
         cfg['platforms_disabled'] = [p for p in (data.get('platforms_disabled') or []) if p in SCRAPERS]
+    if 'twitter' in data:
+        tw = data['twitter']
+        cfg.setdefault('twitter', {})
+        if 'use_twikit' in tw:
+            cfg['twitter']['use_twikit'] = bool(tw['use_twikit'])
+        if 'nitter_instances' in tw:
+            cfg['twitter']['nitter_instances'] = [s.strip() for s in (tw['nitter_instances'] or []) if s.strip()]
+    if 'reddit' in data:
+        rd = data['reddit']
+        cfg.setdefault('reddit', {})
+        if 'client_id' in rd:
+            cfg['reddit']['client_id'] = rd['client_id'].strip()
+        if 'client_secret' in rd:
+            cfg['reddit']['client_secret'] = rd['client_secret'].strip()
     save_config(cfg)
     return jsonify({'ok': True})
 
