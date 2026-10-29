@@ -199,7 +199,8 @@ async function startScraping(){
   showProg(true,true);
   scrapeStart=Date.now();
   try{
-    const r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kw,location:loc,platforms:pls,full_text:document.getElementById('fullTextToggle').checked,date_from:document.getElementById('dateFrom').value||'',date_to:document.getElementById('dateTo').value||'',notify_email:notifyEmail,notify_webhook:notifyWebhook})});
+    const notifyFormat=(document.getElementById('dlFormat')?.value||'csv');
+    const r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kw,location:loc,platforms:pls,full_text:document.getElementById('fullTextToggle').checked,date_from:document.getElementById('dateFrom').value||'',date_to:document.getElementById('dateTo').value||'',notify_email:notifyEmail,notify_webhook:notifyWebhook,notify_format:notifyFormat})});
     const d=await r.json();
     if(!d.ok){setStatus('Error: '+(d.error||''));showProg(false);document.getElementById('startBtn').disabled=false;toast('Error: '+(d.error||''),'err');return}
     currentJob=d.job_id;

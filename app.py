@@ -180,6 +180,7 @@ def create_job_record():
         'cancelled': False,
         'notify_email': '',
         'notify_webhook': '',
+        'notify_format': 'csv',
     }
     with jobs_lock:
         jobs[job_id] = rec
@@ -217,6 +218,7 @@ def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=Fa
             duration = jobs[job_id]['finished_at'] - jobs[job_id]['started_at']
             _notify_email   = jobs[job_id].get('notify_email', '')
             _notify_webhook = jobs[job_id].get('notify_webhook', '')
+            _notify_format  = jobs[job_id].get('notify_format', 'csv')
         location_str = ', '.join(loc for loc in locations if loc)
         for kw in keywords:
             log_audit(
@@ -227,7 +229,8 @@ def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=Fa
                 ip_address=ip, user_agent=ua
             )
         if _notify_email or _notify_webhook:
-            _send_notification(_notify_email, _notify_webhook, len(results), keywords)
+            _send_notification(_notify_email, _notify_webhook, len(results), keywords,
+                               results=results, notify_format=_notify_format)
     except Exception as e:
         with jobs_lock:
             if jobs[job_id].get('cancelled'):
@@ -273,9 +276,217 @@ def _send_email_smtp(sender, password, recipient, subject, html_body):
             s.sendmail(sender, recipient, msg.as_string())
 
 
-def _send_notification(notify_email, notify_webhook, results_count, keywords):
-    """Fire email and/or webhook after a scraping job finishes. Best-effort only."""
+def _generate_export_bytes(results, meta, fmt):
+    """Return (file_bytes, filename, mimetype) for the chosen export format."""
+    import csv as _csv, io as _io
+    stamp = 'scraping'
+    if fmt == 'json':
+        content = json.dumps({'metadata': meta, 'data': results}, ensure_ascii=False, indent=2)
+        return content.encode('utf-8'), f'hasil_{stamp}.json', 'application/json'
+    elif fmt == 'xlsx':
+        import pandas as _pd
+        buf = _io.BytesIO()
+        meta_df = _pd.DataFrame(_meta_rows(meta), columns=['Field', 'Value'])
+        df = _pd.DataFrame(results)
+        with _pd.ExcelWriter(buf, engine='openpyxl') as writer:
+            meta_df.to_excel(writer, index=False, sheet_name='Metadata')
+            df.to_excel(writer, index=False, sheet_name='Hasil')
+        return buf.getvalue(), f'hasil_{stamp}.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    elif fmt == 'md':
+        lines = ['# Hasil Scraping - AlyxLabs', '']
+        for k, v in _meta_rows(meta):
+            lines.append(f'- **{k}:** {v}')
+        lines += ['', '---', '']
+        for i, r in enumerate(results, 1):
+            lines.append(f"## {i}. {r.get('title', '')}")
+            meta_line = f"**Platform:** {r.get('platform', '')}"
+            if r.get('source'): meta_line += f" | **Sumber:** {r.get('source')}"
+            if r.get('date'):   meta_line += f" | **Tanggal:** {r.get('date')}"
+            lines.append(meta_line)
+            if r.get('url'):     lines.append(f"URL: {r.get('url')}")
+            lines.append('')
+            if r.get('content'): lines.append(r.get('content'))
+            lines += ['', '---', '']
+        return '\n'.join(lines).encode('utf-8'), f'hasil_{stamp}.md', 'text/markdown'
+    elif fmt == 'ris':
+        academic = {'OpenAlex', 'Semantic Scholar'}
+        lines = []
+        for r in results:
+            ty = 'JOUR' if r.get('platform', '') in academic else 'NEWS'
+            lines += [f'TY  - {ty}']
+            if r.get('title'):   lines.append(f"TI  - {r['title']}")
+            if r.get('source'):  lines.append(f"AU  - {r['source']}")
+            dv = r.get('date', '')
+            if dv and len(dv) >= 4 and dv[:4].isdigit(): lines.append(f'PY  - {dv[:4]}')
+            if dv: lines.append(f'DA  - {dv}')
+            if r.get('url'):     lines.append(f"UR  - {r['url']}")
+            snip = r.get('content') or r.get('full_text') or ''
+            if snip: lines.append(f"AB  - {' '.join(snip.split())[:500]}")
+            lines += ['DP  - AlyxLabs Scraper', 'ER  - ', '']
+        return '\n'.join(lines).encode('utf-8'), f'hasil_{stamp}.ris', 'application/x-research-info-systems'
+    elif fmt == 'bibtex':
+        _ESC = str.maketrans({'\\':'\\\\','{':'\\{','}':'\\}','&':'\\&','%':'\\%','#':'\\#','_':'\\_','^':'\\^','~':'\\~'})
+        entries = []
+        for i, r in enumerate(results, 1):
+            raw = (r.get('source') or r.get('platform') or 'item').split()[0]
+            key = (''.join(c for c in raw if c.isalnum()).lower() or 'item') + f'_{i}'
+            dv = r.get('date', '')
+            yr = dv[:4] if dv and len(dv) >= 4 and dv[:4].isdigit() else ''
+            flds = [f'  title = {{{(r.get("title","")).translate(_ESC)}}}']
+            if r.get('source'): flds.append(f'  author = {{{r["source"].translate(_ESC)}}}')
+            if yr: flds.append(f'  year = {{{yr}}}')
+            if r.get('url'):    flds.append(f'  url = {{{r["url"].translate(_ESC)}}}')
+            snip = (r.get('content') or r.get('full_text') or '')
+            if snip: flds.append(f'  abstract = {{{(" ".join(snip.split())[:400]).translate(_ESC)}}}')
+            flds.append('  note = {Scraped via AlyxLabs Scraper}')
+            entries.append('@article{' + key + ',\n' + ',\n'.join(flds) + '\n}')
+        return ('\n\n'.join(entries) + '\n').encode('utf-8'), f'hasil_{stamp}.bib', 'application/x-bibtex'
+    else:  # csv default
+        buf = _io.StringIO()
+        writer = _csv.DictWriter(buf, fieldnames=['title','url','content','date','platform','source','keyword'], extrasaction='ignore')
+        writer.writeheader()
+        for r in results:
+            writer.writerow({k: r.get(k,'') for k in ['title','url','content','date','platform','source','keyword']})
+        return buf.getvalue().encode('utf-8-sig'), f'hasil_{stamp}.csv', 'text/csv'
+
+
+def _build_scrape_email(keywords, results, fmt='csv'):
+    """Build rich HTML email body + export file bytes from scraping results."""
+    import collections
+    import io as _io
+
     kw_str = ', '.join(keywords)
+    total  = len(results)
+
+    # --- derive insights from real data ---
+    platform_counts = collections.Counter(r.get('platform','') for r in results if r.get('platform'))
+    source_counts   = collections.Counter(r.get('source','')   for r in results if r.get('source'))
+    top_platform    = platform_counts.most_common(1)[0] if platform_counts else None
+    top_source      = source_counts.most_common(1)[0]   if source_counts   else None
+    dates = [r.get('date','') for r in results if r.get('date','')]
+    date_range = f"{min(dates)[:10]} - {max(dates)[:10]}" if len(dates) >= 2 else (dates[0][:10] if dates else '-')
+    platform_breakdown = ', '.join(f"{p} ({c})" for p, c in platform_counts.most_common(4))
+
+    insights = []
+    if top_platform:
+        insights.append(f"Platform terbanyak: <strong>{top_platform[0]}</strong> ({top_platform[1]} hasil dari {total})")
+    if top_source and top_source[0] != top_platform[0] if top_platform else True:
+        insights.append(f"Sumber teratas: <strong>{top_source[0]}</strong> ({top_source[1]} artikel)")
+    if len(keywords) > 1:
+        insights.append(f"Rata-rata per keyword: <strong>{total // len(keywords)}</strong> hasil")
+    if dates:
+        insights.append(f"Rentang tanggal konten: <strong>{date_range}</strong>")
+    if len(platform_counts) > 1:
+        insights.append(f"Distribusi platform: {platform_breakdown}")
+
+    def esc(s):
+        return str(s).replace('&','&amp;').replace('<','&lt;').replace('>','&gt;') if s else ''
+
+    preview_rows = ''
+    for r in results[:8]:
+        title = esc(r.get('title','') or '')[:90]
+        src   = esc(r.get('source', r.get('platform','')) or '')
+        date  = esc((r.get('date','') or '')[:10])
+        url   = r.get('url','') or ''
+        preview_rows += (
+            f'<tr>'
+            f'<td style="padding:10px 0;border-bottom:1px solid #f1f5f9;vertical-align:top">'
+            f'<div style="font-size:13px;font-weight:600;color:#0f172a;line-height:1.4;margin-bottom:3px">'
+            f'{"<a href=" + chr(34) + esc(url) + chr(34) + " style=" + chr(34) + "color:#6366f1;text-decoration:none" + chr(34) + ">" + title + "</a>" if url else title}'
+            f'</div>'
+            f'<div style="font-size:11px;color:#94a3b8">{src}{" &middot; " + date if date else ""}</div>'
+            f'</td></tr>'
+        )
+
+    insight_items = ''.join(f'<li style="padding:4px 0;font-size:13px;color:#334155">{i}</li>' for i in insights)
+
+    html = f'''<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:32px 0">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%">
+
+  <!-- header -->
+  <tr><td style="background:#0f172a;border-radius:12px 12px 0 0;padding:24px 28px">
+    <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#6366f1;text-transform:uppercase;margin-bottom:6px">AlyxLabs Scraper</div>
+    <div style="font-size:22px;font-weight:700;color:#f1f5f9">Scraping Selesai</div>
+    <div style="font-size:13px;color:#64748b;margin-top:4px">{esc(kw_str)}</div>
+  </td></tr>
+
+  <!-- stat strip -->
+  <tr><td style="background:#6366f1;padding:0">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td style="padding:16px 28px;text-align:center;border-right:1px solid rgba(255,255,255,.15)">
+        <div style="font-size:28px;font-weight:800;color:#fff;line-height:1">{total}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Hasil</div>
+      </td>
+      <td style="padding:16px 28px;text-align:center;border-right:1px solid rgba(255,255,255,.15)">
+        <div style="font-size:14px;font-weight:700;color:#fff;line-height:1.2">{esc(top_platform[0]) if top_platform else "-"}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Platform Utama</div>
+      </td>
+      <td style="padding:16px 28px;text-align:center">
+        <div style="font-size:14px;font-weight:700;color:#fff;line-height:1.2">{len(keywords)}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Keyword</div>
+      </td>
+    </tr></table>
+  </td></tr>
+
+  <!-- body -->
+  <tr><td style="background:#fff;padding:28px">
+
+    <!-- preview -->
+    <div style="font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Pratinjau Hasil ({min(8,total)} dari {total})</div>
+    <table width="100%" cellpadding="0" cellspacing="0">{preview_rows}</table>
+    {f'<div style="font-size:12px;color:#94a3b8;margin-top:8px">+{total-8} hasil lainnya ada di file lampiran.</div>' if total > 8 else ''}
+
+    <!-- insights -->
+    <div style="margin-top:24px;padding:16px 18px;background:#f8fafc;border-left:3px solid #6366f1;border-radius:0 8px 8px 0">
+      <div style="font-size:11px;font-weight:700;color:#6366f1;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Ringkasan</div>
+      <ul style="margin:0;padding-left:18px">{insight_items}</ul>
+    </div>
+
+    <!-- cta -->
+    <div style="text-align:center;margin-top:24px">
+      <a href="https://scraper.alyxlabs.tech" style="display:inline-block;background:#6366f1;color:#fff;font-size:13px;font-weight:600;padding:12px 28px;border-radius:8px;text-decoration:none">Buka Scraper</a>
+    </div>
+
+  </td></tr>
+
+  <!-- footer -->
+  <tr><td style="background:#f8fafc;border-radius:0 0 12px 12px;padding:16px 28px;border-top:1px solid #e2e8f0">
+    <div style="font-size:11px;color:#94a3b8;text-align:center">File CSV terlampir berisi semua {total} hasil. &middot; AlyxLabs Scraper &middot; scraper.alyxlabs.tech</div>
+  </td></tr>
+
+</table>
+</td></tr></table>
+</body></html>'''
+
+    # --- update footer line to reflect actual format ---
+    fmt_label = {'csv':'CSV','json':'JSON','xlsx':'Excel','md':'Markdown','ris':'RIS','bibtex':'BibTeX'}.get(fmt, fmt.upper())
+    html = html.replace('File CSV terlampir berisi semua', f'File {fmt_label} terlampir berisi semua')
+
+    # --- build export bytes for the chosen format ---
+    meta = {
+        'tool': 'AlyxLabs Scraper',
+        'keywords': keywords,
+        'location': '',
+        'date_range': date_range,
+        'sources': list({r.get('platform','') for r in results if r.get('platform')}),
+        'collected_at': '',
+        'duration_seconds': None,
+        'total_results': total,
+        'per_source': dict(platform_counts),
+        'note': 'Snapshot koleksi; hasil scraping dapat berubah seiring waktu.',
+    }
+    file_bytes, filename, mimetype = _generate_export_bytes(results, meta, fmt)
+
+    return html, file_bytes, filename, mimetype
+
+
+def _send_notification(notify_email, notify_webhook, results_count, keywords,
+                       results=None, notify_format='csv'):
+    """Fire email and/or webhook after a scraping job finishes. Best-effort only."""
     if notify_email:
         cfg = load_config()
         em = cfg.get('email', {})
@@ -283,16 +494,12 @@ def _send_notification(notify_email, notify_webhook, results_count, keywords):
         app_pw = em.get('gmail_app_password', '').strip()
         if sender and app_pw:
             try:
-                body = (
-                    '<div style="font-family:system-ui,sans-serif;max-width:480px;padding:24px">'
-                    '<h2 style="color:#6366f1;margin:0 0 12px">Scraping Selesai</h2>'
-                    f'<p><strong>{results_count} hasil</strong> dikumpulkan untuk keyword: <em>{kw_str}</em></p>'
-                    '<hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0">'
-                    '<p style="color:#94a3b8;font-size:.8rem">AlyxLabs Scraper - scraper.alyxlabs.tech</p>'
-                    '</div>'
-                )
+                html_body, file_bytes, filename, mimetype = _build_scrape_email(
+                    keywords, results or [], fmt=notify_format)
                 _send_email_smtp(sender, app_pw, notify_email,
-                                 'Scraping selesai - AlyxLabs', body)
+                                 f'Scraping selesai: {results_count} hasil - AlyxLabs',
+                                 html_body,
+                                 attachments=[(filename, file_bytes, mimetype)])
             except Exception:
                 pass
     if notify_webhook and _is_safe_url(notify_webhook):
@@ -302,7 +509,9 @@ def _send_notification(notify_email, notify_webhook, results_count, keywords):
                 'event': 'scraping_finished',
                 'results_count': results_count,
                 'keywords': keywords,
-            }, timeout=5)
+                'format': notify_format,
+                'results': (results or [])[:500],
+            }, timeout=10)
         except Exception:
             pass
 
@@ -507,8 +716,11 @@ def api_start():
     full_text = bool(payload.get('full_text', False))
     date_from = (payload.get('date_from') or '').strip() or None
     date_to = (payload.get('date_to') or '').strip() or None
-    notify_email = (payload.get('notify_email') or '').strip()[:254]
+    notify_email   = (payload.get('notify_email') or '').strip()[:254]
     notify_webhook = (payload.get('notify_webhook') or '').strip()
+    notify_format  = (payload.get('notify_format') or 'csv').strip().lower()
+    if notify_format not in ('csv', 'json', 'xlsx', 'md', 'ris', 'bibtex'):
+        notify_format = 'csv'
 
     # Only allow platforms the admin has enabled
     _enabled = set(enabled_platforms())
@@ -540,6 +752,7 @@ def api_start():
             jobs[job_id]['date_to']         = date_to
             jobs[job_id]['notify_email']    = notify_email
             jobs[job_id]['notify_webhook']  = notify_webhook
+            jobs[job_id]['notify_format']   = notify_format
 
         ip = get_client_ip()
         ua = request.headers.get('User-Agent', '')
