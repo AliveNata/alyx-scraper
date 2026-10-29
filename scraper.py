@@ -1005,15 +1005,58 @@ class UnifiedScraper:
         # Dedup across sources (same URL or identical title)
         before = len(self.results)
         self.results = self._dedup(self.results)
+
+        # Relevance filter: artikel harus mengandung >=1 token keyword di title/content
+        self.results = self._filter_relevant(self.results)
+
         for i, r in enumerate(self.results, 1):
             r['id'] = i
 
         summary = " | ".join(f"{p}: {c}" for p, c in platform_counts.items())
         removed = before - len(self.results)
         if self.gui_callback:
-            extra = f" ({removed} duplikat dibuang)" if removed else ""
+            extra = f" ({removed} duplikat+irrelevant dibuang)" if removed else ""
             self.gui_callback(f"Selesai! {len(self.results)} hasil{extra} - {summary}")
         return self.results
+
+    # Platforms whose results are already keyword-filtered by the source engine
+    # (API/search-query-based) — skip relevance check for them.
+    _TRUSTED_PLATFORMS = {
+        'Google News', 'GDELT', 'Reddit', 'YouTube',
+        'OpenAlex', 'Semantic Scholar', 'arXiv',
+    }
+
+    # Common Indonesian + English stopwords to ignore when tokenizing a keyword
+    _STOPWORDS = {
+        'dan','atau','yang','di','ke','dari','untuk','dengan','ini','itu',
+        'pada','adalah','dalam','sebagai','tidak','akan','sudah','juga',
+        'the','and','or','in','on','of','for','to','a','an','is','are',
+        'was','were','with','as','at','by','from',
+    }
+
+    @classmethod
+    def _kw_tokens(cls, keyword):
+        """Return meaningful tokens from a keyword string."""
+        return [
+            t for t in re.findall(r'\w+', keyword.lower())
+            if t not in cls._STOPWORDS and len(t) > 1
+        ]
+
+    @classmethod
+    def _is_relevant(cls, r):
+        """Return True if title or content contains at least one keyword token."""
+        platform = r.get('platform', '')
+        if platform in cls._TRUSTED_PLATFORMS:
+            return True
+        kw = r.get('keyword', '')
+        tokens = cls._kw_tokens(kw)
+        if not tokens:
+            return True
+        text = ((r.get('title') or '') + ' ' + (r.get('content') or '')).lower()
+        return any(tok in text for tok in tokens)
+
+    def _filter_relevant(self, results):
+        return [r for r in results if self._is_relevant(r)]
 
     @staticmethod
     def _norm(s):
