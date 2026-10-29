@@ -44,6 +44,16 @@ hr{border-color:var(--glass-b)!important}
 .dark-invert{filter:none}
 [data-theme="dark"] .dark-invert{filter:invert(1)}
 
+/* Dark mode contrast fixes */
+[data-theme="dark"] .doc-section code{
+  background:rgba(99,102,241,.14);
+  border-color:rgba(165,180,252,.3);
+  color:#a5b4fc;
+}
+[data-theme="dark"] .doc-section h2{
+  color:#a5b4fc;
+}
+
 /* Bilingual: same layout, text swaps with the navbar language toggle */
 .lang-en{display:none}
 [data-lang="en"] .lang-id{display:none}

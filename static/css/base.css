@@ -17,16 +17,16 @@
 }
 [data-theme="dark"]{
   --t1:#f1f5f9;--t2:#94a3b8;--t3:#475569;
-  --glass:rgba(255,255,255,.05);
-  --glass-b:rgba(255,255,255,.1);
+  --glass:rgba(255,255,255,.07);
+  --glass-b:rgba(255,255,255,.18);
   --nav-bg:rgba(6,8,24,.88);
-  --nav-border:rgba(255,255,255,.1);
+  --nav-border:rgba(255,255,255,.14);
   --tab-active-bg:rgba(99,102,241,.15);
-  --tab-active-border:rgba(99,102,241,.3);
-  --btn-icon-bg:rgba(255,255,255,.05);
-  --btn-icon-border:rgba(255,255,255,.1);
+  --tab-active-border:rgba(99,102,241,.35);
+  --btn-icon-bg:rgba(255,255,255,.07);
+  --btn-icon-border:rgba(255,255,255,.18);
   --foot-bg:rgba(4,6,20,.9);
-  --foot-border:rgba(255,255,255,.08);
+  --foot-border:rgba(255,255,255,.12);
 }
 
 /* ── BACKGROUNDS ── */

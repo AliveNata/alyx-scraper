@@ -147,14 +147,36 @@ select.input-sm option{background:var(--modal-bg)}
 .chip i{color:#111}
 [data-theme="dark"] .chip i{color:#eee}
 
+/* ── Dark mode contrast fixes ── */
+[data-theme="dark"] input.ifield,
+[data-theme="dark"] .input-sm,
+[data-theme="dark"] select.input-sm{
+  border-color:rgba(255,255,255,.2);
+}
+[data-theme="dark"] input.ifield:focus,
+[data-theme="dark"] .input-sm:focus{
+  border-color:rgba(165,180,252,.55);
+}
+[data-theme="dark"] .chip{
+  border-color:rgba(255,255,255,.18);
+}
+[data-theme="dark"] .btn-g,
+[data-theme="dark"] .btn-dl{
+  border-color:rgba(255,255,255,.18);
+}
+[data-theme="dark"] thead th{
+  color:var(--t2);
+  background:rgba(255,255,255,.04);
+}
+
 /* Filter chips row */
 .filter-chips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--glass-b)}
 .fchip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:14px;border:1.5px solid var(--glass-b);background:rgba(99,102,241,.04);color:var(--t2);font-size:.77rem;font-weight:500;cursor:pointer;transition:all .15s;user-select:none}
 .fchip:hover{border-color:rgba(99,102,241,.3);color:var(--t1)}
 .fchip.active{border-color:rgba(99,102,241,.45);background:rgba(99,102,241,.1);color:var(--accent)}
-[data-theme="dark"] .fchip.active{color:var(--accent3)}
+[data-theme="dark"] .fchip.active{color:#a5b4fc;border-color:rgba(165,180,252,.35);background:rgba(99,102,241,.18)}
 .fchip-count{background:rgba(99,102,241,.15);color:var(--accent);border-radius:8px;padding:1px 5px;font-size:.69rem}
-[data-theme="dark"] .fchip-count{color:var(--accent3)}
+[data-theme="dark"] .fchip-count{color:#a5b4fc;background:rgba(99,102,241,.2)}
 
 /* Saved Searches */
 .ss-panel{background:var(--glass);border:1px solid var(--glass-b);border-radius:14px;overflow:hidden}
@@ -234,6 +256,10 @@ tbody tr:hover{background:var(--row-hover)}
 /* Citation button (per row) */
 .btn-cite{background:none;border:none;padding:2px 6px;color:var(--t3);cursor:pointer;border-radius:5px;font-size:.88rem;line-height:1;transition:color .15s;vertical-align:middle}
 .btn-cite:hover{color:var(--accent)}
+
+/* Image scraper dark mode */
+[data-theme="dark"] .upload-zone{border-color:rgba(255,255,255,.22)}
+[data-theme="dark"] .img-card{border-color:rgba(255,255,255,.16)}
 
 /* Responsive */
 @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}}
