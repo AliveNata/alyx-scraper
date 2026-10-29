@@ -151,23 +151,31 @@ select.input-sm option{background:var(--modal-bg)}
 [data-theme="dark"] input.ifield,
 [data-theme="dark"] .input-sm,
 [data-theme="dark"] select.input-sm{
-  border-color:rgba(255,255,255,.2);
+  border-color:rgba(255,255,255,.28);
 }
 [data-theme="dark"] input.ifield:focus,
 [data-theme="dark"] .input-sm:focus{
-  border-color:rgba(165,180,252,.55);
+  border-color:rgba(165,180,252,.65);
+}
+[data-theme="dark"] input[type="date"].ifield{
+  color-scheme:dark;
+  border-color:rgba(255,255,255,.28);
 }
 [data-theme="dark"] .chip{
-  border-color:rgba(255,255,255,.18);
+  border-color:rgba(255,255,255,.22);
 }
 [data-theme="dark"] .btn-g,
 [data-theme="dark"] .btn-dl{
-  border-color:rgba(255,255,255,.18);
+  border-color:rgba(255,255,255,.22);
 }
 [data-theme="dark"] thead th{
   color:var(--t2);
   background:rgba(255,255,255,.04);
 }
+
+/* Hint text dark mode */
+[data-theme="dark"] [data-i18n="fulltext_hint"],
+[data-theme="dark"] [data-i18n="date_hint"]{color:var(--t2)!important}
 
 /* Filter chips row */
 .filter-chips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--glass-b)}
