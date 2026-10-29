@@ -112,7 +112,7 @@ function renderChart(usage){
   const ctx    = document.getElementById('usageChart').getContext('2d');
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const gridC  = isDark ? 'rgba(148,163,184,.1)' : 'rgba(0,0,0,.05)';
-  const textC  = isDark ? '#94a3b8' : '#64748b';
+  const textC  = isDark ? '#cbd5e1' : '#64748b';
   if(usageChart) usageChart.destroy();
   usageChart = new Chart(ctx, {
     type: 'line',
@@ -144,6 +144,7 @@ function renderChart(usage){
             color: textC, font: { size: 12, family: 'Inter' }, usePointStyle: true, boxWidth: 8, boxHeight: 8,
             generateLabels: (chart) => chart.data.datasets.map((ds, i) => ({
               text: ds.label, fillStyle: ds.borderColor, strokeStyle: ds.borderColor,
+              color: textC,
               lineWidth: 0, pointStyle: 'circle', hidden: !chart.isDatasetVisible(i), datasetIndex: i
             }))
           }
