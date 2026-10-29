@@ -141,12 +141,8 @@ function renderChart(usage){
       plugins: {
         legend: {
           labels: {
-            color: textC, font: { size: 12, family: 'Inter' }, usePointStyle: true, boxWidth: 8, boxHeight: 8,
-            generateLabels: (chart) => chart.data.datasets.map((ds, i) => ({
-              text: ds.label, fillStyle: ds.borderColor, strokeStyle: ds.borderColor,
-              color: textC,
-              lineWidth: 0, pointStyle: 'circle', hidden: !chart.isDatasetVisible(i), datasetIndex: i
-            }))
+            color: textC, font: { size: 12, family: 'Inter' }, usePointStyle: true,
+            pointStyle: 'circle', boxWidth: 8, boxHeight: 8
           }
         }
       },
