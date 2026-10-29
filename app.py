@@ -245,29 +245,34 @@ def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=Fa
         _job_semaphore.release()
 
 
-def _send_email_smtp(sender, password, recipient, subject, html_body):
-    """Send email via SMTP. Reads smtp_host and smtp_port from email config.
-    Supports port 587 (STARTTLS) and 465/others (SSL). Compatible with Gmail
-    App Passwords and cPanel/hosting SMTP."""
-    import smtplib
-    import ssl
+def _send_email_smtp(sender, password, recipient, subject, html_body, attachments=None):
+    """Send email via SMTP with optional attachments.
+    attachments: list of (filename, bytes, mimetype) tuples.
+    Supports port 587 (STARTTLS) and 465/others (SSL)."""
+    import smtplib, ssl
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
+    from email.mime.base import MIMEBase
+    from email import encoders as _enc
+    from email.utils import formataddr
     cfg_email = load_config().get('email', {})
     host = cfg_email.get('smtp_host', 'smtp.gmail.com').strip() or 'smtp.gmail.com'
     port = int(cfg_email.get('smtp_port', 465) or 465)
-    from email.utils import formataddr
-    msg = MIMEMultipart('alternative')
+    msg = MIMEMultipart('mixed')
     msg['Subject'] = subject
     msg['From'] = formataddr(('No Reply - AlyxLabs Support', sender))
     msg['To'] = recipient
     msg.attach(MIMEText(html_body, 'html'))
+    for fname, fbytes, fmime in (attachments or []):
+        part = MIMEBase(*fmime.split('/', 1))
+        part.set_payload(fbytes)
+        _enc.encode_base64(part)
+        part.add_header('Content-Disposition', 'attachment', filename=fname)
+        msg.attach(part)
     ctx = ssl.create_default_context()
     if port == 587:
         with smtplib.SMTP(host, port, timeout=15) as s:
-            s.ehlo()
-            s.starttls(context=ctx)
-            s.ehlo()
+            s.ehlo(); s.starttls(context=ctx); s.ehlo()
             s.login(sender, password)
             s.sendmail(sender, recipient, msg.as_string())
     else:
