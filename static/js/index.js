@@ -118,14 +118,15 @@ function showProg(show,indet=false){
   if(!indet)b.style.width='0%';
 }
 
-function toast(msg,type='info',dur=3500){
+function toast(msg,type='info',dur=5000){
   const ctr=document.getElementById('toastCtr');
   const icons={info:'<i class="bi bi-info-circle ti-info"></i>',ok:'<i class="bi bi-check-circle-fill ti-ok"></i>',err:'<i class="bi bi-x-circle-fill ti-err"></i>'};
   const el=document.createElement('div');
   el.className='toast'+(type==='ok'?' t-ok':type==='err'?' t-err':'');
-  el.innerHTML=(icons[type]||icons.info)+esc(msg);
+  el.innerHTML=`<div class="toast-body">${icons[type]||icons.info}${esc(msg)}</div>`
+    +`<div class="toast-loader"><div class="toast-loader-bar" style="animation-duration:${dur}ms"></div></div>`;
   ctr.appendChild(el);
-  setTimeout(()=>{el.style.transition='opacity .3s';el.style.opacity='0';setTimeout(()=>el.remove(),300)},dur);
+  setTimeout(()=>{el.style.transition='opacity .25s,transform .25s';el.style.opacity='0';el.style.transform='translateX(12px)';setTimeout(()=>el.remove(),250)},dur);
 }
 
 function openModal(id){document.getElementById(id).classList.add('open')}
