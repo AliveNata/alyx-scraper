@@ -16,7 +16,7 @@
   --foot-border:rgba(99,102,241,.1);
 }
 [data-theme="dark"]{
-  --t1:#f1f5f9;--t2:#94a3b8;--t3:#475569;
+  --t1:#f1f5f9;--t2:#94a3b8;--t3:#64748b;
   --glass:rgba(255,255,255,.07);
   --glass-b:rgba(255,255,255,.18);
   --nav-bg:rgba(6,8,24,.88);

@@ -220,6 +220,12 @@ hr.g-hr { border: none; border-top: 1px solid var(--glass-b); margin: 14px 0; }
 [data-theme="dark"] .settings-hint { color: var(--t2); }
 [data-theme="dark"] .g-input, [data-theme="dark"] .g-select { border-color: rgba(255,255,255,.28) !important; }
 [data-theme="dark"] .g-input::placeholder { color: var(--t3); }
+[data-theme="dark"] .cmp-period { color: var(--t2); }
+[data-theme="dark"] .cmp-label { color: var(--t2); }
+[data-theme="dark"] .mini-title { color: var(--t2); }
+[data-theme="dark"] .top-name { color: var(--t1); }
+[data-theme="dark"] .g-table tbody td { color: var(--t1); }
+[data-theme="dark"] .adm-tab { color: var(--t2); }
 
 .toggle-wrap { display: flex; align-items: flex-start; gap: 14px; }
 .toggle-switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; margin-top: 2px; }
