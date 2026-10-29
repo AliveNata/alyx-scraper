@@ -64,14 +64,14 @@ html[data-theme="dark"]::before{
 }
 .alyx-brand{
   font-weight:800;font-size:1.1rem;text-decoration:none!important;
-  color:var(--accent);display:flex;align-items:center;gap:4px;
+  color:var(--t1);display:flex;align-items:center;gap:4px;
   white-space:nowrap;flex-shrink:0;transition:opacity .2s;
 }
-.alyx-brand:hover{opacity:.8;color:var(--accent)}
+.alyx-brand:hover{opacity:.8;color:var(--t1)}
 .alyx-brand-icon-wrap{display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .alyx-brand-labels{display:flex;flex-direction:column;line-height:1.1;gap:1px}
 .alyx-brand-name{font-size:1.05rem;font-weight:800}
-.alyx-brand-sub{font-size:0.58rem;letter-spacing:0.09em;color:var(--accent);opacity:.6;font-weight:600;text-transform:uppercase}
+.alyx-brand-sub{font-size:0.58rem;letter-spacing:0.09em;color:var(--t1);opacity:.5;font-weight:600;text-transform:uppercase}
 [data-theme="dark"] .alyx-brand-name{
   background:linear-gradient(135deg,#fff 0%,#a78bfa 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
@@ -131,11 +131,14 @@ html[data-theme="dark"]::before{
 .alyx-foot-brand-name i{color:var(--accent)}
 .alyx-foot-brand-labels{display:flex;flex-direction:column;line-height:1.1;gap:1px}
 .alyx-foot-brand-title{font-size:.95rem;font-weight:800;color:var(--t1)}
-.alyx-foot-brand-sub{font-size:.58rem;letter-spacing:.09em;color:var(--accent);opacity:.6;font-weight:600;text-transform:uppercase}
+.alyx-foot-brand-sub{font-size:.58rem;letter-spacing:.09em;color:var(--t1);opacity:.5;font-weight:600;text-transform:uppercase}
 .alyx-foot-tagline{font-size:.79rem;color:var(--t3)}
 [data-theme="dark"] .alyx-foot-tagline{color:var(--t2)}
-[data-theme="dark"] .alyx-foot-brand-title{color:var(--t1);-webkit-text-fill-color:var(--t1)}
-[data-theme="dark"] .alyx-foot-brand-sub{color:var(--t1);-webkit-text-fill-color:var(--t1);opacity:.6}
+[data-theme="dark"] .alyx-foot-brand-title{
+  background:linear-gradient(135deg,#fff 0%,#a78bfa 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+[data-theme="dark"] .alyx-foot-brand-sub{color:#a78bfa;-webkit-text-fill-color:#a78bfa;opacity:.7}
 .alyx-foot-center{text-align:center}
 .alyx-foot-copy{font-size:.79rem;color:var(--t3)}
 .alyx-foot-copy a{color:var(--t2);text-decoration:none!important;transition:color .2s}
