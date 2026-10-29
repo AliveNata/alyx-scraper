@@ -23,6 +23,8 @@ try:
 except ImportError:
     pass
 
+import requests as _requests
+
 from scraper import UnifiedScraper, SCRAPERS
 from image_scraper_module import ImageScraper
 from database import (log_audit, get_audit_logs, get_usage_stats, get_top_keywords,
@@ -881,6 +883,44 @@ def api_images_upload():
         'uploaded': {'data': b64, 'content_type': content_type, 'filename': file.filename},
         'related_images': images
     })
+
+
+# ─── Ticker News API ──────────────────────────────────────────────────
+_ticker_cache = {'items': [], 'ts': 0.0}
+_TICKER_TTL = 900  # 15 minutes
+
+def _fetch_ticker_news():
+    import xml.etree.ElementTree as ET
+    url = 'https://news.google.com/rss?hl=id&gl=ID&ceid=ID:id'
+    try:
+        r = _requests.get(url, timeout=8, headers={'User-Agent': 'Mozilla/5.0'})
+        root = ET.fromstring(r.content)
+        items = []
+        for item in root.findall('./channel/item')[:20]:
+            title_el = item.find('title')
+            source_el = item.find('source')
+            if title_el is None:
+                continue
+            raw = title_el.text or ''
+            if ' - ' in raw:
+                title, source = raw.rsplit(' - ', 1)
+            else:
+                title = raw
+                source = source_el.text if source_el is not None else ''
+            items.append({'title': title.strip(), 'source': source.strip()})
+        return items
+    except Exception:
+        return []
+
+@app.route('/api/ticker-news')
+def api_ticker_news():
+    global _ticker_cache
+    now = time.time()
+    if now - _ticker_cache['ts'] > _TICKER_TTL or not _ticker_cache['items']:
+        items = _fetch_ticker_news()
+        if items:
+            _ticker_cache = {'items': items, 'ts': now}
+    return jsonify(_ticker_cache['items'])
 
 
 # ─── Feedback API ─────────────────────────────────────────────────────

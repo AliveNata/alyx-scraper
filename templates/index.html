@@ -23,43 +23,31 @@
 {% block content %}
 
 <div class="ticker-wrap">
-  <div class="ticker-track">
-    <span class="ticker-item"><i class="bi bi-newspaper"></i> Google News</span>
-    <span class="ticker-item"><i class="bi bi-globe2"></i> News Sites</span>
-    <span class="ticker-item"><i class="bi bi-broadcast"></i> GDELT</span>
-    <span class="ticker-item"><i class="bi bi-chat-square-text-fill"></i> Kompas</span>
-    <span class="ticker-item"><i class="bi bi-phone-fill"></i> Liputan6</span>
-    <span class="ticker-item"><i class="bi bi-play-btn-fill"></i> YouTube</span>
-    <span class="ticker-item"><i class="bi bi-book-fill"></i> Wikipedia</span>
-    <span class="ticker-item"><i class="bi bi-journal-text"></i> OpenAlex</span>
-    <span class="ticker-item"><i class="bi bi-mortarboard-fill"></i> Semantic Scholar</span>
-    <span class="ticker-item"><i class="bi bi-people-fill"></i> Kaskus</span>
-    <span class="ticker-sep">&#8212;</span>
-    <span class="ticker-item ticker-feat">6 Format Export</span>
-    <span class="ticker-item ticker-feat">Sitasi APA7 Otomatis</span>
-    <span class="ticker-item ticker-feat">Notifikasi Email</span>
-    <span class="ticker-item ticker-feat">Filter Tanggal</span>
-    <span class="ticker-item ticker-feat">Gratis Selamanya</span>
-    <span class="ticker-sep">&#8212;</span>
-    <span class="ticker-item"><i class="bi bi-newspaper"></i> Google News</span>
-    <span class="ticker-item"><i class="bi bi-globe2"></i> News Sites</span>
-    <span class="ticker-item"><i class="bi bi-broadcast"></i> GDELT</span>
-    <span class="ticker-item"><i class="bi bi-chat-square-text-fill"></i> Kompas</span>
-    <span class="ticker-item"><i class="bi bi-phone-fill"></i> Liputan6</span>
-    <span class="ticker-item"><i class="bi bi-play-btn-fill"></i> YouTube</span>
-    <span class="ticker-item"><i class="bi bi-book-fill"></i> Wikipedia</span>
-    <span class="ticker-item"><i class="bi bi-journal-text"></i> OpenAlex</span>
-    <span class="ticker-item"><i class="bi bi-mortarboard-fill"></i> Semantic Scholar</span>
-    <span class="ticker-item"><i class="bi bi-people-fill"></i> Kaskus</span>
-    <span class="ticker-sep">&#8212;</span>
-    <span class="ticker-item ticker-feat">6 Format Export</span>
-    <span class="ticker-item ticker-feat">Sitasi APA7 Otomatis</span>
-    <span class="ticker-item ticker-feat">Notifikasi Email</span>
-    <span class="ticker-item ticker-feat">Filter Tanggal</span>
-    <span class="ticker-item ticker-feat">Gratis Selamanya</span>
-    <span class="ticker-sep">&#8212;</span>
+  <div class="ticker-track" id="tickerTrack">
+    <span class="ticker-item" style="opacity:.4"><i class="bi bi-newspaper"></i> Memuat berita terkini...</span>
   </div>
 </div>
+<script>
+(function(){
+  fetch('/api/ticker-news')
+    .then(function(r){return r.json();})
+    .then(function(items){
+      if(!items||!items.length) return;
+      var track = document.getElementById('tickerTrack');
+      var html = '';
+      function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+      for(var rep=0;rep<2;rep++){
+        items.forEach(function(it){
+          html += '<span class="ticker-item"><i class="bi bi-newspaper"></i> ' + esc(it.title) +
+            (it.source ? '<span class="ticker-src"> / ' + esc(it.source) + '</span>' : '') +
+            '</span><span class="ticker-sep">|</span>';
+        });
+      }
+      track.innerHTML = html;
+    })
+    .catch(function(){});
+})();
+</script>
 
 <div class="ctr main">
 

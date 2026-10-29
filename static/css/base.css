@@ -174,7 +174,8 @@ html[data-theme="dark"]::before{
 }
 .ticker-item i{font-size:.8rem;color:var(--accent);opacity:.7}
 .ticker-feat{color:var(--accent);font-weight:600}
-.ticker-sep{color:var(--glass-b);padding:0 6px;font-size:.9rem;color:var(--t3)}
+.ticker-src{color:var(--t3);font-weight:400;font-size:.7rem}
+.ticker-sep{padding:0 6px;font-size:.9rem;color:var(--t3)}
 [data-theme="dark"] .ticker-wrap{background:var(--nav-bg)}
 [data-theme="dark"] .ticker-item{color:var(--t2)}
 
