@@ -134,6 +134,7 @@ html[data-theme="dark"]::before{
 }
 .alyx-foot-brand-name i{color:var(--accent)}
 .alyx-foot-tagline{font-size:.79rem;color:var(--t3)}
+[data-theme="dark"] .alyx-foot-tagline{color:var(--t2)}
 .alyx-foot-center{text-align:center}
 .alyx-foot-copy{font-size:.79rem;color:var(--t3)}
 .alyx-foot-copy a{color:var(--t2);text-decoration:none!important;transition:color .2s}

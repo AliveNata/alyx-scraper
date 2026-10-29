@@ -257,6 +257,10 @@ tbody tr:hover{background:var(--row-hover)}
 .btn-cite{background:none;border:none;padding:2px 6px;color:var(--t3);cursor:pointer;border-radius:5px;font-size:.88rem;line-height:1;transition:color .15s;vertical-align:middle}
 .btn-cite:hover{color:var(--accent)}
 
+/* Hint text + donate nudge dark mode */
+[data-theme="dark"] [data-i18n="fulltext_hint"]{color:var(--t2)!important}
+[data-theme="dark"] #donateNudgeText{color:var(--t2)}
+
 /* Image scraper dark mode */
 [data-theme="dark"] .upload-zone{border-color:rgba(255,255,255,.22)}
 [data-theme="dark"] .img-card{border-color:rgba(255,255,255,.16)}
