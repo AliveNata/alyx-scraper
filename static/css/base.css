@@ -135,7 +135,7 @@ html[data-theme="dark"]::before{
 .alyx-foot-tagline{font-size:.79rem;color:var(--t3)}
 [data-theme="dark"] .alyx-foot-tagline{color:var(--t2)}
 [data-theme="dark"] .alyx-foot-brand-title{color:var(--t1);-webkit-text-fill-color:var(--t1)}
-[data-theme="dark"] .alyx-foot-brand-sub{color:#a78bfa;-webkit-text-fill-color:#a78bfa;opacity:.7}
+[data-theme="dark"] .alyx-foot-brand-sub{color:var(--t1);-webkit-text-fill-color:var(--t1);opacity:.6}
 .alyx-foot-center{text-align:center}
 .alyx-foot-copy{font-size:.79rem;color:var(--t3)}
 .alyx-foot-copy a{color:var(--t2);text-decoration:none!important;transition:color .2s}
