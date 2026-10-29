@@ -438,12 +438,7 @@ def _build_scrape_email(keywords, results, fmt='csv'):
   <tr><td style="background:#0f172a;border-radius:12px 12px 0 0;padding:24px 28px">
     <table cellpadding="0" cellspacing="0" width="100%"><tr>
       <td style="width:56px;vertical-align:middle;padding-right:14px">
-        <svg width="48" height="48" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" style="display:block">
-          <rect x="2" y="2" width="7" height="36" fill="#ffffff"/>
-          <rect x="2" y="31" width="27" height="7" fill="#ffffff"/>
-          <rect x="22" y="2" width="7" height="16" fill="#ffffff"/>
-          <rect x="9" y="16" width="13" height="7" fill="#ffffff"/>
-        </svg>
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACLz2ctAAABx0lEQVR4nO3cMW7DQAwAwWPg/3+Z+UFUWavYM62uIIQFCwGncwAAAACATzdXB3Z3z41m5nKm/8T7+9vPxXN4KwGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgqdd5mN3degbuYwOSEiApAZISICkBkhIgKQGSetx3wE8zM1PP8GQ2ICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISIKnH3Qlxh+K72ICkBEhKgKQESEqApARISoCkBEhKgKQESEqApARISoCkBEhKgKQESEqApARISoCkBEhKgKQESEqApARISoCkBEhKgKQESEqApARISoCk5urA7u49o/CN/1e0AUkJkJQASQmQlABJCZCUAEkJkJQASQmQlABJCZCUAEkJkJQASQmQlABJCZCUAEkJkJQASQmQlABJCZCUAEkJkJQAAQAAAAA47/QLqKIRKUtXwGoAAAAASUVORK5CYII=" width="48" height="48" alt="AlyxLabs" style="display:block">
       </td>
       <td style="vertical-align:middle">
         <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#6366f1;text-transform:uppercase;margin-bottom:4px">AlyxLabs Scraper</div>
