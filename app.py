@@ -204,6 +204,28 @@ def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=Fa
         results = scraper.scrape_keywords(keywords, locations, platforms,
                                           date_from=date_from, date_to=date_to)
 
+        if date_from or date_to:
+            from datetime import date as _date
+            def _parse_date(s):
+                try:
+                    return _date.fromisoformat(s[:10])
+                except Exception:
+                    return None
+            df = _parse_date(date_from) if date_from else None
+            dt = _parse_date(date_to) if date_to else None
+            filtered = []
+            for r in results:
+                rd = _parse_date(r.get('date', '') or '')
+                if rd is None:
+                    filtered.append(r)
+                    continue
+                if df and rd < df:
+                    continue
+                if dt and rd > dt:
+                    continue
+                filtered.append(r)
+            results = filtered
+
         if full_text:
             cb('Mengambil teks lengkap artikel...')
             from scraper import enrich_full_text
