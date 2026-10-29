@@ -85,7 +85,8 @@
     <!-- Chart + Comparisons -->
     <div class="overview-grid">
 
-      <!-- Chart -->
+      <!-- Chart column -->
+      <div style="display:flex;flex-direction:column;gap:16px">
       <div class="g-card">
         <div class="g-card-head">
           <div class="g-card-title"><i class="bi bi-graph-up-arrow"></i> Usage Over Time</div>
@@ -106,6 +107,27 @@
         <div class="g-card-body" style="height:300px;position:relative">
           <canvas id="usageChart"></canvas>
         </div>
+      </div>
+      <!-- Quick Insights below chart -->
+      <div class="g-card">
+        <div class="g-card-head">
+          <div class="g-card-title"><i class="bi bi-lightning-charge-fill"></i> Quick Insights</div>
+        </div>
+        <div class="g-card-body" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:16px">
+          <div style="text-align:center;padding:12px 8px;border-radius:10px;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.1)">
+            <div style="font-size:1.3rem;font-weight:800;color:var(--t1)" id="qiToday">-</div>
+            <div style="font-size:.7rem;color:var(--t3);margin-top:3px;font-weight:500">HARI INI</div>
+          </div>
+          <div style="text-align:center;padding:12px 8px;border-radius:10px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.12)">
+            <div style="font-size:1.3rem;font-weight:800;color:var(--t1)" id="qiUsers">-</div>
+            <div style="font-size:.7rem;color:var(--t3);margin-top:3px;font-weight:500">PENGGUNA</div>
+          </div>
+          <div style="text-align:center;padding:12px 8px;border-radius:10px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.12)">
+            <div style="font-size:1.3rem;font-weight:800;color:var(--t1)" id="qiAvg">-</div>
+            <div style="font-size:.7rem;color:var(--t3);margin-top:3px;font-weight:500">RATA-RATA (s)</div>
+          </div>
+        </div>
+      </div>
       </div>
 
       <!-- Comparisons + Top Lists -->
@@ -180,6 +202,10 @@
           </thead>
           <tbody id="logsBody"></tbody>
         </table>
+      </div>
+      <div id="logsPagination" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--glass-b);gap:8px;flex-wrap:wrap">
+        <span id="logsPageInfo" style="font-size:.78rem;color:var(--t3)"></span>
+        <div style="display:flex;gap:4px" id="logsBtns"></div>
       </div>
     </div>
   </div>
@@ -348,6 +374,24 @@
               <span id="ytSaveMsg" style="font-size:.8rem"></span>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Ticker Speed -->
+      <div class="g-card">
+        <div class="g-card-head">
+          <div class="g-card-title"><i class="bi bi-speedometer2"></i> Kecepatan Ticker</div>
+        </div>
+        <div class="g-card-body">
+          <div class="settings-hint" style="margin-bottom:14px">Atur kecepatan running text berita di halaman utama.</div>
+          <div style="display:flex;align-items:center;gap:14px;max-width:440px">
+            <span style="font-size:.78rem;color:var(--t2);white-space:nowrap">Cepat</span>
+            <input type="range" id="tickerSpeedSlider" min="60" max="360" step="30" value="180"
+              style="flex:1;accent-color:var(--accent);cursor:pointer"
+              oninput="updateTickerSpeed(this.value)">
+            <span style="font-size:.78rem;color:var(--t2);white-space:nowrap">Lambat</span>
+          </div>
+          <div style="margin-top:8px;font-size:.78rem;color:var(--t3)">Durasi: <span id="tickerSpeedVal">180</span>s</div>
         </div>
       </div>
 

@@ -57,8 +57,19 @@ function toggleTheme(){
   document.getElementById('langBtn').innerHTML = currentLang === 'id' ? '<span class="fi fi-id"></span>' : '<span class="fi fi-gb"></span>';
   // DOMContentLoaded guarantees window.PAGE_L (set in extra_js) is ready
   if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', applyLang);
+    document.addEventListener('DOMContentLoaded', function(){ applyLang(); applyTickerSpeed(); });
   } else {
     applyLang();
+    applyTickerSpeed();
   }
 })();
+
+function applyTickerSpeed(){
+  try{
+    var v = localStorage.getItem('tickerDuration');
+    if(v){
+      var track = document.querySelector('.ticker-track');
+      if(track) track.style.animationDuration = parseInt(v,10) + 's';
+    }
+  }catch(e){}
+}

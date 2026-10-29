@@ -1,6 +1,8 @@
 /* window.ALL_PLATFORMS is injected inline by the template before this file loads */
 
 let usageChart = null;
+let _logsAll = [], _logsPage = 1;
+const _logsPerPage = 50;
 
 // ── Platform Availability ──
 async function loadPlatforms(){
@@ -84,6 +86,9 @@ async function loadStats(){
     document.getElementById('sTotalResults').textContent = (s.total_results  || 0).toLocaleString();
     document.getElementById('sAvgDuration') .textContent = (s.avg_duration   || 0).toFixed(1);
     document.getElementById('sUniqueKw')    .textContent = (s.unique_keywords|| 0).toLocaleString();
+    if(document.getElementById('qiToday'))  document.getElementById('qiToday').textContent  = (s.today_scrapes || 0).toLocaleString();
+    if(document.getElementById('qiUsers'))  document.getElementById('qiUsers').textContent  = (s.unique_users  || 0).toLocaleString();
+    if(document.getElementById('qiAvg'))    document.getElementById('qiAvg').textContent    = (s.avg_duration  || 0).toFixed(1);
 
     renderChart(j.usage || []);
     computeComparisons(j.usage || []);
@@ -177,38 +182,64 @@ async function loadLogs(){
   const action = document.getElementById('logAction').value;
   const from   = document.getElementById('logFrom').value;
   const to     = document.getElementById('logTo').value;
-  let url = `/api/admin/logs?limit=200`;
+  let url = `/api/admin/logs?limit=500`;
   if(action) url += '&action=' + action;
   if(from)   url += '&date_from=' + from;
   if(to)     url += '&date_to=' + to;
   try {
     const r = await fetch(url), j = await r.json(); if(!j.ok) return;
-    const logs = j.logs || [];
+    _logsAll = j.logs || [];
+    _logsPage = 1;
 
     const todayStr  = new Date().toDateString();
-    const todayCount = logs.filter(l => new Date(l.created_at).toDateString() === todayStr).length;
+    const todayCount = _logsAll.filter(l => new Date(l.created_at).toDateString() === todayStr).length;
     document.getElementById('sToday').textContent = todayCount;
 
-    const badgeCls = {
-      scrape: 'act-scrape', image_scrape: 'act-image_scrape',
-      image_search: 'act-image_search', image_upload: 'act-image_upload'
-    };
-    document.getElementById('logsBody').innerHTML = logs.map((l, i) => `
-      <tr>
-        <td style="color:var(--t3);font-size:.75rem">${i+1}</td>
-        <td style="white-space:nowrap;font-size:.77rem;color:var(--t2);font-family:monospace">${esc(l.created_at)}</td>
-        <td><span class="act-badge ${badgeCls[l.action]||'act-scrape'}">${esc(l.action)}</span></td>
-        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(l.keyword)}">${esc(l.keyword)}</td>
-        <td style="white-space:nowrap">${esc(l.platform)}</td>
-        <td>${esc(l.location)}</td>
-        <td style="font-weight:700;color:var(--accent)">${esc(l.results_count)}</td>
-        <td style="white-space:nowrap">${esc((l.duration_seconds||0).toFixed(1))}s</td>
-        <td style="font-family:monospace;font-size:.77rem;white-space:nowrap">${esc(l.ip_address)}</td>
-        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t2);font-size:.76rem"
-            title="${esc(l.user_agent)}">${esc((l.user_agent||'').substring(0,30))}</td>
-      </tr>
-    `).join('');
+    renderLogsPage();
   } catch(e){ console.error(e) }
+}
+
+function renderLogsPage(){
+  const badgeCls = {
+    scrape: 'act-scrape', image_scrape: 'act-image_scrape',
+    image_search: 'act-image_search', image_upload: 'act-image_upload'
+  };
+  const total = _logsAll.length;
+  const totalPages = Math.max(1, Math.ceil(total / _logsPerPage));
+  if(_logsPage > totalPages) _logsPage = totalPages;
+  const start = (_logsPage - 1) * _logsPerPage;
+  const page = _logsAll.slice(start, start + _logsPerPage);
+
+  document.getElementById('logsBody').innerHTML = page.map((l, i) => `
+    <tr>
+      <td style="color:var(--t3);font-size:.75rem">${start + i + 1}</td>
+      <td style="white-space:nowrap;font-size:.77rem;color:var(--t2);font-family:monospace">${esc(l.created_at)}</td>
+      <td><span class="act-badge ${badgeCls[l.action]||'act-scrape'}">${esc(l.action)}</span></td>
+      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(l.keyword)}">${esc(l.keyword)}</td>
+      <td style="white-space:nowrap">${esc(l.platform)}</td>
+      <td>${esc(l.location)}</td>
+      <td style="font-weight:700;color:var(--accent)">${esc(l.results_count)}</td>
+      <td style="white-space:nowrap">${esc((l.duration_seconds||0).toFixed(1))}s</td>
+      <td style="font-family:monospace;font-size:.77rem;white-space:nowrap">${esc(l.ip_address)}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t2);font-size:.76rem"
+          title="${esc(l.user_agent)}">${esc((l.user_agent||'').substring(0,30))}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--t3)">Belum ada log.</td></tr>';
+
+  const info = document.getElementById('logsPageInfo');
+  if(info) info.textContent = total ? `${start+1}-${Math.min(start+_logsPerPage,total)} dari ${total} entri` : '0 entri';
+
+  const btns = document.getElementById('logsBtns');
+  if(btns){
+    let html = '';
+    if(_logsPage > 1) html += `<button class="g-btn" onclick="_logsPage--;renderLogsPage()" style="padding:5px 11px;font-size:.78rem"><i class="bi bi-chevron-left"></i></button>`;
+    const lo = Math.max(1, _logsPage-2), hi = Math.min(totalPages, _logsPage+2);
+    for(let p=lo; p<=hi; p++){
+      html += `<button class="g-btn${p===_logsPage?' g-btn-primary':''}" onclick="_logsPage=${p};renderLogsPage()" style="padding:5px 11px;font-size:.78rem;min-width:34px">${p}</button>`;
+    }
+    if(_logsPage < totalPages) html += `<button class="g-btn" onclick="_logsPage++;renderLogsPage()" style="padding:5px 11px;font-size:.78rem"><i class="bi bi-chevron-right"></i></button>`;
+    btns.innerHTML = html;
+  }
 }
 
 // ── Settings ──
@@ -218,6 +249,7 @@ async function loadSettings(){
   loadVisionKey();
   loadS2Key();
   loadYtKey();
+  loadTickerSpeed();
 }
 
 async function saveSettings(){
@@ -814,6 +846,27 @@ async function runDiag(){
 
   btn.disabled = false;
   btn.innerHTML = '<i class="bi bi-play-fill"></i> Test';
+}
+
+// ── Ticker Speed ──
+function updateTickerSpeed(val){
+  val = parseInt(val, 10);
+  const el = document.getElementById('tickerSpeedVal');
+  if(el) el.textContent = val;
+  try { localStorage.setItem('tickerDuration', val); } catch(e){}
+  const track = document.querySelector('.ticker-track');
+  if(track) track.style.animationDuration = val + 's';
+}
+
+function loadTickerSpeed(){
+  let val = 180;
+  try { const s = localStorage.getItem('tickerDuration'); if(s) val = parseInt(s,10); } catch(e){}
+  const slider = document.getElementById('tickerSpeedSlider');
+  if(slider){ slider.value = val; }
+  const el = document.getElementById('tickerSpeedVal');
+  if(el) el.textContent = val;
+  const track = document.querySelector('.ticker-track');
+  if(track) track.style.animationDuration = val + 's';
 }
 
 loadStats();
