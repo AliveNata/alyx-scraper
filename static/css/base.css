@@ -150,3 +150,35 @@ html[data-theme="dark"]::before{
   .alyx-foot-grid{grid-template-columns:1fr;text-align:center}
   .alyx-foot-right{align-items:center;flex-direction:row;justify-content:center}
 }
+
+/* ── TICKER ── */
+.ticker-wrap{
+  width:100%;overflow:hidden;
+  border-top:1px solid var(--nav-border);
+  border-bottom:1px solid var(--nav-border);
+  background:var(--nav-bg);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  padding:7px 0;
+  user-select:none;
+}
+.ticker-track{
+  display:flex;align-items:center;gap:0;
+  width:max-content;
+  animation:ticker-scroll 48s linear infinite;
+}
+.ticker-wrap:hover .ticker-track{animation-play-state:paused}
+.ticker-item{
+  font-size:.76rem;font-weight:500;color:var(--t2);
+  white-space:nowrap;padding:0 18px;
+  display:flex;align-items:center;gap:5px;
+}
+.ticker-item i{font-size:.8rem;color:var(--accent);opacity:.7}
+.ticker-feat{color:var(--accent);font-weight:600}
+.ticker-sep{color:var(--glass-b);padding:0 6px;font-size:.9rem;color:var(--t3)}
+[data-theme="dark"] .ticker-wrap{background:var(--nav-bg)}
+[data-theme="dark"] .ticker-item{color:var(--t2)}
+
+@keyframes ticker-scroll{
+  0%{transform:translateX(0)}
+  100%{transform:translateX(-50%)}
+}
