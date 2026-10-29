@@ -253,9 +253,10 @@ def _send_email_smtp(sender, password, recipient, subject, html_body):
     cfg_email = load_config().get('email', {})
     host = cfg_email.get('smtp_host', 'smtp.gmail.com').strip() or 'smtp.gmail.com'
     port = int(cfg_email.get('smtp_port', 465) or 465)
+    from email.utils import formataddr
     msg = MIMEMultipart('alternative')
     msg['Subject'] = subject
-    msg['From'] = sender
+    msg['From'] = formataddr(('No Reply - AlyxLabs Support', sender))
     msg['To'] = recipient
     msg.attach(MIMEText(html_body, 'html'))
     ctx = ssl.create_default_context()
