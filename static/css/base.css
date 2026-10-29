@@ -158,8 +158,14 @@ html[data-theme="dark"]::before{
   border-bottom:1px solid var(--nav-border);
   background:var(--nav-bg);
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  padding:7px 0;
+  padding:9px 0;
   user-select:none;
+  perspective:600px;
+}
+.ticker-inner{
+  transform:rotateX(12deg);
+  transform-origin:center top;
+  overflow:hidden;
 }
 .ticker-track{
   display:flex;align-items:center;gap:0;
