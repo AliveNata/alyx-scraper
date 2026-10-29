@@ -26,6 +26,7 @@ body{display:flex;flex-direction:column;min-height:100vh}
 }
 
 .login-sub{text-align:center;font-size:.83rem;color:var(--t3);margin-bottom:32px}
+[data-theme="dark"] .login-sub{color:var(--t2)}
 
 .login-group{margin-bottom:18px}
 .login-label{display:block;font-size:.72rem;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px}
