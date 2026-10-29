@@ -187,6 +187,7 @@ a.ticker-link:hover{color:var(--accent)}
 a.ticker-link:hover .ticker-src{color:var(--accent);opacity:.7}
 [data-theme="dark"] .ticker-wrap{background:var(--nav-bg)}
 [data-theme="dark"] .ticker-item{color:var(--t2)}
+[data-theme="dark"] select{color-scheme:dark}
 
 @keyframes ticker-scroll{
   0%{transform:translateX(0)}
