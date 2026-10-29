@@ -314,16 +314,46 @@ async function saveRedditCfg(){
   setTimeout(() => msg.textContent = '', 3000);
 }
 
+// ── Generic API key helpers (used by Vision, S2, YouTube cards) ──
+function togglePw(inputId, iconId) {
+  const inp = document.getElementById(inputId);
+  const ico = document.getElementById(iconId);
+  if (inp.type === 'password') { inp.type = 'text'; ico.className = 'bi bi-eye-slash'; }
+  else { inp.type = 'password'; ico.className = 'bi bi-eye'; }
+}
+
+async function saveApiKey(keyName, inputId, badgeId, msgId) {
+  const val = document.getElementById(inputId).value.trim();
+  const msg = document.getElementById(msgId);
+  msg.style.color = 'var(--t3)'; msg.textContent = 'Menyimpan...';
+  try {
+    const res = await fetch('/api/admin/settings', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({api_keys: {[keyName]: val}})
+    });
+    const data = await res.json();
+    if (data.ok) {
+      msg.style.color = '#22c55e'; msg.textContent = 'Tersimpan!';
+      // Refresh the badge for this key without re-fetching all settings
+      const badge = document.getElementById(badgeId);
+      if (badge) badge.innerHTML = val
+        ? '<span class="nitter-badge nitter-ok"><i class="bi bi-check-circle-fill"></i> Aktif</span>'
+        : '<span class="nitter-badge nitter-fail"><i class="bi bi-x-circle-fill"></i> Belum di-set</span>';
+      setTimeout(() => msg.textContent = '', 3000);
+    } else {
+      msg.style.color = '#ef4444'; msg.textContent = data.error || 'Gagal';
+    }
+  } catch(e) { msg.style.color = '#ef4444'; msg.textContent = 'Error'; }
+}
+
 // ── YouTube API key ──
 function toggleYtKey(){
-  const inp=document.getElementById('ytKey'), icon=document.getElementById('ytEye');
-  if(inp.type==='password'){inp.type='text';icon.className='bi bi-eye-slash';}
-  else{inp.type='password';icon.className='bi bi-eye';}
+  togglePw('ytKey','ytEye');
 }
 async function loadYtKey(){
   try{
     const r=await fetch(`/api/admin/settings`); const j=await r.json(); if(!j.ok)return;
-    const key=j.config?.youtube_key||'';
+    const key=j.config?.api_keys?.youtube||'';
     document.getElementById('ytKey').value=key?'********':'';
     document.getElementById('ytStatusBadge').innerHTML=key
       ?'<span class="nitter-badge nitter-ok"><i class="bi bi-check-circle-fill"></i> Aktif</span>'
@@ -335,7 +365,7 @@ async function saveYtKey(){
   btn.disabled=true;
   try{
     const r=await fetch(`/api/admin/settings`,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({youtube_key:document.getElementById('ytKey').value.trim()})});
+      body:JSON.stringify({api_keys:{youtube:document.getElementById('ytKey').value.trim()}})});
     const j=await r.json();
     if(j.ok){msg.style.color='#22c55e';msg.textContent='Tersimpan';loadYtKey();}
     else{msg.style.color='#ef4444';msg.textContent='Gagal simpan';}
@@ -345,14 +375,12 @@ async function saveYtKey(){
 
 // ── Semantic Scholar API key ──
 function toggleS2Key(){
-  const inp=document.getElementById('s2Key'), icon=document.getElementById('s2Eye');
-  if(inp.type==='password'){inp.type='text';icon.className='bi bi-eye-slash';}
-  else{inp.type='password';icon.className='bi bi-eye';}
+  togglePw('s2Key','s2Eye');
 }
 async function loadS2Key(){
   try{
     const r=await fetch(`/api/admin/settings`); const j=await r.json(); if(!j.ok)return;
-    const key=j.config?.semantic_scholar_key||'';
+    const key=j.config?.api_keys?.semantic_scholar||'';
     document.getElementById('s2Key').value=key?'********':'';
     document.getElementById('s2StatusBadge').innerHTML=key
       ?'<span class="nitter-badge nitter-ok"><i class="bi bi-check-circle-fill"></i> Aktif</span>'
@@ -364,7 +392,7 @@ async function saveS2Key(){
   btn.disabled=true;
   try{
     const r=await fetch(`/api/admin/settings`,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({semantic_scholar_key:document.getElementById('s2Key').value.trim()})});
+      body:JSON.stringify({api_keys:{semantic_scholar:document.getElementById('s2Key').value.trim()}})});
     const j=await r.json();
     if(j.ok){msg.style.color='#22c55e';msg.textContent='Tersimpan';loadS2Key();}
     else{msg.style.color='#ef4444';msg.textContent='Gagal simpan';}
@@ -374,17 +402,14 @@ async function saveS2Key(){
 
 // ── Google Vision (reverse image) ──
 function toggleVisionKey(){
-  const inp = document.getElementById('visionKey');
-  const icon = document.getElementById('visionEye');
-  if(inp.type === 'password'){ inp.type = 'text'; icon.className = 'bi bi-eye-slash'; }
-  else { inp.type = 'password'; icon.className = 'bi bi-eye'; }
+  togglePw('visionKey','visionEye');
 }
 
 async function loadVisionKey(){
   try {
     const r = await fetch(`/api/admin/settings`);
     const j = await r.json(); if(!j.ok) return;
-    const key = j.config?.google_vision_key || '';
+    const key = j.config?.api_keys?.google_vision || '';
     document.getElementById('visionKey').value = key ? '********' : '';
     document.getElementById('visionStatusBadge').innerHTML = key
       ? '<span class="nitter-badge nitter-ok"><i class="bi bi-check-circle-fill"></i> Aktif</span>'
@@ -400,7 +425,7 @@ async function saveVisionKey(){
     const r = await fetch(`/api/admin/settings`, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ google_vision_key: document.getElementById('visionKey').value.trim() })
+      body: JSON.stringify({ api_keys: { google_vision: document.getElementById('visionKey').value.trim() } })
     });
     const j = await r.json();
     if(j.ok){ msg.style.color = '#22c55e'; msg.textContent = 'Tersimpan'; loadVisionKey(); }
@@ -426,6 +451,8 @@ async function loadEmailConfig(){
     document.getElementById('emailUser').value = em.gmail_user || '';
     document.getElementById('emailAppPw').value = em.gmail_app_password || '';
     document.getElementById('emailRecipient').value = em.reset_recipient || 'alivenata@gmail.com';
+    document.getElementById('smtpHost').value = em.smtp_host || 'smtp.gmail.com';
+    document.getElementById('smtpPort').value = em.smtp_port || 465;
 
     const configured = !!(em.gmail_user && em.gmail_app_password);
     document.getElementById('emailStatusBadge').innerHTML = configured
@@ -446,6 +473,8 @@ async function saveEmailConfig(){
         gmail_user:         document.getElementById('emailUser').value.trim(),
         gmail_app_password: document.getElementById('emailAppPw').value.trim(),
         reset_recipient:    document.getElementById('emailRecipient').value.trim(),
+        smtp_host:          document.getElementById('smtpHost').value.trim() || 'smtp.gmail.com',
+        smtp_port:          parseInt(document.getElementById('smtpPort').value || '465', 10) || 465,
       }})
     });
     const j = await r.json();

@@ -240,6 +240,36 @@ def run_scraper_job(job_id, keywords, locations, platforms, ip, ua, full_text=Fa
         _job_semaphore.release()
 
 
+def _send_email_smtp(sender, password, recipient, subject, html_body):
+    """Send email via SMTP. Reads smtp_host and smtp_port from email config.
+    Supports port 587 (STARTTLS) and 465/others (SSL). Compatible with Gmail
+    App Passwords and cPanel/hosting SMTP."""
+    import smtplib
+    import ssl
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    cfg_email = load_config().get('email', {})
+    host = cfg_email.get('smtp_host', 'smtp.gmail.com').strip() or 'smtp.gmail.com'
+    port = int(cfg_email.get('smtp_port', 465) or 465)
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From'] = sender
+    msg['To'] = recipient
+    msg.attach(MIMEText(html_body, 'html'))
+    ctx = ssl.create_default_context()
+    if port == 587:
+        with smtplib.SMTP(host, port, timeout=15) as s:
+            s.ehlo()
+            s.starttls(context=ctx)
+            s.ehlo()
+            s.login(sender, password)
+            s.sendmail(sender, recipient, msg.as_string())
+    else:
+        with smtplib.SMTP_SSL(host, port, context=ctx, timeout=15) as s:
+            s.login(sender, password)
+            s.sendmail(sender, recipient, msg.as_string())
+
+
 def _send_notification(notify_email, notify_webhook, results_count, keywords):
     """Fire email and/or webhook after a scraping job finishes. Best-effort only."""
     kw_str = ', '.join(keywords)
@@ -250,8 +280,6 @@ def _send_notification(notify_email, notify_webhook, results_count, keywords):
         app_pw = em.get('gmail_app_password', '').strip()
         if sender and app_pw:
             try:
-                import yagmail
-                yag = yagmail.SMTP(sender, app_pw)
                 body = (
                     '<div style="font-family:system-ui,sans-serif;max-width:480px;padding:24px">'
                     '<h2 style="color:#6366f1;margin:0 0 12px">Scraping Selesai</h2>'
@@ -260,7 +288,8 @@ def _send_notification(notify_email, notify_webhook, results_count, keywords):
                     '<p style="color:#94a3b8;font-size:.8rem">AlyxLabs Scraper - scraper.alyxlabs.tech</p>'
                     '</div>'
                 )
-                yag.send(to=notify_email, subject='Scraping selesai - AlyxLabs', contents=body)
+                _send_email_smtp(sender, app_pw, notify_email,
+                                 'Scraping selesai - AlyxLabs', body)
             except Exception:
                 pass
     if notify_webhook and _is_safe_url(notify_webhook):
@@ -414,8 +443,6 @@ def api_forgot_password():
     reset_url = f"{host}/alyx-control-panel/reset-password?token={token}"
 
     try:
-        import yagmail
-        yag = yagmail.SMTP(sender, app_pw)
         subject = 'Reset Password - AlyxLabs Admin'
         body = f"""
 <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px">
@@ -435,7 +462,7 @@ def api_forgot_password():
     background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;text-decoration:none;
     border-radius:10px;font-weight:600;font-size:.95rem;
     box-shadow:0 4px 16px rgba(99,102,241,.35)">
-    🔑 Reset Password Sekarang
+    Reset Password Sekarang
   </a>
 
   <p style="color:#94a3b8;font-size:.78rem;margin-top:24px;line-height:1.6">
@@ -446,11 +473,11 @@ def api_forgot_password():
 
   <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0">
   <p style="color:#cbd5e1;font-size:.75rem;margin:0">
-    © 2024-2026 AlyxLabs Scraper. Jangan balas email ini.
+    &copy; 2024-2026 AlyxLabs Scraper. Jangan balas email ini.
   </p>
 </div>
 """
-        yag.send(to=recipient, subject=subject, contents=body)
+        _send_email_smtp(sender, app_pw, recipient, subject, body)
         return jsonify({'ok': True, 'recipient': recipient})
     except Exception as e:
         # Clean up token if send fails
@@ -830,7 +857,8 @@ def api_images_upload():
     content_type = file.content_type or 'image/jpeg'
 
     scraper = ImageScraper()
-    vision_key = os.environ.get('GOOGLE_VISION_KEY', '').strip()
+    vision_key = (load_config().get('api_keys', {}).get('google_vision', '').strip()
+                  or os.environ.get('GOOGLE_VISION_KEY', '').strip())
 
     images = []
     method = 'filename'
@@ -956,10 +984,20 @@ def api_admin_settings_post():
     if 'email' in data:
         em = data['email']
         cfg['email'] = {
-            'gmail_user':        em.get('gmail_user', '').strip(),
-            'reset_recipient':   em.get('reset_recipient', 'alivenata@gmail.com').strip(),
+            'gmail_user':         em.get('gmail_user', '').strip(),
+            'reset_recipient':    em.get('reset_recipient', 'alivenata@gmail.com').strip(),
             'gmail_app_password': em.get('gmail_app_password', ''),
+            # smtp_host/smtp_port support non-Gmail SMTP (e.g. cPanel hosting).
+            # Key names gmail_user/gmail_app_password kept for backwards compatibility.
+            'smtp_host': em.get('smtp_host', 'smtp.gmail.com').strip() or 'smtp.gmail.com',
+            'smtp_port': int(em.get('smtp_port', 465) or 465),
         }
+    if 'api_keys' in data:
+        ak = data['api_keys']
+        cfg.setdefault('api_keys', {})
+        for k in ('semantic_scholar', 'youtube', 'google_vision'):
+            if k in ak:
+                cfg['api_keys'][k] = ak[k].strip()
     if 'platforms_disabled' in data:
         cfg['platforms_disabled'] = [p for p in (data.get('platforms_disabled') or []) if p in SCRAPERS]
     save_config(cfg)
@@ -978,12 +1016,10 @@ def api_admin_test_email():
     if not sender or not app_pw:
         return jsonify({'ok': False, 'error': 'Email config belum diisi (gmail_user + gmail_app_password di Settings)'}), 400
     try:
-        import yagmail
-        yag = yagmail.SMTP(sender, app_pw)
-        yag.send(
-            to=recipient,
-            subject='Test Email - AlyxLabs Admin',
-            contents=f'<p>✅ Konfigurasi email AlyxLabs berhasil! Pengirim: <strong>{sender}</strong></p>'
+        _send_email_smtp(
+            sender, app_pw, recipient,
+            'Test Email - AlyxLabs Admin',
+            f'<p>Konfigurasi email AlyxLabs berhasil! Pengirim: <strong>{sender}</strong></p>'
         )
         return jsonify({'ok': True, 'recipient': recipient})
     except Exception as e:

@@ -4,10 +4,22 @@ import time
 import random
 import re
 import os
+import json
 import threading
 from datetime import datetime
 from urllib.parse import quote_plus, quote, urljoin
 from concurrent.futures import ThreadPoolExecutor
+
+_CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
+
+
+def _load_scraper_config():
+    """Read config.json directly -- avoids any circular import with app.py."""
+    try:
+        with open(_CONFIG_PATH) as _f:
+            return json.load(_f)
+    except Exception:
+        return {}
 
 BROWSER_UA = (
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
@@ -774,7 +786,8 @@ class SemanticScholarScraper(BaseScraper):
             url = ('https://api.semanticscholar.org/graph/v1/paper/search?query='
                    + quote_plus(keyword) + f'&limit={min(max_results, 20)}&fields={fields}')
             headers = {'User-Agent': 'AlyxScraper/2.0 (research tool)'}
-            key = os.environ.get('SEMANTIC_SCHOLAR_KEY', '')
+            key = (_load_scraper_config().get('api_keys', {}).get('semantic_scholar', '').strip()
+                   or os.environ.get('SEMANTIC_SCHOLAR_KEY', ''))
             if key:
                 headers['x-api-key'] = key
             # Retry up to 3 times on 429 with exponential backoff (2s, 4s).
@@ -826,7 +839,8 @@ class YouTubeScraper(BaseScraper):
     def scrape(self, keyword, location='', max_results=15):
         self.update_status(f"[YouTube] Mencari '{keyword}'...")
         results = []
-        key = os.environ.get('YOUTUBE_API_KEY', '')
+        key = (_load_scraper_config().get('api_keys', {}).get('youtube', '').strip()
+               or os.environ.get('YOUTUBE_API_KEY', ''))
         if not key:
             self.update_status("[YouTube] API key belum di-set (Admin -> Settings)")
             return results

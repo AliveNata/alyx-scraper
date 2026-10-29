@@ -214,19 +214,19 @@
         <div class="g-card-body">
           <div class="settings-hint" style="margin-bottom:16px">
             Digunakan untuk kirim link <strong>Forgot Password</strong> ke email admin.
-            Gunakan Gmail dengan <strong>App Password</strong>
-            (<a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--accent)">myaccount.google.com/apppasswords</a>).
+            Gunakan Gmail atau SMTP hosting. Untuk Gmail buat <strong>App Password</strong>
+            di <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--accent)">myaccount.google.com/apppasswords</a>.
           </div>
 
           <div style="display:flex;flex-direction:column;gap:12px;max-width:440px">
             <div>
-              <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">Gmail Pengirim</label>
+              <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">Email Pengirim</label>
               <input class="g-input" id="emailUser" placeholder="contoh@gmail.com" style="width:100%">
             </div>
             <div>
               <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">
-                Gmail App Password
-                <span style="font-weight:400;color:var(--t3);margin-left:4px">(bukan password Gmail biasa)</span>
+                App Password / SMTP Password
+                <span style="font-weight:400;color:var(--t3);margin-left:4px">(bukan password email biasa)</span>
               </label>
               <div style="position:relative">
                 <input class="g-input" type="password" id="emailAppPw" placeholder="xxxx xxxx xxxx xxxx" style="width:100%;padding-right:38px">
@@ -240,6 +240,17 @@
               <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">Email Penerima Reset</label>
               <input class="g-input" id="emailRecipient" placeholder="alivenata@gmail.com" value="alivenata@gmail.com" style="width:100%">
             </div>
+            <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end">
+              <div>
+                <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">SMTP Host</label>
+                <input class="g-input" id="smtpHost" placeholder="smtp.gmail.com" style="width:100%">
+              </div>
+              <div>
+                <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">Port</label>
+                <input class="g-input" id="smtpPort" placeholder="465" type="number" style="width:72px">
+              </div>
+            </div>
+            <div class="settings-hint"><i class="bi bi-info-circle"></i> Gmail: smtp.gmail.com:465. cPanel hosting: mail.domain.com:465 (SSL) atau :587 (TLS)</div>
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
               <button class="g-btn g-btn-primary" onclick="saveEmailConfig()" id="emailSaveBtn">
                 <i class="bi bi-floppy-fill"></i> Simpan
@@ -253,7 +264,7 @@
 
           <div class="settings-hint" style="margin-top:14px">
             <i class="bi bi-info-circle"></i>
-            Cara buat App Password: Google Account &rarr; Security &rarr; 2-Step Verification &rarr; App Passwords &rarr; buat baru untuk "Mail".
+            Cara buat App Password Gmail: Google Account &rarr; Security &rarr; 2-Step Verification &rarr; App Passwords &rarr; buat baru untuk "Mail".
           </div>
         </div>
       </div>
@@ -273,10 +284,15 @@
           <div style="display:flex;flex-direction:column;gap:12px;max-width:440px">
             <div>
               <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">Google Vision API Key</label>
-              <input class="g-input" type="password" id="visionKey" placeholder="Set via environment variable on server" disabled style="width:100%">
-              <div class="settings-hint" style="margin-top:4px"><i class="bi bi-lock-fill"></i> Set via environment variable on server</div>
+              <div style="position:relative">
+                <input class="g-input" type="password" id="visionKey" placeholder="Masukkan API key..." style="width:100%;padding-right:38px">
+                <button type="button" onclick="togglePw('visionKey','visionEye')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t3);cursor:pointer;font-size:.95rem"><i class="bi bi-eye" id="visionEye"></i></button>
+              </div>
             </div>
-            <span id="visionSaveMsg" style="font-size:.8rem"></span>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+              <button class="g-btn g-btn-primary" onclick="saveApiKey('google_vision','visionKey','visionStatusBadge','visionSaveMsg')"><i class="bi bi-floppy-fill"></i> Simpan</button>
+              <span id="visionSaveMsg" style="font-size:.8rem"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -295,10 +311,15 @@
           <div style="display:flex;flex-direction:column;gap:12px;max-width:440px">
             <div>
               <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">Semantic Scholar API Key</label>
-              <input class="g-input" type="password" id="s2Key" placeholder="Set via environment variable on server" disabled style="width:100%">
-              <div class="settings-hint" style="margin-top:4px"><i class="bi bi-lock-fill"></i> Set via environment variable on server</div>
+              <div style="position:relative">
+                <input class="g-input" type="password" id="s2Key" placeholder="Masukkan API key..." style="width:100%;padding-right:38px">
+                <button type="button" onclick="togglePw('s2Key','s2Eye')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t3);cursor:pointer;font-size:.95rem"><i class="bi bi-eye" id="s2Eye"></i></button>
+              </div>
             </div>
-            <span id="s2SaveMsg" style="font-size:.8rem"></span>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+              <button class="g-btn g-btn-primary" onclick="saveApiKey('semantic_scholar','s2Key','s2StatusBadge','s2SaveMsg')"><i class="bi bi-floppy-fill"></i> Simpan</button>
+              <span id="s2SaveMsg" style="font-size:.8rem"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -317,10 +338,15 @@
           <div style="display:flex;flex-direction:column;gap:12px;max-width:440px">
             <div>
               <label class="settings-label" style="font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:5px;display:block">YouTube API Key</label>
-              <input class="g-input" type="password" id="ytKey" placeholder="Set via environment variable on server" disabled style="width:100%">
-              <div class="settings-hint" style="margin-top:4px"><i class="bi bi-lock-fill"></i> Set via environment variable on server</div>
+              <div style="position:relative">
+                <input class="g-input" type="password" id="ytKey" placeholder="Masukkan API key..." style="width:100%;padding-right:38px">
+                <button type="button" onclick="togglePw('ytKey','ytEye')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--t3);cursor:pointer;font-size:.95rem"><i class="bi bi-eye" id="ytEye"></i></button>
+              </div>
             </div>
-            <span id="ytSaveMsg" style="font-size:.8rem"></span>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+              <button class="g-btn g-btn-primary" onclick="saveApiKey('youtube','ytKey','ytStatusBadge','ytSaveMsg')"><i class="bi bi-floppy-fill"></i> Simpan</button>
+              <span id="ytSaveMsg" style="font-size:.8rem"></span>
+            </div>
           </div>
         </div>
       </div>
