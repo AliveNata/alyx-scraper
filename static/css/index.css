@@ -177,6 +177,10 @@ select.input-sm option{background:var(--modal-bg)}
 [data-theme="dark"] [data-i18n="fulltext_hint"],
 [data-theme="dark"] [data-i18n="date_hint"]{color:var(--t2)!important}
 
+/* Empty state dark mode */
+[data-theme="dark"] .empty{color:var(--t2)}
+[data-theme="dark"] .empty i{opacity:.7}
+
 /* Filter chips row */
 .filter-chips{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--glass-b)}
 .fchip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:14px;border:1.5px solid var(--glass-b);background:rgba(99,102,241,.04);color:var(--t2);font-size:.77rem;font-weight:500;cursor:pointer;transition:all .15s;user-select:none}
