@@ -3,7 +3,7 @@ body{background:transparent!important;color:var(--t1)!important;font-family:'Int
 /* Doc vars that map to base.html theme vars */
 .sidebar{position:sticky;top:80px}
 .sidebar a{display:block;padding:6px 12px;color:var(--t2);text-decoration:none;font-size:.88rem;border-left:2px solid transparent;border-radius:0 6px 6px 0;transition:all .15s}
-.sidebar a:hover,.sidebar a.active{color:var(--accent);border-left-color:var(--accent);background:rgba(99,102,241,.06)}
+.sidebar a:hover,.sidebar a.active{color:var(--accent);border-left-color:var(--accent);background:rgba(15,118,110,.06)}
 .sidebar .sidebar-title{font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);padding:6px 12px;margin-top:16px}
 
 .doc-section{padding-top:24px;margin-bottom:32px}
@@ -46,12 +46,12 @@ hr{border-color:var(--glass-b)!important}
 
 /* Dark mode contrast fixes */
 [data-theme="dark"] .doc-section code{
-  background:rgba(99,102,241,.14);
-  border-color:rgba(165,180,252,.3);
-  color:#a5b4fc;
+  background:rgba(15,118,110,.14);
+  border-color:rgba(94,234,212,.3);
+  color:#5eead4;
 }
 [data-theme="dark"] .doc-section h2{
-  color:#a5b4fc;
+  color:#5eead4;
 }
 
 /* Bilingual: same layout, text swaps with the navbar language toggle */
