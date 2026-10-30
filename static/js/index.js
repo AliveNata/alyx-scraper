@@ -13,6 +13,14 @@ function applyEnabledPlatforms(){
 }
 applyEnabledPlatforms();
 
+(function setDateMax(){
+  const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
+  ['dateFrom','dateTo'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.max=today;
+  });
+})();
+
 window.PAGE_L = {
 id:{
   stat_results:'Total Hasil',stat_platforms:'Platform Aktif',stat_keywords:'Keywords',stat_duration:'Durasi',
@@ -120,6 +128,7 @@ function showProg(show,indet=false){
 
 function toast(msg,type='info',dur=5000){
   const ctr=document.getElementById('toastCtr');
+  if(!ctr) return;
   const icons={info:'<i class="bi bi-info-circle ti-info"></i>',ok:'<i class="bi bi-check-circle-fill ti-ok"></i>',err:'<i class="bi bi-x-circle-fill ti-err"></i>'};
   const el=document.createElement('div');
   el.className='toast'+(type==='ok'?' t-ok':type==='err'?' t-err':'');

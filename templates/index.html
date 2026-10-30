@@ -110,18 +110,16 @@
     </div>
   </div>
 
-  <div style="margin-top:10px">
-    <div class="form-row" style="grid-template-columns:1fr 1fr">
-      <div class="form-col">
-        <label class="form-label" data-i18n="date_from_label">Dari tanggal <span style="font-weight:400;color:var(--t3)" data-i18n="date_optional">(opsional)</span></label>
-        <input id="dateFrom" type="date" class="ifield">
-      </div>
-      <div class="form-col">
-        <label class="form-label" data-i18n="date_to_label">Sampai tanggal</label>
-        <input id="dateTo" type="date" class="ifield">
-      </div>
+  <div style="margin-top:10px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <div class="form-col" style="flex:0 0 auto">
+      <label class="form-label" data-i18n="date_from_label">Dari tanggal <span style="font-weight:400;color:var(--t3)" data-i18n="date_optional">(opsional)</span></label>
+      <input id="dateFrom" type="date" class="ifield" style="width:160px">
     </div>
-    <div style="margin-top:5px">
+    <div class="form-col" style="flex:0 0 auto">
+      <label class="form-label" data-i18n="date_to_label">Sampai tanggal</label>
+      <input id="dateTo" type="date" class="ifield" style="width:160px">
+    </div>
+    <div style="align-self:flex-end;padding-bottom:2px">
       <span style="font-size:.78rem;color:var(--t3);line-height:1.4" data-i18n="date_hint">Filter diterapkan ke semua hasil. Kosongkan untuk ambil semua tanggal.</span>
     </div>
   </div>
