@@ -110,7 +110,7 @@
     </div>
   </div>
 
-  <div style="margin-top:10px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+  <div style="margin-top:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
     <div class="form-col" style="flex:0 0 auto">
       <label class="form-label" data-i18n="date_from_label">Dari tanggal <span style="font-weight:400;color:var(--t3)" data-i18n="date_optional">(opsional)</span></label>
       <input id="dateFrom" type="date" class="ifield" style="width:160px">
@@ -126,7 +126,7 @@
 
   <div class="prog-wrap" id="progWrap" style="display:none"><div class="prog-bar" id="progBar"></div></div>
 
-  <div>
+  <div style="margin-top:20px">
     <div class="sec-label" data-i18n="platforms_label">Pilih Platform</div>
     <div class="plat-groups">
       <div class="plat-row">
@@ -171,17 +171,17 @@
   </div>
 </div>
 
-<div style="margin:-4px 0 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.85rem;color:var(--t2)">
-  <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-    <input type="checkbox" id="fullTextToggle">
-    <span data-i18n="fulltext_label">Ambil teks lengkap artikel</span>
-  </label>
-  <span style="color:var(--t3);font-size:.78rem" data-i18n="fulltext_hint">(lebih lambat, sumber berita saja)</span>
-</div>
-
-<details style="margin:-4px 0 14px">
-  <summary style="cursor:pointer;font-size:.82rem;color:var(--t2);user-select:none;list-style:none;display:flex;align-items:center;gap:6px">
-    <i class="bi bi-bell"></i> <span data-i18n="notify_title">Notifikasi saat selesai</span>
+<div style="margin:-4px 0 14px;display:flex;flex-direction:column;gap:6px;font-size:.85rem;color:var(--t2)">
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+      <input type="checkbox" id="fullTextToggle">
+      <span data-i18n="fulltext_label">Ambil teks lengkap artikel</span>
+    </label>
+    <span style="color:var(--t3);font-size:.78rem" data-i18n="fulltext_hint">(lebih lambat, sumber berita saja)</span>
+  </div>
+  <details>
+  <summary style="cursor:pointer;font-size:.82rem;color:var(--t2);user-select:none;list-style:none;display:flex;align-items:center;gap:8px">
+    <i class="bi bi-bell" style="font-size:.85rem"></i> <span data-i18n="notify_title">Notifikasi saat selesai</span>
   </summary>
   <div style="margin-top:8px;padding:14px;background:var(--glass);border:1px solid var(--glass-b);border-radius:12px;display:flex;flex-direction:column;gap:10px">
     <div class="notify-grid">
@@ -197,6 +197,7 @@
     <span style="font-size:.75rem;color:var(--t3)" data-i18n="notify_hint">Kirim ringkasan hasil via email atau webhook setelah scraping selesai.</span>
   </div>
 </details>
+</div>
 
 <div class="status-bar" id="statusBar">
   <i class="bi bi-info-circle"></i>
