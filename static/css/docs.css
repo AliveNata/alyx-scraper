@@ -16,9 +16,10 @@ body{background:transparent!important;color:var(--t1)!important;font-family:'Int
 .platform-item{
   background:var(--glass);border:1px solid var(--glass-b);border-radius:10px;padding:16px;
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  box-shadow:0 1px 3px rgba(0,0,0,.06);
+  box-shadow:0 1px 3px rgba(0,0,0,.06);height:100%;
 }
 [data-theme="dark"] .platform-item{box-shadow:0 1px 3px rgba(0,0,0,.25)}
+[data-theme="dark"] .sociabuzz-icon{filter:brightness(0) invert(1)}
 .platform-item h5{font-size:.95rem;font-weight:600;margin-bottom:4px;color:var(--t1)}
 .platform-item p{font-size:.82rem;color:var(--t2);margin-bottom:0}
 
