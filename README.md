@@ -6,44 +6,81 @@ Alat riset & monitoring media + akademik Indonesia. Kumpulkan data dari berbagai
 
 ---
 
-## Sumber yang Didukung (8)
+## Sumber yang Didukung (12)
 
-| Sumber | Metode | API key |
-|--------|--------|---------|
-| Google News | RSS feed | - |
-| News Sites | Bing News RSS + 18 feed RSS Indonesia | - |
-| GDELT | DOC 2.0 API (berita global, historis) | - |
-| YouTube | Data API v3 (cari video) | Gratis (wajib) |
-| Wikipedia | MediaWiki API (id.wikipedia) | - |
-| OpenAlex | Works API (jurnal/paper: judul, penulis, abstrak, DOI) | - |
-| Semantic Scholar | Graph API (paper akademik) | Gratis (disarankan) |
-| Kaskus | Indeks pencarian (forum Indonesia) | - |
+| Sumber | Kategori | Metode | API key |
+|--------|----------|--------|---------|
+| Google News | Berita | RSS feed | - |
+| News Sites | Berita | Bing News RSS + 18 feed RSS Indonesia | - |
+| GDELT | Berita | DOC 2.0 API (berita global, historis) | - |
+| Kompas | Berita | RSS feed | - |
+| Liputan6 | Berita | RSS feed | - |
+| OpenAlex | Jurnal/Paper | Works API (judul, penulis, abstrak, DOI) | - |
+| Semantic Scholar | Jurnal/Paper | Graph API | Gratis (disarankan) |
+| arXiv | Jurnal/Paper | Atom API (preprint: fisika, ilmu komputer, matematika) | - |
+| Crossref | Jurnal/Paper | REST API (130M+ DOI, metadata lengkap) | - |
+| YouTube | Video | Data API v3 | Gratis (wajib) |
+| Wikipedia | Referensi | MediaWiki API (id.wikipedia) | - |
+| Kaskus | Forum | Indeks pencarian | - |
 
-Sumber yang butuh API key gratis bisa dinyalakan/dimatikan admin. Twitter/X, Instagram, Facebook, Threads, Reddit dihapus karena tidak reliable dari server (blokir IP / API berbayar).
+Semua sumber bisa dinyalakan/dimatikan per-platform via Admin Dashboard. Twitter/X, Instagram, Facebook, Threads, Reddit dihapus karena tidak reliable dari server (blokir IP / API berbayar).
+
+## API Keys
+
+| Key | Fungsi | Wajib |
+|-----|--------|-------|
+| YouTube Data API v3 | Scraping video YouTube | Ya |
+| Google Cloud Vision | Reverse image search (upload) | Tidak (fallback ke nama file) |
+| Semantic Scholar | Rate limit lebih tinggi (1 RPS vs shared) | Tidak |
+| Groq | Analisis AI otomatis di email notifikasi | Tidak (email tetap terkirim tanpa AI section) |
+
+Set semua key di Admin -> Settings.
 
 ---
 
 ## Fitur
 
-- **8 sumber terkurasi** - berita, video, referensi, jurnal, forum
+- **12 sumber terkurasi** - berita, jurnal/paper akademik, video, referensi, forum
+- **Sitasi otomatis** APA7 dan format Mendikbud untuk setiap hasil; satu klik salin
 - **Teks lengkap artikel** (trafilatura) untuk analisis konten
-- **Filter rentang tanggal** untuk sumber historis (GDELT, jurnal)
+- **Filter rentang tanggal** berlaku ke semua platform (post-filter backend)
+- **Filter relevansi** - artikel tidak relevan dari sumber tier-2 otomatis dibuang
 - **Deduplikasi** lintas-sumber otomatis
 - **Catatan Koleksi + sitasi** - metadata pengumpulan (keyword, sumber, waktu WIB) siap untuk bab Metodologi
 - **Analisis** - frekuensi kata terbanyak & distribusi waktu
-- **Export** CSV / JSON / XLSX / Markdown (dengan metadata)
+- **Export** CSV / JSON / XLSX / Markdown / RIS / BibTeX (dengan metadata)
 - **Image Scraper** - pencarian, scrape URL, upload (reverse search via Google Vision)
 - **Bilingual** Indonesia / English, **Light/Dark** theme
 - **Admin Dashboard** (`/alyx-control-panel`) - toggle platform, kunci API, audit log, chart usage
+- **Email notifikasi** dengan preview artikel, ringkasan statistik, dan **Analisis AI** (Insight / Rekomendasi / Kesimpulan via Groq)
 
 ---
 
 ## Changelog
 
+### v3.1.0 - Okt 2026 (Email & kualitas hasil)
+
+**Email notifikasi:**
+- Logo di email sekarang pakai hosted PNG (`/static/brand_email.png`) - fix blank/pecah di Gmail
+- Label "Rentang tanggal konten" diganti "Rentang tanggal publikasi artikel"
+- Tambah section **Analisis AI** (Insight, Rekomendasi, Kesimpulan) generated via Groq; email tetap terkirim normal jika Groq tidak tersedia
+
+**Kualitas hasil scraping:**
+- **Filter relevansi** - artikel dari sumber tier-2 (Kompas, Liputan6, News Sites) wajib mengandung token keyword di judul/konten; sumber terpercaya (Google News, GDELT, YouTube, jurnal) bypass filter
+- **Filter tanggal post-processing** - `date_from`/`date_to` sekarang berlaku ke semua platform (sebelumnya hanya GDELT & jurnal); artikel tanpa tanggal tetap dipertahankan
+
+**UI:**
+- Toast notifikasi pindah ke kanan atas, slide-in dari kanan, loader bar 5 detik, auto-dismiss
+- Hint filter tanggal dipindah ke bawah kedua field tanggal (full-width, tidak terpotong)
+- Teks hint diupdate: "Filter diterapkan ke semua hasil. Kosongkan untuk ambil semua tanggal."
+
+**API keys:**
+- Tambah field `groq` di `api_keys` config (Admin -> Settings)
+
 ### v3.0.0 - Sep 2026 (Fokus riset)
 
 - **Rebrand** ke AlyxLabs (logo + favicon baru)
-- **Sumber dirombak** jadi 8 yang reliable: hapus Reddit + sosial (Twitter/IG/FB/Threads) + Quora; tambah **GDELT, YouTube, Wikipedia, OpenAlex, Semantic Scholar**
+- **Sumber dirombak** jadi fokus riset: hapus Reddit (termasuk API resmi v2.1.0) + sosial (Twitter/IG/FB/Threads) + Quora; tambah **GDELT, YouTube, Wikipedia, OpenAlex, Semantic Scholar, arXiv, Crossref, Kompas, Liputan6** (total 12)
 - **Teks lengkap artikel** (opt-in, trafilatura) untuk berita
 - **Filter rentang tanggal** (GDELT + jurnal), **dedup** lintas-sumber
 - **Catatan Koleksi + Salin sitasi**; metadata ikut di semua export
@@ -142,19 +179,23 @@ Buka **http://localhost:5000**
 |-----|-------|--------|
 | `SECRET_KEY` | Ya | Kunci penanda cookie session. Set ke nilai acak kuat, misal `openssl rand -hex 32`. Kalau tidak di-set, session admin bisa dipalsukan. |
 
-Deploy live: VPS + gunicorn (`gunicorn app:app -b 127.0.0.1:8001`) di belakang nginx, di-manage PM2. `wsgi.py` disediakan untuk opsi PythonAnywhere tapi bukan yang dipakai sekarang.
+Deploy live: VPS + gunicorn (`gunicorn app:app -b 127.0.0.1:8001`) di belakang nginx, di-manage systemd (`systemctl restart alyx-scraper`). `wsgi.py` disediakan untuk opsi PythonAnywhere tapi bukan yang dipakai sekarang.
 
 ---
 
-## Repos yang Dipakai
+## Dependensi Utama
 
-| Lib | Repo |
-|-----|------|
-| twikit | https://github.com/d60/twikit |
-| facebook-scraper | https://github.com/kevinzg/facebook-scraper |
-| quora-scraper | https://github.com/adrian-dip/quora-scraper |
-| Threads-Scraper | https://github.com/Zeeshanahmad4/Threads-Scraper |
-| image-scraper | https://github.com/mahdidevlp/image-scraper |
+| Lib | Fungsi |
+|-----|--------|
+| Flask | Web framework |
+| gunicorn | WSGI server (production) |
+| trafilatura | Ekstrak teks lengkap artikel berita |
+| lxml | HTML parsing (diperlukan trafilatura) |
+| openpyxl | Export XLSX |
+| werkzeug | Password hashing admin |
+| yagmail | Email notifikasi |
+| Groq SDK | Analisis AI di email |
+| requests / feedparser | HTTP client + RSS parsing |
 
 ---
 

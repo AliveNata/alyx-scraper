@@ -39,6 +39,8 @@
       <div class="sidebar-title">Sumber &amp; API</div>
       <a href="https://docs.openalex.org" target="_blank">OpenAlex API</a>
       <a href="https://api.semanticscholar.org" target="_blank">Semantic Scholar API</a>
+      <a href="https://arxiv.org/help/api" target="_blank">arXiv API</a>
+      <a href="https://api.crossref.org" target="_blank">Crossref API</a>
       <a href="https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/" target="_blank">GDELT DOC API</a>
       <a href="https://developers.google.com/youtube/v3" target="_blank">YouTube Data API</a>
       <a href="https://trafilatura.readthedocs.io" target="_blank">trafilatura</a>
@@ -61,7 +63,7 @@
       <h3 class="lang-id">Fitur Utama</h3>
       <h3 class="lang-en">Main Features</h3>
       <ul class="lang-id">
-        <li><strong>10 Platform Terkurasi</strong> - Google News, News Sites, GDELT, Kompas, Liputan6, YouTube, Wikipedia, OpenAlex, Semantic Scholar, Kaskus</li>
+        <li><strong>12 Platform Terkurasi</strong> - Google News, News Sites, GDELT, Kompas, Liputan6, YouTube, Wikipedia, OpenAlex, Semantic Scholar, arXiv, Crossref, Kaskus</li>
         <li><strong>Teks Lengkap Artikel</strong> - Ambil isi artikel penuh (bukan cuma cuplikan) untuk analisis konten</li>
         <li><strong>Filter Tanggal &amp; Dedup</strong> - Rentang tanggal untuk sumber historis, hasil duplikat dibuang otomatis</li>
         <li><strong>Sitasi Otomatis</strong> - Generate sitasi APA7 dan Mendikbud langsung dari hasil scraping</li>
@@ -73,7 +75,7 @@
         <li><strong>Bilingual &amp; Light/Dark</strong> - Indonesia/English, tema terang sebagai default</li>
       </ul>
       <ul class="lang-en">
-        <li><strong>10 Curated Platforms</strong> - Google News, News Sites, GDELT, Kompas, Liputan6, YouTube, Wikipedia, OpenAlex, Semantic Scholar, Kaskus</li>
+        <li><strong>12 Curated Platforms</strong> - Google News, News Sites, GDELT, Kompas, Liputan6, YouTube, Wikipedia, OpenAlex, Semantic Scholar, arXiv, Crossref, Kaskus</li>
         <li><strong>Full Article Text</strong> - Fetch full article bodies (not just snippets) for content analysis</li>
         <li><strong>Date Filter &amp; Dedup</strong> - Date range for historical sources, duplicates removed automatically</li>
         <li><strong>Auto Citation</strong> - Generate APA7 and Mendikbud citations directly from scraping results</li>
@@ -102,8 +104,8 @@
     <!-- Platforms -->
     <div class="doc-section" id="platforms">
       <h2><i class="bi bi-grid"></i> Platform</h2>
-      <p class="lang-id">AlyxLabs mengumpulkan data dari 10 platform terkurasi berikut. Platform bisa dinyalakan/dimatikan via Admin.</p>
-      <p class="lang-en">AlyxLabs collects from these 10 curated platforms. Each can be toggled via the Admin dashboard.</p>
+      <p class="lang-id">AlyxLabs mengumpulkan data dari 12 platform terkurasi berikut. Platform bisa dinyalakan/dimatikan via Admin.</p>
+      <p class="lang-en">AlyxLabs collects from these 12 curated platforms. Each can be toggled via the Admin dashboard.</p>
       <div class="platform-grid">
         <div class="platform-item">
           <h5><img src="/static/logos/google-news.png" alt="" style="height:1.1em;width:1.1em;vertical-align:-0.2em;object-fit:contain"> Google News</h5>
@@ -149,6 +151,16 @@
           <h5><img src="/static/logos/semantic-scholar.png" alt="" style="height:1.1em;width:1.1em;vertical-align:-0.2em;object-fit:contain"> Semantic Scholar</h5>
           <p class="lang-id">Paper akademik via Semantic Scholar API. Cocok untuk pencarian literatur ilmiah multidisiplin.</p>
           <p class="lang-en">Academic papers via the Semantic Scholar API. Good for multidisciplinary literature search.</p>
+        </div>
+        <div class="platform-item">
+          <h5><img src="/static/logos/arxiv.png" alt="" style="height:1.1em;width:1.1em;vertical-align:-0.2em;object-fit:contain"> arXiv</h5>
+          <p class="lang-id">Preprint server untuk fisika, komputer, matematika, biologi, dan lainnya.</p>
+          <p class="lang-en">Preprint server for physics, CS, math, biology and more.</p>
+        </div>
+        <div class="platform-item">
+          <h5><img src="/static/logos/crossref.png" alt="" style="height:1.1em;width:1.1em;vertical-align:-0.2em;object-fit:contain"> Crossref</h5>
+          <p class="lang-id">Registry DOI dengan 130 juta+ karya ilmiah. Metadata lengkap: abstrak, penulis, venue, DOI.</p>
+          <p class="lang-en">DOI registry with 130M+ scholarly works. Full metadata: abstract, authors, venue, DOI.</p>
         </div>
         <div class="platform-item">
           <h5><img src="/static/logos/kaskus.png" alt="" style="height:1.1em;width:1.1em;vertical-align:-0.2em;object-fit:contain"> Kaskus</h5>
@@ -279,47 +291,50 @@
 
       <div class="changelog-item">
         <div class="d-flex align-items-center gap-2 mb-2">
-          <span class="cl-version">v2.2.0</span>
+          <span class="cl-version">v3.0.0</span>
           <span class="cl-date">Oktober 2026</span>
         </div>
         <ul class="lang-id">
-          <li><span class="badge-new">NEW</span> Sitasi otomatis APA7 &amp; Mendikbud untuk setiap hasil</li>
-          <li><span class="badge-new">NEW</span> Paginasi - 50 hasil per halaman, navigasi cepat</li>
-          <li><span class="badge-new">NEW</span> Export per platform - download hasil tiap sumber secara terpisah</li>
-          <li><span class="badge-new">NEW</span> Notifikasi email &amp; webhook setelah scraping selesai</li>
-          <li><span class="badge-new">NEW</span> Platform Kompas &amp; Liputan6 sebagai sumber terpisah</li>
-        </ul>
-        <ul class="lang-en">
-          <li><span class="badge-new">NEW</span> Auto citation in APA7 &amp; Mendikbud format for every result</li>
-          <li><span class="badge-new">NEW</span> Pagination - 50 results per page, fast navigation</li>
-          <li><span class="badge-new">NEW</span> Per-platform export - download each source's results separately</li>
-          <li><span class="badge-new">NEW</span> Email &amp; webhook notification when scraping finishes</li>
-          <li><span class="badge-new">NEW</span> Kompas &amp; Liputan6 as standalone platforms</li>
-        </ul>
-      </div>
-
-      <div class="changelog-item">
-        <div class="d-flex align-items-center gap-2 mb-2">
-          <span class="cl-version">v2.1.0</span>
-          <span class="cl-date">Oktober 2026</span>
-        </div>
-        <ul class="lang-id">
+          <li><span class="badge-new">NEW</span> <strong>Analisis AI di email</strong> - Insight, Rekomendasi, dan Kesimpulan otomatis via Groq (fallback graceful jika tidak tersedia)</li>
           <li><span class="badge-new">NEW</span> Pivot ke monitoring media &amp; riset akademik (mahasiswa/thesis)</li>
           <li><span class="badge-new">NEW</span> YouTube - cari video via YouTube Data API v3</li>
           <li><span class="badge-new">NEW</span> Wikipedia - artikel referensi via MediaWiki API</li>
           <li><span class="badge-new">NEW</span> OpenAlex - jurnal &amp; paper akademik, cakupan Indonesia bagus</li>
           <li><span class="badge-new">NEW</span> Semantic Scholar - paper akademik via Semantic Scholar API</li>
-          <li><span class="badge-remove">REMOVE</span> Reddit, X/Twitter, Facebook, Threads, Quora, Instagram (flaky, tidak reliable)</li>
+          <li><span class="badge-new">NEW</span> arXiv - preprint server (fisika, CS, matematika, biologi)</li>
+          <li><span class="badge-new">NEW</span> Crossref - registry DOI 130 juta+ karya ilmiah, metadata lengkap</li>
+          <li><span class="badge-new">NEW</span> Sitasi otomatis APA7 &amp; Mendikbud untuk setiap hasil</li>
+          <li><span class="badge-new">NEW</span> Paginasi - 50 hasil per halaman, navigasi cepat</li>
+          <li><span class="badge-new">NEW</span> Export per platform - download hasil tiap sumber secara terpisah</li>
+          <li><span class="badge-new">NEW</span> Notifikasi email &amp; webhook setelah scraping selesai</li>
+          <li><span class="badge-new">NEW</span> Platform Kompas &amp; Liputan6 sebagai sumber terpisah</li>
+          <li><span class="badge-improve">IMPROVE</span> Filter tanggal berlaku ke semua platform (sebelumnya hanya GDELT &amp; jurnal)</li>
+          <li><span class="badge-improve">IMPROVE</span> Filter relevansi - artikel tidak relevan dari sumber tier-2 otomatis dibuang berdasarkan token keyword</li>
+          <li><span class="badge-improve">IMPROVE</span> Toast notifikasi pindah ke kanan atas, loader bar 5 detik, slide animasi</li>
+          <li><span class="badge-fix">FIX</span> Label tanggal email diperbarui ke "Rentang tanggal publikasi artikel"</li>
           <li><span class="badge-fix">FIX</span> Security hardening + bug fixes</li>
+          <li><span class="badge-remove">REMOVE</span> Reddit, X/Twitter, Facebook, Threads, Quora, Instagram (flaky, tidak reliable)</li>
         </ul>
         <ul class="lang-en">
+          <li><span class="badge-new">NEW</span> <strong>AI analysis in email</strong> - automatic Insight, Recommendation, and Conclusion via Groq (graceful fallback if unavailable)</li>
           <li><span class="badge-new">NEW</span> Pivot to media monitoring &amp; academic research (students/thesis)</li>
           <li><span class="badge-new">NEW</span> YouTube - video search via YouTube Data API v3</li>
           <li><span class="badge-new">NEW</span> Wikipedia - reference articles via MediaWiki API</li>
           <li><span class="badge-new">NEW</span> OpenAlex - academic journals &amp; papers, good Indonesian coverage</li>
           <li><span class="badge-new">NEW</span> Semantic Scholar - academic papers via the Semantic Scholar API</li>
-          <li><span class="badge-remove">REMOVE</span> Reddit, X/Twitter, Facebook, Threads, Quora, Instagram (flaky, unreliable)</li>
+          <li><span class="badge-new">NEW</span> arXiv - preprint server (physics, CS, math, biology)</li>
+          <li><span class="badge-new">NEW</span> Crossref - DOI registry with 130M+ scholarly works, full metadata</li>
+          <li><span class="badge-new">NEW</span> Auto citation in APA7 &amp; Mendikbud format for every result</li>
+          <li><span class="badge-new">NEW</span> Pagination - 50 results per page, fast navigation</li>
+          <li><span class="badge-new">NEW</span> Per-platform export - download each source's results separately</li>
+          <li><span class="badge-new">NEW</span> Email &amp; webhook notification when scraping finishes</li>
+          <li><span class="badge-new">NEW</span> Kompas &amp; Liputan6 as standalone platforms</li>
+          <li><span class="badge-improve">IMPROVE</span> Date filter now applies to all platforms (previously only GDELT &amp; journals)</li>
+          <li><span class="badge-improve">IMPROVE</span> Relevance filter - off-topic articles from tier-2 sources are automatically dropped based on keyword tokens</li>
+          <li><span class="badge-improve">IMPROVE</span> Toast notification moved to top-right, 5-second loader bar, slide animation</li>
+          <li><span class="badge-fix">FIX</span> Email date label updated to "Publication date range"</li>
           <li><span class="badge-fix">FIX</span> Security hardening + bug fixes</li>
+          <li><span class="badge-remove">REMOVE</span> Reddit, X/Twitter, Facebook, Threads, Quora, Instagram (flaky, unreliable)</li>
         </ul>
       </div>
 

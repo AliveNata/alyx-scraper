@@ -9,6 +9,8 @@ import io
 import time
 import json
 import os
+import hmac
+import secrets
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -47,6 +49,19 @@ app.config.update(
     SESSION_COOKIE_SECURE=True,   # served over HTTPS in prod; disabled for local dev in __main__
     MAX_CONTENT_LENGTH=5 * 1024 * 1024,  # 5 MB upload cap
 )
+
+# ── CSRF ─────────────────────────────────────────────────────────────────────
+def _csrf_token():
+    if '_csrf' not in session:
+        session['_csrf'] = secrets.token_hex(32)
+    return session['_csrf']
+
+def _csrf_ok():
+    tok = session.get('_csrf', '')
+    return bool(tok) and hmac.compare_digest(tok, request.form.get('_csrf', ''))
+
+app.jinja_env.globals['csrf_token'] = _csrf_token
+# ─────────────────────────────────────────────────────────────────────────────
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.json')
 
@@ -154,12 +169,19 @@ def too_large(e):
     return jsonify({'error': 'File terlalu besar, maksimum 5MB'}), 413
 
 
-def _prune_jobs(max_age=3600):
-    """Drop finished jobs older than max_age so the in-memory dict does not grow forever."""
+def _prune_jobs(max_age=3600, stuck_age=7200):
+    """Drop finished jobs older than max_age, and stuck running/pending jobs older than stuck_age."""
     now = time.time()
     with jobs_lock:
-        stale = [jid for jid, r in jobs.items()
-                 if r.get('finished_at') and now - r['finished_at'] > max_age]
+        stale = [
+            jid for jid, r in jobs.items()
+            if (r.get('finished_at') and now - r['finished_at'] > max_age)
+            or (not r.get('finished_at')
+                and r.get('started_at') and now - r['started_at'] > stuck_age)
+            or (not r.get('finished_at')
+                and not r.get('started_at')
+                and r.get('created_at') and now - r['created_at'] > stuck_age)
+        ]
         for jid in stale:
             jobs.pop(jid, None)
 
@@ -171,6 +193,7 @@ def create_job_record():
         'status': 'queued',
         'message': 'Job queued',
         'results': [],
+        'created_at': time.time(),
         'started_at': None,
         'finished_at': None,
         'keywords': [],
@@ -377,6 +400,74 @@ def _generate_export_bytes(results, meta, fmt):
         return buf.getvalue().encode('utf-8-sig'), f'hasil_{stamp}.csv', 'text/csv'
 
 
+def _groq_insights(keywords, results):
+    """Call Groq API to generate insight, recommendation, and conclusion from scraped articles."""
+    try:
+        import json as _json
+        key = (load_config().get('api_keys', {}).get('groq', '').strip()
+               or os.environ.get('GROQ_API_KEY', ''))
+        if not key:
+            return None
+
+        kw_str = ', '.join(keywords)
+        # Build a compact article list (max 25 articles)
+        lines = []
+        for i, r in enumerate(results[:25], 1):
+            title = (r.get('title') or '').strip()[:120]
+            src   = r.get('platform') or r.get('source') or ''
+            date  = (r.get('date') or '')[:10]
+            snippet = (r.get('content') or '')[:200].strip()
+            lines.append(f"{i}. [{src} | {date}] {title}" + (f" - {snippet}" if snippet else ""))
+
+        articles_text = '\n'.join(lines)
+        prompt = (
+            f"Kamu adalah analis riset media. Berikut {len(results)} artikel hasil scraping "
+            f"untuk keyword: \"{kw_str}\".\n\n"
+            f"{articles_text}\n\n"
+            f"Berikan analisis singkat dalam format berikut (gunakan bahasa Indonesia, "
+            f"masing-masing 2-4 kalimat, TANPA header markdown, langsung isinya):\n\n"
+            f"INSIGHT:\n(temuan utama dari artikel-artikel ini, tren atau pola yang terlihat)\n\n"
+            f"REKOMENDASI:\n(saran konkret untuk riset atau tindak lanjut berdasarkan temuan)\n\n"
+            f"KESIMPULAN:\n(ringkasan keseluruhan dalam 2-3 kalimat)"
+        )
+
+        import requests as _requests
+
+        def _call(model):
+            body = {
+                'model': model,
+                'messages': [{'role': 'user', 'content': prompt}],
+                'max_tokens': 500,
+                'temperature': 0.5,
+            }
+            resp = _requests.post(
+                'https://api.groq.com/openai/v1/chat/completions',
+                json=body,
+                headers={'Authorization': f'Bearer {key}'},
+                timeout=20,
+            )
+            resp.raise_for_status()
+            return resp.json()
+
+        models = ['qwen/qwen3.8-27b', 'openai/gpt-oss-20b']
+        last_err = None
+        for model in models:
+            try:
+                data = _call(model)
+                return data['choices'][0]['message']['content'].strip()
+            except Exception as e:
+                # 429 rate limit or model unavailable -> try next model
+                if '429' in str(e) or '503' in str(e):
+                    last_err = e
+                    continue
+                raise
+        print(f'[groq_insights] all models rate-limited: {last_err}')
+        return None
+    except Exception as e:
+        print(f'[groq_insights] error: {e}')
+        return None
+
+
 def _build_scrape_email(keywords, results, fmt='csv'):
     """Build rich HTML email body + export file bytes from scraping results."""
     import collections
@@ -384,6 +475,9 @@ def _build_scrape_email(keywords, results, fmt='csv'):
 
     kw_str = ', '.join(keywords)
     total  = len(results)
+
+    # --- AI insights via Groq (best-effort, skipped if key missing or error) ---
+    ai_raw = _groq_insights(keywords, results) if results else None
 
     # --- derive insights from real data ---
     platform_counts = collections.Counter(r.get('platform','') for r in results if r.get('platform'))
@@ -426,6 +520,44 @@ def _build_scrape_email(keywords, results, fmt='csv'):
         )
 
     insight_items = ''.join(f'<li style="padding:4px 0;font-size:13px;color:#334155">{i}</li>' for i in insights)
+
+    # --- parse AI response into 3 blocks ---
+    def _parse_ai_block(raw, label):
+        """Extract text after LABEL: up to the next label or end."""
+        import re as _re
+        pattern = rf'{label}:\s*(.*?)(?=\n(?:INSIGHT|REKOMENDASI|KESIMPULAN):|$)'
+        m = _re.search(pattern, raw, _re.DOTALL | _re.IGNORECASE)
+        return m.group(1).strip() if m else ''
+
+    ai_section_html = ''
+    if ai_raw:
+        ai_insight  = esc(_parse_ai_block(ai_raw, 'INSIGHT'))
+        ai_rekom    = esc(_parse_ai_block(ai_raw, 'REKOMENDASI'))
+        ai_concl    = esc(_parse_ai_block(ai_raw, 'KESIMPULAN'))
+
+        def _ai_block(label, color, text):
+            return (
+                f'<div style="margin-bottom:14px">'
+                f'<div style="font-size:10px;font-weight:700;color:{color};letter-spacing:1px;'
+                f'text-transform:uppercase;margin-bottom:5px">{label}</div>'
+                f'<div style="font-size:13px;color:#334155;line-height:1.6">{text}</div>'
+                f'</div>'
+            ) if text else ''
+
+        blocks = (
+            _ai_block('Insight', '#0ea5e9', ai_insight) +
+            _ai_block('Rekomendasi', '#10b981', ai_rekom) +
+            _ai_block('Kesimpulan', '#6366f1', ai_concl)
+        )
+        if blocks:
+            ai_section_html = (
+                f'<div style="margin-top:20px;padding:18px 20px;background:#f0f9ff;'
+                f'border-left:3px solid #0ea5e9;border-radius:0 8px 8px 0">'
+                f'<div style="font-size:11px;font-weight:700;color:#0ea5e9;letter-spacing:1px;'
+                f'text-transform:uppercase;margin-bottom:14px">Analisis AI</div>'
+                f'{blocks}'
+                f'</div>'
+            )
 
     html = f'''<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -479,6 +611,8 @@ def _build_scrape_email(keywords, results, fmt='csv'):
       <div style="font-size:11px;font-weight:700;color:#6366f1;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Ringkasan</div>
       <ul style="margin:0;padding-left:18px">{insight_items}</ul>
     </div>
+
+    {ai_section_html}
 
     <!-- cta -->
     <div style="text-align:center;margin-top:24px">
@@ -590,19 +724,21 @@ def _password_ok(pw, cfg):
         if stored.startswith(('pbkdf2:', 'scrypt:')):
             return check_password_hash(stored, pw)
         # Legacy plaintext in config - upgrade to hash on success.
-        if pw == stored:
+        if hmac.compare_digest(pw, stored):
             cfg['admin_password'] = generate_password_hash(pw)
             save_config(cfg)
             return True
         return False
     # No hash in config yet - check the env var (initial deployment).
     env_pw = os.environ.get('ADMIN_PASSWORD', '')
-    return bool(env_pw) and pw == env_pw
+    return bool(env_pw) and hmac.compare_digest(pw, env_pw)
 
 
 @app.route('/admin/login', methods=['POST'])
 @limiter.limit("5 per 15 minutes")
 def admin_login_post():
+    if not _csrf_ok():
+        return render_template('admin_login.html', error='Invalid request. Refresh dan coba lagi.'), 403
     ip = get_client_ip()
     if _login_blocked(ip):
         return render_template('admin_login.html',
@@ -640,6 +776,9 @@ def admin_reset_password():
 
 @app.route('/admin/reset-password', methods=['POST'])
 def admin_reset_password_post():
+    if not _csrf_ok():
+        return render_template('reset_password.html', token='', valid=False,
+                               error='Invalid request. Refresh dan coba lagi.'), 403
     token = request.form.get('token', '')
     new_pw = request.form.get('password', '')
     confirm_pw = request.form.get('confirm_password', '')
@@ -1082,6 +1221,7 @@ def api_images_search():
 
 
 @app.route('/api/images/related', methods=['POST'])
+@limiter.limit("20 per minute")
 def api_images_related():
     payload = request.json or {}
     image_url = payload.get('image_url', '').strip()
@@ -1199,7 +1339,7 @@ def api_submit_feedback():
         type_ = 'saran'
     if not message:
         return jsonify({'ok': False, 'error': 'Pesan tidak boleh kosong'}), 400
-    ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
+    ip = get_client_ip()
     submit_feedback(name, email, type_, message, ip)
     return jsonify({'ok': True})
 
@@ -1275,7 +1415,14 @@ def api_admin_stats():
 def api_admin_settings_get():
     if not session.get('admin_auth'):
         return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
-    return jsonify({'ok': True, 'config': load_config()})
+    cfg = load_config()
+    em = cfg.get('email', {})
+    ak = cfg.get('api_keys', {})
+    return jsonify({'ok': True, 'config': {
+        **cfg,
+        'email': {**em, 'gmail_app_password': '***' if em.get('gmail_app_password') else ''},
+        'api_keys': {k: ('***' if v else '') for k, v in ak.items()},
+    }})
 
 
 @app.route('/api/admin/settings', methods=['POST'])

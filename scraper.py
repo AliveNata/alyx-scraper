@@ -882,6 +882,137 @@ class YouTubeScraper(BaseScraper):
         return results
 
 
+# ─────────────────────────────────────────────────────────────
+# arXiv - preprint server (physics, cs, math, bio, etc.) via Atom XML
+# Free, no key. Uses urllib.parse, xml.etree.ElementTree.
+# ─────────────────────────────────────────────────────────────
+class ArxivScraper(BaseScraper):
+    _NS = 'http://www.w3.org/2005/Atom'
+
+    def scrape(self, keyword, location='', max_results=15):
+        self.update_status(f"[arXiv] Mencari '{keyword}'...")
+        results = []
+        try:
+            import xml.etree.ElementTree as ET
+            n = min(max_results, 25)
+            url = ('http://export.arxiv.org/api/query?search_query=all:'
+                   + quote_plus(keyword)
+                   + f'&max_results={n}&sortBy=relevance&sortOrder=descending')
+            resp = requests.get(url, headers={
+                'User-Agent': 'AlyxScraper/2.0 (mailto:alivenata@alyxlabs.tech)'
+            }, timeout=20)
+            resp.raise_for_status()
+            root = ET.fromstring(resp.text)
+            ns = self._NS
+            for entry in root.findall(f'{{{ns}}}entry'):
+                title_el = entry.find(f'{{{ns}}}title')
+                title = self.clean(title_el.text or '') if title_el is not None else ''
+                if not title:
+                    continue
+                summary_el = entry.find(f'{{{ns}}}summary')
+                abstract = self.clean(summary_el.text or '') if summary_el is not None else ''
+                id_el = entry.find(f'{{{ns}}}id')
+                link = (id_el.text or '').strip() if id_el is not None else ''
+                published_el = entry.find(f'{{{ns}}}published')
+                date = (published_el.text or '')[:10] if published_el is not None else ''
+                authors = [
+                    self.clean((a.find(f'{{{ns}}}name') or type('', (), {'text': ''})()).text or '')
+                    for a in entry.findall(f'{{{ns}}}author')
+                ][:4]
+                byline = ', '.join(a for a in authors if a)
+                content = (byline + '. ' if byline else '') + abstract
+                # Post-filter by date if set
+                if self.date_from and date and date < self.date_from:
+                    continue
+                if self.date_to and date and date > self.date_to:
+                    continue
+                results.append({
+                    'platform': 'arXiv',
+                    'title': title,
+                    'content': self.clean(content)[:1000],
+                    'url': link,
+                    'date': date,
+                    'source': 'arXiv',
+                    'keyword': keyword,
+                    'location': location,
+                })
+                if len(results) >= max_results:
+                    break
+            self.update_status(f"[arXiv] {len(results)} paper ditemukan")
+        except Exception as e:
+            self.update_status(f"[arXiv] Error: {str(e)[:60]}")
+        return results
+
+
+# ─────────────────────────────────────────────────────────────
+# Crossref - DOI registry, 130M+ works. JSON API, no key.
+# Uses polite pool (mailto header) for higher rate limits.
+# ─────────────────────────────────────────────────────────────
+class CrossrefScraper(BaseScraper):
+    def scrape(self, keyword, location='', max_results=15):
+        self.update_status(f"[Crossref] Mencari '{keyword}'...")
+        results = []
+        try:
+            n = min(max_results, 20)
+            url = ('https://api.crossref.org/works?query=' + quote_plus(keyword)
+                   + f'&rows={n}&sort=relevance')
+            if self.date_from or self.date_to:
+                df = self.date_from or '1900-01-01'
+                dt = self.date_to or '2100-12-31'
+                url += f'&filter=from-pub-date:{df},until-pub-date:{dt}'
+            resp = requests.get(url, headers={
+                'User-Agent': 'AlyxScraper/2.0 (mailto:alivenata@alyxlabs.tech)'
+            }, timeout=20)
+            resp.raise_for_status()
+            items = resp.json().get('message', {}).get('items', [])
+            for w in items:
+                title_parts = w.get('title') or []
+                title = self.clean(title_parts[0] if title_parts else '')
+                if not title:
+                    continue
+                abstract = self.clean(w.get('abstract') or '')
+                # Strip JATS XML tags from abstract if present
+                import re as _re
+                abstract = _re.sub(r'<[^>]+>', ' ', abstract).strip()
+                authors_raw = w.get('author') or []
+                authors = [
+                    ((a.get('given', '') + ' ' + a.get('family', '')).strip())
+                    for a in authors_raw[:4]
+                ]
+                byline = ', '.join(a for a in authors if a)
+                doi = w.get('DOI', '')
+                link = ('https://doi.org/' + doi) if doi else (w.get('URL') or '')
+                # Date: prefer published-print, then published-online, then issued
+                date = ''
+                for key in ('published-print', 'published-online', 'issued'):
+                    parts = (w.get(key) or {}).get('date-parts')
+                    if parts and parts[0]:
+                        p = parts[0]
+                        date = '-'.join(str(x).zfill(2) for x in p[:3])
+                        break
+                venue = ''
+                container = w.get('container-title') or []
+                if container:
+                    venue = container[0]
+                content = (byline + '. ' if byline else '') + abstract
+                results.append({
+                    'platform': 'Crossref',
+                    'title': title,
+                    'content': self.clean(content)[:1000],
+                    'url': link,
+                    'date': date,
+                    'source': venue or 'Crossref',
+                    'keyword': keyword,
+                    'location': location,
+                })
+                if len(results) >= max_results:
+                    break
+            self.update_status(f"[Crossref] {len(results)} paper ditemukan")
+        except Exception as e:
+            self.update_status(f"[Crossref] Error: {str(e)[:60]}")
+        return results
+
+
 SCRAPERS = {
     'Google News': GoogleNewsScraper,
     'News Sites':  NewsSitesScraper,
@@ -890,6 +1021,8 @@ SCRAPERS = {
     'Wikipedia':   WikipediaScraper,
     'OpenAlex':    OpenAlexScraper,
     'Semantic Scholar': SemanticScholarScraper,
+    'arXiv':       ArxivScraper,
+    'Crossref':    CrossrefScraper,
     'Kaskus':      KaskusScraper,
     'Kompas':      KompasScraper,
     'Liputan6':    Liputan6Scraper,
@@ -1023,7 +1156,7 @@ class UnifiedScraper:
     # (API/search-query-based) — skip relevance check for them.
     _TRUSTED_PLATFORMS = {
         'Google News', 'GDELT', 'Reddit', 'YouTube',
-        'OpenAlex', 'Semantic Scholar', 'arXiv',
+        'OpenAlex', 'Semantic Scholar', 'arXiv', 'Crossref',
     }
 
     # Common Indonesian + English stopwords to ignore when tokenizing a keyword
