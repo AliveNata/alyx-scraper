@@ -4,15 +4,15 @@
 
 {% block nav_tabs %}
 <ul class="alyx-nav-tabs">
-  <li><a class="alyx-nav-tab active" id="navScraper" href="#" onclick="showTab('scraper');return false"><i class="bi bi-search"></i> Scraper</a></li>
-  <li><a class="alyx-nav-tab" id="navImages" href="#" onclick="showTab('images');return false"><i class="bi bi-images"></i> Image Scraper</a></li>
+  <li><a class="alyx-nav-tab active" id="navScraper" href="javascript:void(0)" onclick="showTab('scraper')"><i class="bi bi-search"></i> Scraper</a></li>
+  <li><a class="alyx-nav-tab" id="navImages" href="javascript:void(0)" onclick="showTab('images')"><i class="bi bi-images"></i> Image Scraper</a></li>
 </ul>
 {% endblock %}
 
 {% block mobile_tabs %}
 <div class="alyx-mobile-tabs">
-  <a class="alyx-nav-tab active" id="mNavScraper" href="#" onclick="showTab('scraper');return false" style="flex:1;text-align:center"><i class="bi bi-search"></i> Scraper</a>
-  <a class="alyx-nav-tab" id="mNavImages" href="#" onclick="showTab('images');return false" style="flex:1;text-align:center"><i class="bi bi-images"></i> Images</a>
+  <a class="alyx-nav-tab active" id="mNavScraper" href="javascript:void(0)" onclick="showTab('scraper')" style="flex:1;text-align:center"><i class="bi bi-search"></i> Scraper</a>
+  <a class="alyx-nav-tab" id="mNavImages" href="javascript:void(0)" onclick="showTab('images')" style="flex:1;text-align:center"><i class="bi bi-images"></i> Images</a>
 </div>
 {% endblock %}
 
@@ -81,7 +81,7 @@
 
 <!-- Donate nudge: sits between stats and the form, unobtrusive -->
 <div id="donateNudge" style="text-align:center;margin:-6px 0 10px;font-size:.78rem;color:var(--t3)">
-  <i class="bi bi-heart-fill" style="color:#e11d48;font-size:.7em"></i>
+  <i class="bi bi-heart-fill heart-beat" style="color:#e11d48;font-size:.7em"></i>
   <span id="donateNudgeText">Gratis selamanya - kalau berguna, </span><a href="https://sociabuzz.com/alyxlabs/support" target="_blank" id="donateNudgeLink" style="color:var(--accent);text-decoration:none;font-weight:500">dukung AlyxLabs</a><span>.</span>
 </div>
 
@@ -147,6 +147,8 @@
         <span class="plat-row-label" data-i18n="cat_journal">Jurnal</span>
         <label class="chip cat-n"><input type="checkbox" class="pcb" value="OpenAlex"><img src="/static/logos/openalex.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain" class="plat-logo"> OpenAlex</label>
         <label class="chip cat-n"><input type="checkbox" class="pcb" value="Semantic Scholar"><img src="/static/logos/semantic-scholar.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain" class="plat-logo"> Semantic Scholar</label>
+        <label class="chip cat-n"><input type="checkbox" class="pcb" value="arXiv"><img src="/static/logos/arxiv.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain" class="plat-logo"> arXiv</label>
+        <label class="chip cat-n"><input type="checkbox" class="pcb" value="Crossref"><img src="/static/logos/crossref.png" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.25em;object-fit:contain" class="plat-logo"> Crossref</label>
       </div>
       <div class="plat-row">
         <span class="plat-row-label" data-i18n="cat_video">Video</span>
@@ -297,7 +299,7 @@
     <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="uploadImg(this)">
   </div>
   <div id="uploadPreview" style="display:none;margin-top:12px;text-align:center">
-    <img id="upImg" style="max-height:160px;border-radius:10px;border:1px solid var(--glass-b)">
+    <img id="upImg" alt="Preview gambar yang diunggah" style="max-height:160px;border-radius:10px;border:1px solid var(--glass-b)">
     <p style="margin-top:6px;font-size:.78rem;color:var(--t3)" id="upName"></p>
   </div>
 </div>
@@ -355,7 +357,7 @@
     <button class="btn-cls" onclick="closeModal('imgModal')"><i class="bi bi-x-lg"></i></button>
   </div>
   <div class="modal-body" style="text-align:center">
-    <img id="imgModalImg" style="max-width:100%;max-height:58vh;border-radius:10px">
+    <img id="imgModalImg" alt="" style="max-width:100%;max-height:58vh;border-radius:10px">
     <div style="display:flex;gap:10px;justify-content:center;margin-top:16px">
       <a id="imgModalLink" href="#" target="_blank" class="btn-g"><i class="bi bi-box-arrow-up-right"></i> <span data-i18n="img_open">Buka</span></a>
       <button class="btn-p" onclick="findRelated()" style="padding:9px 18px"><i class="bi bi-search"></i> <span data-i18n="img_related">Cari Mirip</span></button>
